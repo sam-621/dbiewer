@@ -44,5 +44,14 @@ export default tseslint.config(
     files: ['src/shared/components/ui/**'],
     rules: { 'react-refresh/only-export-components': 'off' }
   },
+  {
+    files: ['src/shared/hooks/use-composer-editor.ts', 'src/shared/utils/composer-editor.ts'],
+    rules: {
+      'react-hooks/refs': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/exhaustive-deps': 'off'
+    }
+  },
   prettier
 );

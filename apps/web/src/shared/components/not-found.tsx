@@ -9,8 +9,8 @@ export const NotFound = () => {
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
       <h1 className="text-xl font-semibold">{t('Page not found')}</h1>
-      <Button asChild variant="outline">
-        <Link to="/">{t('Go home')}</Link>
+      <Button render={<Link to="/" />} variant="outline">
+        {t('Go home')}
       </Button>
     </main>
   );
