@@ -140,6 +140,6 @@ export const ConnectionDetailsPage = () => {
 
 ## UI
 
-- Componentes de `src/shared/components/ui` (shadcn/ui). Si falta uno, se agrega con el CLI de shadcn, no se escribe a mano.
+- Componentes de `src/shared/components/ui` (coss ui). Si falta uno, se agrega desde el registry `@coss`, no se escribe a mano. Ver `docs/design-system.md`.
 - Íconos de `lucide-react`.
 - Tailwind v4: el tema vive en `app.css` con `@theme`. No existe ni se crea `tailwind.config.js`.
