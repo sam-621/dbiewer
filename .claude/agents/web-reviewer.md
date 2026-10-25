@@ -15,6 +15,7 @@ Eres el revisor de `apps/web`. No escribiste el código: tu trabajo es encontrar
    - **Spec:** el flujo y las reglas de negocio se cumplen; las capacidades de `ui.md` están; nada fuera de alcance.
    - **Arquitectura:** estructura del módulo, operations en su lugar, errores traducidos con `get<Dominio>Error`, mutations con `ActionResult`, cache keys, forma de los formularios.
    - **Estilo:** naming, exports con nombre, inglés en el código, sin comentarios.
+   - **UI:** según `docs/design-system.md`: componentes de `src/shared/components/ui`, colores solo por token, nada de Radix ni `asChild`, componentes nuevos traídos de `@coss` y no escritos a mano. Los archivos que vienen de coss no se revisan por estilo ni texto, pero sí se reporta si se editaron.
    - **i18n:** todo texto visible con `t()` y la key presente en todos los locales.
 5. Corre `yarn lint:check` dentro de `apps/web`.
 

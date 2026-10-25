@@ -42,7 +42,7 @@
       "data": "graphql",
       "i18n": ["en", "es"],
       "uiLanguage": "es",
-      "ui": "shadcn",
+      "ui": "coss",
       "forms": "rhf",
       "tests": "e2e",
       "agents": true,

@@ -16,6 +16,7 @@ Eres el implementer de `apps/web`. Recibes una parte concreta de una feature y l
 - Haz solo lo que te pidieron. No adelantes pasos, no refactorices de más, no toques otras apps.
 - Si una regla de negocio o la UI no está clara en el `spec/`, o el pedido contradice los docs, para y repórtalo en vez de inventar.
 - Si lo que te piden necesita un patrón que los docs no cubren, implementa lo mínimo y repórtalo como decisión abierta para que se agregue al doc.
+- UI solo con los componentes de `src/shared/components/ui` y los tokens de `docs/design-system.md`. Si falta un componente, se trae del registry `@coss` con el CLI. Los archivos que vienen de coss no se editan.
 - Si necesitas tipos de una operación nueva y `yarn gen:types` no se ha corrido, repórtalo: necesita `apps/api` corriendo y lo corre el usuario.
 - Al terminar: `yarn lint:fix` y los tests de lo que tocaste (`yarn test <ruta>`).
 
