@@ -1,3 +1,4 @@
 {
-  "cSpell.ignorePaths": ["**/*.md", "**/*.md.tmpl"]
+  "cSpell.words": ["websql"],
+  "cSpell.ignorePaths": ["features/**", ".claude/**", "**/CLAUDE.md"]
 }

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "project": "websql",
+  "displayName": "WebSQL",
+  "description": "Cliente SQL web: conectarse a bases de datos, explorar su esquema y ejecutar queries desde el navegador",
+  "language": {
+    "docs": "es",
+    "code": "en"
+  },
+  "packageManager": "yarn",
+  "workspaces": false,
+  "commits": {
+    "body": false,
+    "attribution": false
+  },
+  "style": {
+    "comments": "none"
+  },
+  "apps": [
+    {
+      "name": "api",
+      "kind": "backend",
+      "description": "Backend: conexiones a las bases de datos del usuario, ejecución de queries, esquema e historial",
+      "stack": "Express, GraphQL Yoga, Drizzle, Postgres",
+      "architecture": "layered",
+      "api": "graphql",
+      "db": "drizzle",
+      "rls": true,
+      "errors": "throw",
+      "tests": "light",
+      "engines": ["postgres"],
+      "agents": true,
+      "location": "apps"
+    },
+    {
+      "name": "web",
+      "kind": "frontend",
+      "description": "Cliente web: editor SQL, explorador del esquema, grilla de resultados e historial",
+      "stack": "React, Vite, Tailwind, i18next",
+      "framework": "react-vite",
+      "backend": "api",
+      "data": "graphql",
+      "i18n": ["en", "es"],
+      "uiLanguage": "es",
+      "ui": "shadcn",
+      "forms": "rhf",
+      "tests": "e2e",
+      "agents": true,
+      "location": "apps"
+    }
+  ]
+}
