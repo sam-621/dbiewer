@@ -10,13 +10,13 @@ interface Props {
 const { file, code, size = 'sm' } = Astro.props;
 ---
 
-<div class="overflow-hidden rounded-[5px] border border-line bg-bg-elev font-mono">
-  <div class="flex items-center gap-1.5 border-b border-line bg-bg-elev-2 px-[7px] py-1 text-[9.5px] text-fg-3">
+<div class="overflow-hidden rounded-[5px] border bg-muted font-mono">
+  <div class="flex items-center gap-1.5 border-b bg-input px-[7px] py-1 text-[9.5px] text-muted-foreground">
     {file}
   </div>
   <pre
     class:list={[
-      'm-0 overflow-x-auto leading-normal whitespace-pre text-fg',
+      'm-0 overflow-x-auto leading-normal whitespace-pre text-foreground',
       size === 'sm' ? 'px-2 py-1.5 text-[9.5px]' : 'px-2.5 py-2 text-[10.5px]'
     ]}
   ><SqlCode code={code} /></pre>

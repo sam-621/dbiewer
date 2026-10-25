@@ -18,19 +18,19 @@ const { name, columns, x, y, highlighted = false } = Astro.props;
 
 <div
   class:list={[
-    'absolute w-[156px] overflow-hidden rounded-md border bg-bg-elev font-mono text-[10px]',
+    'absolute w-[156px] overflow-hidden rounded-md border bg-muted font-mono text-[10px]',
     highlighted
-      ? 'border-accent shadow-[0_0_0_1px_var(--color-accent),0_4px_14px_oklch(0_0_0/0.4),0_0_22px_var(--color-accent-soft)]'
-      : 'border-line shadow-[0_4px_14px_oklch(0_0_0/0.4)]'
+      ? 'border-primary shadow-[0_0_0_1px_var(--color-primary),0_4px_14px_oklch(0_0_0/0.4),0_0_22px_--theme(--color-primary/14%)]'
+      : 'shadow-[0_4px_14px_oklch(0_0_0/0.4)]'
   ]}
   style={{ left: `${x}px`, top: `${y}px` }}
 >
-  <div class="flex items-center gap-[5px] border-b border-line bg-linear-to-b from-[oklch(0.255_0.006_80)] to-[oklch(0.225_0.006_80)] px-[7px] py-1">
-    <span class="size-[5px] rounded-[2px] bg-accent"></span>
-    <span class="text-[10.5px] font-semibold text-fg">{name}</span>
+  <div class="flex items-center gap-[5px] border-b bg-linear-to-b from-[oklch(0.255_0.006_80)] to-[oklch(0.225_0.006_80)] px-[7px] py-1">
+    <span class="size-[5px] rounded-[2px] bg-primary"></span>
+    <span class="text-[10.5px] font-semibold text-foreground">{name}</span>
   </div>
   {columns.map(column => (
-    <div class="flex items-center gap-[5px] border-t border-line-soft px-[7px] py-0.5 text-fg-2">
+    <div class="flex items-center gap-[5px] border-t px-[7px] py-0.5 text-foreground/80">
       <span
         class:list={[
           'w-2 text-[7.5px]',
@@ -39,8 +39,8 @@ const { name, columns, x, y, highlighted = false } = Astro.props;
       >
         {column.key === 'pk' ? '●' : column.key === 'fk' ? '○' : ''}
       </span>
-      <span class="flex-1 text-fg">{column.name}</span>
-      <span class="text-[9px] text-fg-4">{column.type}</span>
+      <span class="flex-1 text-foreground">{column.name}</span>
+      <span class="text-[9px] text-muted-foreground/72">{column.type}</span>
     </div>
   ))}
 </div>

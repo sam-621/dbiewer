@@ -1,0 +1,26 @@
+---
+import type { VariantProps } from 'class-variance-authority';
+import { buttonVariants } from './button';
+import { Kbd } from './kbd';
+import { cn } from '@/lib/utils';
+
+type Props = VariantProps<typeof buttonVariants> & {
+  href: string;
+  kbd?: string;
+  class?: string;
+};
+
+const { href, variant, size, kbd, class: className } = Astro.props;
+const onPrimary = !variant || variant === 'default';
+---
+
+<a href={href} data-slot="button" class={cn(buttonVariants({ variant, size }), className)}>
+  <slot />
+  {kbd && (
+    <Kbd
+      className={cn('font-mono', onPrimary && 'bg-primary-foreground/12 text-primary-foreground')}
+    >
+      {kbd}
+    </Kbd>
+  )}
+</a>

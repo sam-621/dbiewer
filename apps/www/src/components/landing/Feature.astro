@@ -1,6 +1,4 @@
 ---
-import CheckIcon from '../ui/CheckIcon.astro';
-
 interface Props {
   eyebrow: string;
   title: string;
@@ -17,14 +15,14 @@ const { eyebrow, title, reverse = false } = Astro.props;
   ]}
 >
   <div class:list={['flex flex-col gap-4', { 'min-[901px]:order-2': reverse }]}>
-    <span class="font-mono text-[10.5px] font-semibold tracking-[0.08em] text-accent uppercase">
+    <span class="font-mono text-[10.5px] font-semibold tracking-[0.08em] text-primary uppercase">
       — {eyebrow}
     </span>
     <h3 class="m-0 text-[30px] leading-[1.1] font-semibold tracking-[-0.02em]">{title}</h3>
-    <p class="m-0 max-w-[460px] text-[14.5px] leading-relaxed text-fg-2">
+    <p class="m-0 max-w-[460px] text-[14.5px] leading-relaxed text-foreground/80">
       <slot name="description" />
     </p>
-    <ul class="m-0 mt-1.5 flex list-none flex-col gap-2 p-0 [&_li]:flex [&_li]:items-center [&_li]:gap-[9px] [&_li]:text-[13px] [&_li]:text-fg-2">
+    <ul class="m-0 mt-1.5 flex list-none flex-col gap-2 p-0 [&_li]:flex [&_li]:items-center [&_li]:gap-[9px] [&_li]:text-[13px] [&_li]:text-foreground/80">
       <slot name="bullets" />
     </ul>
   </div>

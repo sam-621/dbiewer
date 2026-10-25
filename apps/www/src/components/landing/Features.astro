@@ -1,10 +1,10 @@
 ---
+import { Check } from 'lucide-react';
 import AiVisual from '../mockups/AiVisual.astro';
 import CanvasVisual from '../mockups/CanvasVisual.astro';
 import GridVisual from '../mockups/GridVisual.astro';
 import SqlVisual from '../mockups/SqlVisual.astro';
-import CheckIcon from '../ui/CheckIcon.astro';
-import Code from '../ui/Code.astro';
+import { Code } from '../ui/code';
 import SectionHead from '../ui/SectionHead.astro';
 import Feature from './Feature.astro';
 ---
@@ -25,21 +25,21 @@ import Feature from './Feature.astro';
       </Fragment>
       <Fragment slot="bullets">
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Auto-layout that respects FK clusters</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             Highlight columns marked <Code>PK</Code> · <Code>FK</Code> · <Code>NOT NULL</Code>
           </span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Multi-schema with collapsible groups</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Export the canvas as PNG, SVG or DBML</span>
         </li>
       </Fragment>
@@ -57,21 +57,21 @@ import Feature from './Feature.astro';
       </Fragment>
       <Fragment slot="bullets">
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Multiple statements per tab, run the one at the cursor</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             <Code>EXPLAIN ANALYZE</Code> rendered as a tree
           </span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Saved queries with workspace-level sharing</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             Results to CSV, JSON or a new <Code>VIEW</Code>
           </span>
@@ -88,21 +88,21 @@ import Feature from './Feature.astro';
       </Fragment>
       <Fragment slot="bullets">
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             Every query is <b>Copy / Run / Open in editor</b>
           </span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Per-table context — only sees what you explicitly attach</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Chats persist per workspace, searchable</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             <b>Never</b> writes to your DB. Suggests, you decide.
           </span>
@@ -119,17 +119,17 @@ import Feature from './Feature.astro';
       </Fragment>
       <Fragment slot="bullets">
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>
             Visual <Code>WHERE</Code> builder with type-aware chips
           </span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Render JSON, dates and enums sensibly</span>
         </li>
         <li>
-          <CheckIcon />
+          <Check className="size-3.5 shrink-0 text-primary" strokeWidth={2.4} />
           <span>Cursor-based pagination, no offsets</span>
         </li>
       </Fragment>

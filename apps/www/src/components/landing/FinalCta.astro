@@ -1,27 +1,27 @@
 ---
 import { APP_URL } from '../../config';
-import Button from '../ui/Button.astro';
+import LinkButton from '../ui/LinkButton.astro';
 ---
 
 <section class="relative px-6 pt-[60px] pb-[100px] max-sm:px-4">
-  <div class="glow-top mx-auto flex max-w-[900px] flex-col items-center gap-[18px] rounded-[14px] border border-accent-line px-8 py-14 text-center max-sm:px-5 max-sm:py-10">
-    <span class="font-mono text-[11px] font-semibold tracking-[0.08em] text-accent uppercase">
+  <div class="glow-top bg-background mx-auto flex max-w-[900px] flex-col items-center gap-[18px] rounded-[14px] border border-primary/36 px-8 py-14 text-center max-sm:px-5 max-sm:py-10">
+    <span class="font-mono text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">
       — get started
     </span>
     <h2 class="m-0 max-w-[720px] text-[clamp(28px,4vw,40px)] leading-[1.1] font-semibold tracking-[-0.025em] text-balance">
       Your database is one connection string{' '}
-      <em class="font-serif font-normal text-accent">away.</em>
+      <em class="font-serif font-normal text-primary">away.</em>
     </h2>
-    <p class="m-0 max-w-[560px] text-base leading-relaxed text-fg-3">
+    <p class="m-0 max-w-[560px] text-base leading-relaxed text-muted-foreground">
       No card, no setup, no install. Connect a Postgres in 30 seconds.
     </p>
     <div class="mt-1.5 flex flex-wrap items-center justify-center gap-2.5">
-      <Button href={APP_URL} variant="primary" kbd="→">
+      <LinkButton href={APP_URL} size="lg" kbd="→">
         Connect a database
-      </Button>
-      <Button href={APP_URL} variant="ghost">
+      </LinkButton>
+      <LinkButton href={APP_URL} variant="outline" size="lg">
         See a demo first
-      </Button>
+      </LinkButton>
     </div>
   </div>
 </section>

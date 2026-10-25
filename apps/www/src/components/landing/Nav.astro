@@ -1,7 +1,7 @@
 ---
 import { APP_URL } from '../../config';
 import Brand from '../ui/Brand.astro';
-import Button from '../ui/Button.astro';
+import LinkButton from '../ui/LinkButton.astro';
 
 const links = [
   { label: 'Features', href: '#features' },
@@ -12,22 +12,25 @@ const links = [
 ];
 ---
 
-<nav class="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-md">
+<nav class="sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md">
   <div class="mx-auto flex max-w-[1200px] items-center gap-7 px-6 py-3 max-sm:px-4">
     <Brand tag="v0.1" />
     <div class="ml-auto flex items-center gap-[22px]">
       {links.map(link => (
-        <a href={link.href} class="text-[13px] text-fg-2 hover:text-fg max-[900px]:hidden">
+        <a
+          href={link.href}
+          class="text-[13px] text-foreground/80 hover:text-foreground max-[900px]:hidden"
+        >
           {link.label}
         </a>
       ))}
       <div class="ml-2 flex gap-1.5">
-        <Button href={APP_URL} variant="ghost" size="sm" class="max-sm:hidden">
+        <LinkButton href={APP_URL} variant="ghost" size="sm" class="max-sm:hidden">
           Sign in
-        </Button>
-        <Button href={APP_URL} variant="primary" size="sm" kbd="↵">
+        </LinkButton>
+        <LinkButton href={APP_URL} size="sm" kbd="↵">
           Open app
-        </Button>
+        </LinkButton>
       </div>
     </div>
   </div>

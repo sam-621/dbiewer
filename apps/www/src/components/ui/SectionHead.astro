@@ -9,11 +9,11 @@ const { eyebrow, sub, class: className } = Astro.props;
 ---
 
 <div class:list={['mb-14 flex flex-col items-center gap-3.5 text-center', className]}>
-  <span class="font-mono text-[11px] font-semibold tracking-[0.08em] text-accent uppercase">
+  <span class="font-mono text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">
     — {eyebrow}
   </span>
-  <h2 class="m-0 max-w-[720px] text-[clamp(28px,4vw,44px)] leading-[1.1] font-semibold tracking-[-0.025em] text-balance [&_em]:font-serif [&_em]:font-normal [&_em]:text-accent">
+  <h2 class="m-0 max-w-[720px] text-[clamp(28px,4vw,44px)] leading-[1.1] font-semibold tracking-[-0.025em] text-balance [&_em]:font-serif [&_em]:font-normal [&_em]:text-primary">
     <slot />
   </h2>
-  {sub && <p class="m-0 max-w-[560px] text-base leading-relaxed text-fg-3">{sub}</p>}
+  {sub && <p class="m-0 max-w-[560px] text-base leading-relaxed text-muted-foreground">{sub}</p>}
 </div>

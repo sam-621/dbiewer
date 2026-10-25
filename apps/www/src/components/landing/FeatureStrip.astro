@@ -1,47 +1,39 @@
 ---
+import { Code, Database, Sparkles, Table } from 'lucide-react';
+
 const items = [
   {
     title: 'Live schema canvas',
     text: 'Every table, view and FK relationship laid out automatically.',
-    icon: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6"/>'
+    icon: Database
   },
   {
     title: 'SQL with brains',
     text: 'Autocomplete for your tables, columns and joins. Run with ⌘↵.',
-    icon: '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/>'
+    icon: Code
   },
   {
     title: 'AI that knows your DB',
     text: 'Ask in plain language, get SQL grounded in your real schema.',
-    icon: '<path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"/>'
+    icon: Sparkles
   },
   {
     title: 'Spreadsheet view',
     text: 'Open any table in fullscreen. Filter, sort, edit cells.',
-    icon: '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 10h18M9 4v16"/>'
+    icon: Table
   }
 ];
 ---
 
 <section class="relative px-6 pb-20 max-sm:px-4">
-  <div class="mx-auto grid max-w-[1100px] grid-cols-4 gap-px overflow-hidden rounded-xl border border-line bg-line max-[900px]:grid-cols-2 max-sm:grid-cols-1">
-    {items.map(item => (
-      <div class="flex flex-col gap-1.5 bg-bg px-5 py-[18px]">
-        <div class="mb-0.5 grid size-7 place-items-center rounded-md bg-accent-soft text-accent">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            set:html={item.icon}
-          />
+  <div class="mx-auto grid max-w-[1100px] grid-cols-4 gap-px overflow-hidden rounded-2xl border bg-border max-[900px]:grid-cols-2 max-sm:grid-cols-1">
+    {items.map(({ title, text, icon: Icon }) => (
+      <div class="flex flex-col gap-1.5 bg-card px-5 py-[18px]">
+        <div class="mb-0.5 grid size-7 place-items-center rounded-md bg-primary/14 text-primary">
+          <Icon className="size-3.5" strokeWidth={1.7} />
         </div>
-        <div class="text-[13px] font-semibold text-fg">{item.title}</div>
-        <div class="text-xs leading-normal text-fg-3">{item.text}</div>
+        <div class="text-[13px] font-semibold text-foreground">{title}</div>
+        <div class="text-xs leading-normal text-muted-foreground">{text}</div>
       </div>
     ))}
   </div>

@@ -6,12 +6,12 @@ interface Props {
 const { label } = Astro.props;
 ---
 
-<div class="relative overflow-hidden rounded-[10px] border border-line bg-bg shadow-[inset_0_0_0_1px_oklch(1_0_0/0.04),0_18px_50px_oklch(0_0_0/0.4)]">
-  <div class="flex h-8 items-center gap-2 border-b border-line bg-bg px-3 text-[11px] text-fg-3">
+<div class="relative overflow-hidden rounded-[10px] border bg-card shadow-[inset_0_0_0_1px_oklch(1_0_0/0.04),0_18px_50px_oklch(0_0_0/0.4)]">
+  <div class="flex h-8 items-center gap-2 border-b bg-card px-3 text-[11px] text-muted-foreground">
     <div class="flex gap-1">
-      <div class="size-2 rounded-full bg-bg-elev-2"></div>
-      <div class="size-2 rounded-full bg-bg-elev-2"></div>
-      <div class="size-2 rounded-full bg-bg-elev-2"></div>
+      <div class="size-2 rounded-full bg-input"></div>
+      <div class="size-2 rounded-full bg-input"></div>
+      <div class="size-2 rounded-full bg-input"></div>
     </div>
     <span class="truncate font-mono text-[10.5px]">
       {label}

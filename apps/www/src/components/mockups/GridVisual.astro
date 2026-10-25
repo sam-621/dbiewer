@@ -12,15 +12,15 @@ const rows = [
 ];
 
 const selectedRow = 1;
-const cell = 'border-r border-b border-line-soft px-[9px] py-1 text-left whitespace-nowrap';
+const cell = 'border-r border-b px-[9px] py-1 text-left whitespace-nowrap';
 ---
 
 <VisualFrame label="public.users · 14,823 rows · filtered">
-  <div class="h-80 overflow-hidden bg-bg-canvas font-mono text-[10.5px]">
+  <div class="h-80 overflow-hidden bg-background font-mono text-[10.5px]">
     <table class="w-full border-separate border-spacing-0">
       <thead>
-        <tr class="[&_th]:bg-bg-elev [&_th]:font-medium [&_th]:text-fg-2">
-          <th class:list={[cell, 'w-7 text-right! text-fg-4!']}>#</th>
+        <tr class="[&_th]:bg-muted [&_th]:font-medium [&_th]:text-foreground/80">
+          <th class:list={[cell, 'w-7 text-right! text-muted-foreground/72!']}>#</th>
           <th class={cell}>
             <span class="mr-1 text-[9px] text-pk">●</span>id
           </th>
@@ -32,11 +32,13 @@ const cell = 'border-r border-b border-line-soft px-[9px] py-1 text-left whitesp
       </thead>
       <tbody>
         {rows.map(([id, email, name, plan, createdAt], index) => (
-          <tr class:list={['text-fg', { '[&_td]:bg-accent-soft': index === selectedRow }]}>
-            <td class:list={[cell, 'text-right! text-fg-4']}>{index + 1}</td>
+          <tr class:list={['text-foreground', { '[&_td]:bg-primary/14': index === selectedRow }]}>
+            <td class:list={[cell, 'text-right! text-muted-foreground/72']}>{index + 1}</td>
             <td class={cell}>{id}</td>
             <td class={cell}>{email}</td>
-            <td class:list={[cell, { 'text-fg-4 italic': name === null }]}>{name ?? 'NULL'}</td>
+            <td class:list={[cell, { 'text-muted-foreground/72 italic': name === null }]}>
+              {name ?? 'NULL'}
+            </td>
             <td class={cell}>{plan}</td>
             <td class:list={[cell, 'text-sql-date']}>{createdAt}</td>
           </tr>

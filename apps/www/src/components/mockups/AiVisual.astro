@@ -15,7 +15,7 @@ const query = `SELECT u.id, u.email, MAX(o.placed_at)
 ---
 
 <VisualFrame label="find churned customers">
-  <div class="flex h-80 flex-col gap-3 overflow-hidden bg-bg p-3.5">
+  <div class="flex h-80 flex-col gap-3 overflow-hidden bg-card p-3.5">
     <ChatMessage from="user" size="md">
       Find users who had orders in October but none after.
     </ChatMessage>
