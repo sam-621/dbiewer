@@ -41,7 +41,7 @@ src/
 ├── services/<servicio>/               servicios externos (ver "Services (externos)")
 ├── schemas/<recurso>-schemas.ts       schemas de zod del input
 ├── errors/<recurso>-errors.ts
-├── config/                            config.ts: variables de entorno validadas con zod; index.ts lo reexporta (@/config)
+├── config/                            config.ts: valida las variables de entorno y las mapea a un objeto (ver "Config"); index.ts lo reexporta (@/config)
 └── shared/
 ```
 
@@ -89,9 +89,15 @@ src/services/emails/
 
 - **Una interface** con los métodos que usan los use-cases (`EmailSender.send`), sin tipos del proveedor.
 - **Un adapter por proveedor**, en `<adapter>/<adapter>-<rol>.ts` con su `index.ts`. Siempre hay uno para desarrollo (consola o local) y uno para tests (dummy), para no depender del proveedor real fuera de producción.
-- **Una factory** (`get<Rol>(config)`) que elige el adapter según una variable de entorno (`EMAIL_SENDER`), no según `NODE_ENV`. La validación de `src/config/` exige las credenciales del adapter elegido y en `production` solo acepta el proveedor real.
+- **Una factory** (`get<Rol>(config)`) que elige el adapter según una variable de entorno (`EMAIL_SENDER`), no según `NODE_ENV`. La factory recibe su parte de la config (`getEmailSender(config.emailSender)`), y `src/config/` exige las credenciales del adapter elegido.
 - La factory se llama en el wiring (`src/app.ts`, `src/services/auth/auth.ts`) y el resultado se pasa al constructor del use-case.
 - Templates y locales van dentro del service solo si el proveedor los necesita (emails sí; storage no). El use-case arma el contenido con el template y el locale y se lo pasa al service ya listo.
+
+## Config
+
+- `src/config/config.ts` valida `process.env` con zod y lo mapea a un objeto en camelCase, agrupado por tema: `config.port`, `config.database.url`, `config.auth.secret`, `config.emailSender.adapter`, `config.emailSender.resend.apiKey`. Nadie más lee `process.env` ni usa los nombres en mayúsculas.
+- Cada service tiene su grupo (`emailSender`, más adelante `billing`, `assetStorage`), con `adapter` y una clave por proveedor con sus credenciales. Su tipo se exporta desde `@/config` (`EmailSenderConfig = Config['emailSender']`).
+- **La config solo valida forma y presencia**: que estén las variables que se necesitan, con el tipo correcto, y las credenciales del adapter elegido. Nada de reglas por ambiente (p. ej. "en production solo `resend`"): cada ambiente se configura con lo que quiera, pero tiene que configurarlo. Por eso ninguna variable tiene default.
 
 ## Repositorios
 

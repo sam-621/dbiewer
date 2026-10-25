@@ -18,26 +18,25 @@ import {
 
 const MAGIC_LINK_EXPIRES_IN_SECONDS = 15 * 60;
 const EMAIL_FROM_NAME = 'dbiewer';
-const LOCAL_EMAIL_FROM = 'no-reply@dbiewer.localhost';
 
 export const createAuth = (adminDb: Database) => {
   const magicLinkUseCase = new MagicLinkUseCase(
     new VerificationRepository(adminDb),
-    getEmailSender(config),
-    { email: config.EMAIL_FROM ?? LOCAL_EMAIL_FROM, name: EMAIL_FROM_NAME }
+    getEmailSender(config.emailSender),
+    { email: config.emailSender.from, name: EMAIL_FROM_NAME }
   );
 
   return betterAuth({
-    baseURL: config.BETTER_AUTH_URL,
-    secret: config.BETTER_AUTH_SECRET,
-    trustedOrigins: [config.WEB_URL],
+    baseURL: config.auth.url,
+    secret: config.auth.secret,
+    trustedOrigins: [config.webUrl],
     database: drizzleAdapter(adminDb, { provider: 'pg', schema }),
     session: {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24
     },
     rateLimit: {
-      enabled: config.NODE_ENV !== 'test',
+      enabled: config.env !== 'test',
       customRules: {
         '/sign-in/magic-link': {
           window: MAGIC_LINK_LIMIT_WINDOW_IN_MINUTES * 60,
@@ -71,7 +70,7 @@ export const createAuth = (adminDb: Database) => {
     ],
     advanced: {
       database: { generateId: () => crypto.randomUUID() },
-      useSecureCookies: config.NODE_ENV !== 'development',
+      useSecureCookies: config.env !== 'development',
       defaultCookieAttributes: { sameSite: 'lax' }
     }
   });

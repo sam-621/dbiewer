@@ -12,12 +12,12 @@ Reglas de negocio y decisiones en `product.md`.
   - `session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 }`.
   - `rateLimit` con una regla para `/sign-in/magic-link`: 3 pedidos cada 10 minutos. El límite por email se aplica en `sendMagicLink`, contando las filas de `verification` del email en esa ventana.
   - `advanced.database.generateId: () => crypto.randomUUID()`, para cumplir con `id uuid` de `docs/database.md`.
-  - `trustedOrigins: [config.WEB_URL]`.
+  - `trustedOrigins: [config.webUrl]`.
   - Cookies `httpOnly` (default de Better Auth), `sameSite: 'lax'` y `useSecureCookies` fuera de desarrollo.
 
 ## Email
 
-- Proveedor: Resend (`resend`). Service externo en `src/services/emails/`: interface `EmailSender` con los adapters `resend`, `console` y `dummy` (`getEmailSender(config)`), template `templates/magic-link-template.tsx` (react-email) y textos en `locales/`. `MagicLinkUseCase` (`src/use-cases/magic-link-use-case.ts`) arma el email y lo envía.
+- Proveedor: Resend (`resend`). Service externo en `src/services/emails/`: interface `EmailSender` con los adapters `resend`, `console` y `dummy` (`getEmailSender(config.emailSender)`), template `templates/magic-link-template.tsx` (react-email) y textos en `locales/`. `MagicLinkUseCase` (`src/use-cases/magic-link-use-case.ts`) arma el email y lo envía.
 - En `development` y `test` no se envía nada: el link se escribe en el log, y los tests e2e lo leen de la tabla `verification`.
 - El texto del email va en inglés o en español, según el `Accept-Language` del request que pidió el link.
 
@@ -110,15 +110,17 @@ Se registra en el mapper de `src/shared/errors/error-handler.ts`.
 
 ## Config (api)
 
-Variables nuevas en `src/config/config.ts`:
+Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 
-| Variable | Uso |
-|----------|-----|
-| `ADMIN_DATABASE_URL` | Conexión que se salta RLS, para Better Auth y la creación del workspace. |
-| `BETTER_AUTH_SECRET` | Firma de cookies y tokens. |
-| `BETTER_AUTH_URL` | URL pública de la api. |
-| `WEB_URL` | Origen del web, para `trustedOrigins` y los redirects. |
-| `RESEND_API_KEY` | Envío del magic link. Opcional en `development` y `test`. |
+| Variable | En `config` | Uso |
+|----------|-------------|-----|
+| `ADMIN_DATABASE_URL` | `database.adminUrl` | Conexión que se salta RLS, para Better Auth y la creación del workspace. |
+| `BETTER_AUTH_SECRET` | `auth.secret` | Firma de cookies y tokens. |
+| `BETTER_AUTH_URL` | `auth.url` | URL pública de la api. |
+| `WEB_URL` | `webUrl` | Origen del web, para `trustedOrigins` y los redirects. |
+| `EMAIL_SENDER` | `emailSender.adapter` | `resend`, `console` o `dummy`. Obligatoria, sin default. |
+| `EMAIL_FROM` | `emailSender.from` | Remitente de los emails. Obligatoria. |
+| `RESEND_API_KEY` | `emailSender.resend.apiKey` | Obligatoria si `EMAIL_SENDER=resend`. |
 
 ## Web
 
