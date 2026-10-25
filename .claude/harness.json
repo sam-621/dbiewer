@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "project": "websql",
-  "displayName": "WebSQL",
+  "project": "dbiewer",
+  "displayName": "dbiewer",
   "description": "Cliente SQL web: conectarse a bases de datos, explorar su esquema y ejecutar queries desde el navegador",
   "language": {
     "docs": "es",

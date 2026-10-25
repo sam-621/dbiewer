@@ -63,8 +63,8 @@ Un archivo por recurso en cada capa (`connection.resolver.ts`, `connection.servi
 
 ## Errores
 
-- Todo error de negocio extiende `WebsqlError` y vive en `errors/<recurso>.errors.ts`. El mensaje incluye los valores que lo causaron.
-- Los services **lanzan** el error. Un handler de errores de Yoga (`src/shared/errors/error-handler.ts`) mapea `WebsqlError` a un error de GraphQL con `extensions: { code }` y su mensaje. Lo demás responde un error genérico sin detalles.
+- Todo error de negocio extiende `DbiewerError` y vive en `errors/<recurso>.errors.ts`. El mensaje incluye los valores que lo causaron.
+- Los services **lanzan** el error. Un handler de errores de Yoga (`src/shared/errors/error-handler.ts`) mapea `DbiewerError` a un error de GraphQL con `extensions: { code }` y su mensaje. Lo demás responde un error genérico sin detalles.
 - Un error nuevo se registra en el mapper del handler con su `code`.
 
 ## Multi-tenant

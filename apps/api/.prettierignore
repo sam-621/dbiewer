@@ -1,0 +1,4 @@
+dist
+database/migrations
+src/shared/graphql/codegen.ts
+*.md

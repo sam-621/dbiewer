@@ -27,9 +27,10 @@ Todo lo que toca una DB real, levanta el server o pega a una API viva. Si hace f
 | `yarn dev` | Levanta la app en local. |
 | `yarn build` | Typecheck y build de producción. |
 | `yarn start` | Corre la build. |
-| `yarn migrate <config>` | Aplica las migraciones pendientes. |
-| `yarn rollback <config>` | Revierte el último batch de migraciones. |
-| `yarn seed` | Siembra datos base. |
+| `yarn migrate <config>` | Aplica las migraciones pendientes. `<config>` es el archivo env con `ADMIN_DATABASE_URL` (p. ej. `.env.migration`). |
+| `yarn seed` | Siembra datos base. Por definir: se agrega cuando exista el primer schema. |
+
+- Drizzle no tiene migraciones de reversa: para deshacer una migración ya aplicada, se crea una nueva con `yarn migrate:make <nombre>` que revierta el cambio.
 
 ## Variables de entorno
 

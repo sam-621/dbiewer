@@ -17,6 +17,6 @@ Backend: conexiones a las bases de datos del usuario, ejecución de queries, esq
 - La lógica de negocio va en `src/services`. Los resolvers solo validan, llaman al service y responden.
 - Sin comentarios en el código.
 - Migraciones solo con `yarn migrate:make <nombre>`, que genera el archivo sin aplicarlo.
-- Nunca correr comandos contra una DB real (`migrate`, `rollback`, `seed`...).
+- Nunca correr comandos contra una DB real (`migrate`, `seed`...).
 - Tests: solo los de la feature, nunca la suite completa.
 - No correr `tsc` para verificar ediciones.

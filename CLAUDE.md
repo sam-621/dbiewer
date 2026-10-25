@@ -1,4 +1,4 @@
-# WebSQL
+# dbiewer
 
 Cliente SQL web: conectarse a bases de datos, explorar su esquema y ejecutar queries desde el navegador
 

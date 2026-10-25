@@ -67,7 +67,7 @@ export const SavedQueryResolver: Resolvers<Context> = {
 ## Errores
 
 ```ts
-export class SavedQueryNotFoundError extends WebsqlError {
+export class SavedQueryNotFoundError extends DbiewerError {
   constructor(id: string) {
     super(`Saved query not found with id ${id}`);
   }

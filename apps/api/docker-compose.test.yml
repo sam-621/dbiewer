@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dbiewer_test
+    ports:
+      - '54329:5432'
+    volumes:
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d dbiewer_test']
+      interval: 1s
+      timeout: 5s
+      retries: 30
