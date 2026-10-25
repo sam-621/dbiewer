@@ -7,14 +7,14 @@ import { toNodeHandler } from 'better-auth/node';
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
 
+import { resolvers } from '@/api/resolvers';
 import type { Database } from '@/persistence/database';
-import { resolvers } from '@/resolvers';
-import { createServices } from '@/services';
-import { createAuth } from '@/shared/auth/auth';
+import { createAuth } from '@/services/auth';
 import type { Context } from '@/shared/context';
 import { maskError } from '@/shared/errors/error-handler';
+import { createUseCases } from '@/use-cases';
 
-const typeDefs = loadFilesSync(fileURLToPath(new URL('./schema', import.meta.url)), {
+const typeDefs = loadFilesSync(fileURLToPath(new URL('./api/schema', import.meta.url)), {
   extensions: ['gql']
 });
 
@@ -25,7 +25,7 @@ export const createApp = (db: Database, adminDb: Database) => {
     schema: makeExecutableSchema<Context>({ typeDefs, resolvers }),
     maskedErrors: { maskError },
     logging: false,
-    context: () => ({ services: createServices(db) })
+    context: () => ({ useCases: createUseCases(db) })
   });
 
   const app = express();

@@ -42,3 +42,6 @@ Todo lo que toca una DB real, levanta el server o pega a una API viva. Si hace f
 | `BETTER_AUTH_SECRET` | Firma de cookies y tokens de Better Auth. Mínimo 32 caracteres (`openssl rand -base64 32`). |
 | `BETTER_AUTH_URL` | URL pública de la api. |
 | `WEB_URL` | Origen del web, para `trustedOrigins` y los redirects. |
+| `EMAIL_SENDER` | Adapter de emails: `resend`, `console` (default; escribe el email en el log) o `dummy` (no hace nada; lo usan los e2e). En `production` solo se acepta `resend`. |
+| `RESEND_API_KEY` | API key de Resend. Obligatoria si `EMAIL_SENDER=resend`. |
+| `EMAIL_FROM` | Dirección remitente de los emails. Obligatoria si `EMAIL_SENDER=resend`. |

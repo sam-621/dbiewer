@@ -1,7 +1,7 @@
 import { createApp } from '@/app';
+import { config } from '@/config';
 import { createDatabase } from '@/persistence/database';
-import { config } from '@/shared/config';
-import { createLogger } from '@/shared/logger/logger';
+import { createLogger } from '@/services/logger';
 
 const logger = createLogger('server');
 const database = createDatabase(config.DATABASE_URL);

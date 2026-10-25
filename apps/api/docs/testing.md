@@ -8,7 +8,7 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 
 | Suite | Sufijo | Comando | Docker | Cuándo |
 |-------|--------|---------|--------|--------|
-| unit | `*.test.ts` | `yarn test` | no | No toca DB ni HTTP |
+| unit | `*.test.ts(x)` | `yarn test` | no | No toca DB ni HTTP |
 | e2e | `*.e2e.test.ts` | `yarn test:e2e` | sí | Pega por HTTP al server |
 
 - Para correr solo una parte: `yarn test:e2e <ruta>`, `-t "<nombre>"`.
@@ -26,7 +26,7 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 
 | Pieza | Test | Ubicación |
 |-------|------|-----------|
-| Service con lógica pura | unit | junto al archivo |
+| Use-case con lógica pura | unit (repositorios y services mockeados) | junto al archivo |
 | Query o mutation de GraphQL | e2e | `tests/<recurso>/<operación>/` |
 
 ## Reglas generales

@@ -4,7 +4,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'database/migrations', 'src/shared/graphql/codegen.ts'] },
+  { ignores: ['dist', 'database/migrations', 'src/api/codegen.ts'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

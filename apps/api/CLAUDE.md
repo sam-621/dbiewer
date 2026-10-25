@@ -6,7 +6,7 @@ Backend: conexiones a las bases de datos del usuario, ejecución de queries, esq
 
 | Si vas a... | Lee |
 |-------------|-----|
-| Escribir o mover lógica de negocio, resolvers, services o repos | `docs/architecture.md` |
+| Escribir o mover lógica de negocio, resolvers, use-cases, services externos o repos | `docs/architecture.md` |
 | Escribir cualquier código | `docs/code-style.md` |
 | Escribir o correr tests | `docs/testing.md` |
 | Crear una migración o tocar queries o índices | `docs/database.md` |
@@ -14,7 +14,7 @@ Backend: conexiones a las bases de datos del usuario, ejecución de queries, esq
 
 ## Reglas que aplican siempre
 
-- La lógica de negocio va en `src/services`. Los resolvers solo validan, llaman al service y responden.
+- La lógica de negocio va en `src/use-cases`. Los resolvers solo validan, llaman al use-case y responden. `src/services` es solo para servicios externos (email, auth, logger, billing, storage), sin reglas de negocio.
 - Sin comentarios en el código.
 - Migraciones solo con `yarn migrate:make <nombre>`, que genera el archivo sin aplicarlo.
 - Nunca correr comandos contra una DB real (`migrate`, `seed`...).

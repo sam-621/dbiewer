@@ -5,7 +5,7 @@ Reglas de negocio y decisiones en `product.md`.
 ## Better Auth (api)
 
 - Paquete `better-auth` con `drizzleAdapter(db, { provider: 'pg' })` y el plugin `magicLink`.
-- Instancia creada con `createAuth(adminDb)` en `src/shared/auth/auth.ts`. La conexión de admin se arma en `src/index.ts` (y en `TestServer`), se inyecta en `createApp` y se cierra en el shutdown y en el teardown de los tests.
+- Instancia creada con `createAuth(adminDb)` en `src/services/auth/auth.ts` (reexportado por `index.ts`). La conexión de admin se arma en `src/index.ts` (y en `TestServer`), se inyecta en `createApp` y se cierra en el shutdown y en el teardown de los tests.
 - Se monta en Express **antes** de Yoga, en `app.all('/api/auth/*splat', toNodeHandler(auth))` (Express 5 no acepta un `*` sin nombre), y sin `express.json()` delante de esa ruta.
 - Configuración:
   - `magicLink({ expiresIn: 900, sendMagicLink })`. `sendMagicLink` usa el servicio de email.
@@ -17,7 +17,7 @@ Reglas de negocio y decisiones en `product.md`.
 
 ## Email
 
-- Proveedor propuesto: Resend (`resend`). Servicio en `src/services/email.service.ts` con un método `sendMagicLink(email, url)`.
+- Proveedor: Resend (`resend`). Service externo en `src/services/emails/`: interface `EmailSender` con los adapters `resend`, `console` y `dummy` (`getEmailSender(config)`), template `templates/magic-link-template.tsx` (react-email) y textos en `locales/`. `MagicLinkUseCase` (`src/use-cases/magic-link-use-case.ts`) arma el email y lo envía.
 - En `development` y `test` no se envía nada: el link se escribe en el log, y los tests e2e lo leen de la tabla `verification`.
 - El texto del email va en inglés o en español, según el `Accept-Language` del request que pidió el link.
 
@@ -48,20 +48,20 @@ Tabla propia:
 
 ## Creación del workspace
 
-- `databaseHooks.user.create.after` llama a `WorkspaceService.createForUser(user)`, que crea el workspace con el nombre inicial de `product.md`.
-- `WorkspaceService.createForUser` usa la conexión de admin, porque todavía no hay tenant en el contexto.
+- `databaseHooks.user.create.after` llama a `WorkspaceUseCase.createForUser(user)`, que crea el workspace con el nombre inicial de `product.md`.
+- `WorkspaceUseCase.createForUser` usa la conexión de admin, porque todavía no hay tenant en el contexto.
 - Si el hook falla, el workspace se crea al resolver el contexto del siguiente request (`getOrCreateForUser`). Así una cuenta nunca queda sin workspace.
 
 ## Contexto del request
 
 - El `context` de Yoga (o un middleware en `src/shared/middlewares/auth.middleware.ts`) llama a `auth.api.getSession({ headers })`.
 - Con sesión: busca el workspace del usuario, abre la conexión del request con `set_config('app.current_tenant_id', workspace.id, true)` dentro de una transacción y arma el contexto.
-- `Context` pasa a ser `{ services, session: { user, workspace } | null }`.
-- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga un helper `requireSession(context)` en `src/shared/auth/`, no cada resolver por su cuenta.
+- `Context` pasa a ser `{ useCases, session: { user, workspace } | null }`.
+- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga un helper `requireSession(context)` en `src/services/auth/`, no cada resolver por su cuenta.
 
 ## API GraphQL
 
-`src/schema/account.gql`:
+`src/api/schema/account.gql`:
 
 ```graphql
 type User {
@@ -93,11 +93,12 @@ type Query {
 
 | Capa | Archivo |
 |------|---------|
-| Schema | `src/schema/account.gql` |
-| Resolvers | `src/resolvers/account.resolver.ts` |
-| Services | `src/services/account.service.ts`, `src/services/workspace.service.ts`, `src/services/email.service.ts` |
-| Repositorios | `src/repositories/workspace.repository.ts` |
-| Errores | `src/errors/account.errors.ts` |
+| Schema | `src/api/schema/account.gql` |
+| Resolvers | `src/api/resolvers/account-resolver.ts` |
+| Use-cases | `src/use-cases/account-use-case.ts`, `src/use-cases/workspace-use-case.ts`, `src/use-cases/magic-link-use-case.ts` |
+| Services externos | `src/services/auth/` (Better Auth), `src/services/emails/` |
+| Repositorios | `src/persistence/repositories/workspace/`, `src/persistence/repositories/verification/` |
+| Errores | `src/errors/account-errors.ts` |
 
 ### Errores
 
@@ -109,7 +110,7 @@ Se registra en el mapper de `src/shared/errors/error-handler.ts`.
 
 ## Config (api)
 
-Variables nuevas en `src/shared/config.ts`:
+Variables nuevas en `src/config/config.ts`:
 
 | Variable | Uso |
 |----------|-----|
@@ -135,7 +136,7 @@ Variables nuevas en `src/shared/config.ts`:
 
 - `apps/api/src/app.ts`: monta Better Auth antes de Yoga, y el contexto resuelve la sesión.
 - `apps/api/src/shared/context.ts`: agrega `session`.
-- `apps/api/src/services/index.ts`: registra los services nuevos.
+- `apps/api/src/use-cases/index.ts`: registra los use-cases nuevos.
 - `apps/api/docs/architecture.md`: el apartado Multi-tenant pasa a decir que el tenant es el workspace y cómo llega al contexto. El cambio se propone al terminar el paso 3.
 - `apps/web/src/app/app.tsx`: rutas `/login` y `/`, con sus guards.
 - `apps/web/vite.config.ts`: proxy a la api.

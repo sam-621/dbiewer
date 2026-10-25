@@ -1,8 +1,8 @@
 import winston from 'winston';
 
-import { config } from '@/shared/config';
+import { config } from '@/config';
 
-import { inlineLoggerFormat, structuredLoggerFormat } from './logger.formats';
+import { inlineLoggerFormat, structuredLoggerFormat } from './logger-formats';
 
 export type Logger = winston.Logger;
 

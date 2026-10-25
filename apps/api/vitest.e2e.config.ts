@@ -14,7 +14,8 @@ export default defineConfig({
       ADMIN_DATABASE_URL: 'postgres://postgres:postgres@localhost:54329/dbiewer_test',
       BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-characters',
       BETTER_AUTH_URL: 'http://localhost:4000',
-      WEB_URL: 'http://localhost:5173'
+      WEB_URL: 'http://localhost:5173',
+      EMAIL_SENDER: 'dummy'
     }
   }
 });

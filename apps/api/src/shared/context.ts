@@ -1,5 +1,5 @@
-import type { Services } from '@/services';
+import type { UseCases } from '@/use-cases';
 
 export type Context = {
-  services: Services;
+  useCases: UseCases;
 };

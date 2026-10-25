@@ -6,5 +6,5 @@ export default defineConfig({
   target: 'node24',
   outDir: 'dist',
   clean: true,
-  onSuccess: 'cp -R src/schema dist/schema'
+  onSuccess: 'mkdir -p dist/api && cp -R src/api/schema dist/api/schema'
 });
