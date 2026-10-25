@@ -47,6 +47,14 @@
       "tests": "e2e",
       "agents": true,
       "location": "apps"
+    },
+    {
+      "name": "www",
+      "kind": "site",
+      "description": "Landing de dbiewer: presenta el producto y lleva al cliente web",
+      "stack": "Astro, Tailwind",
+      "agents": false,
+      "location": "apps"
     }
   ]
 }

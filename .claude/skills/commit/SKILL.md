@@ -20,7 +20,7 @@ disable-model-invocation: true
 
 ## Scope
 
-- El scope es la app: `api`, `web`.
+- El scope es la app: `api`, `web`, `www`.
 - Sin scope cuando el cambio es de la raíz del repo (`features/`, `.claude/`, `CLAUDE.md` raíz): `docs: add features folder`.
 
 ## Pasos

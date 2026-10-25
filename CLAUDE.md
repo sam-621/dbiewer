@@ -10,6 +10,7 @@ Monorepo sin workspaces: cada app en `apps/` tiene su propio `package.json`, `no
 |-----|--------|-------|
 | `apps/api` | Backend: conexiones a las bases de datos del usuario, ejecución de queries, esquema e historial | Express, GraphQL Yoga, Drizzle, Postgres |
 | `apps/web` | Cliente web: editor SQL, explorador del esquema, grilla de resultados e historial | React, Vite, Tailwind, i18next |
+| `apps/www` | Landing de dbiewer: presenta el producto y lleva al cliente web | Astro, Tailwind |
 
 Antes de escribir código en una app, leer su `CLAUDE.md`.
 

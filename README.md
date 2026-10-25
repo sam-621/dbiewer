@@ -8,6 +8,7 @@ Web SQL client: connect to databases, explore their schema and run queries from 
 |-----|------------|-------|
 | `apps/api` | Backend: connections to the user's databases, query execution, schema and history | Express, GraphQL Yoga, Drizzle, Postgres |
 | `apps/web` | Web client: SQL editor, schema explorer, results grid and history | React, Vite, Tailwind, i18next |
+| `apps/www` | dbiewer landing: presents the product and links to the web client | Astro, Tailwind |
 
 ## Working with Claude Code
 
