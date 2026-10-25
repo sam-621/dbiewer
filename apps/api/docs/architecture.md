@@ -71,4 +71,6 @@ Un archivo por recurso en cada capa (`connection.resolver.ts`, `connection.servi
 
 - Cada tabla con `tenant_id` tiene RLS en Postgres que lee `app.current_tenant_id`.
 - El middleware de auth abre la conexión del request a la DB propia con `set_config('app.current_tenant_id', ...)`. Ningún service filtra por tenant a mano.
-- Los tests y scripts con `ADMIN_DATABASE_URL` se saltan RLS.
+- `ADMIN_DATABASE_URL` se salta RLS. La usan los tests, los scripts y, en runtime, solo Better Auth y la creación del workspace (todavía no hay tenant en el contexto).
+- Las conexiones (`db` con `DATABASE_URL`, `adminDb` con `ADMIN_DATABASE_URL`) se crean en `src/index.ts` y se inyectan en `createApp(db, adminDb)`. Ningún módulo abre su propia conexión al importarse.
+- Sus pools se cierran en el shutdown de `src/index.ts` (`SIGINT`/`SIGTERM`) y en `TestServer.teardown()`.

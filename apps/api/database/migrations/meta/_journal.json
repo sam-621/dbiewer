@@ -8,6 +8,20 @@
       "when": 1792894367971,
       "tag": "0000_app_user_privileges",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792904018535,
+      "tag": "0001_create_auth_and_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792950645732,
+      "tag": "0002_auth_rls_and_privileges",
+      "breakpoints": true
     }
   ]
 }

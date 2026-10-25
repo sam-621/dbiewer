@@ -38,4 +38,7 @@ Todo lo que toca una DB real, levanta el server o pega a una API viva. Si hace f
 |----------|----------|
 | `PORT` | Puerto del server. |
 | `DATABASE_URL` | Conexión de la app. |
-| `ADMIN_DATABASE_URL` | Conexión como superusuario, solo para tests y scripts. Se salta RLS. |
+| `ADMIN_DATABASE_URL` | Conexión como superusuario. Se salta RLS. La usan los tests, los scripts y, en runtime, Better Auth y la creación del workspace. |
+| `BETTER_AUTH_SECRET` | Firma de cookies y tokens de Better Auth. Mínimo 32 caracteres (`openssl rand -base64 32`). |
+| `BETTER_AUTH_URL` | URL pública de la api. |
+| `WEB_URL` | Origen del web, para `trustedOrigins` y los redirects. |

@@ -5,14 +5,15 @@ Reglas de negocio y decisiones en `product.md`.
 ## Better Auth (api)
 
 - Paquete `better-auth` con `drizzleAdapter(db, { provider: 'pg' })` y el plugin `magicLink`.
-- Instancia en `src/shared/auth/auth.ts`. Se monta en Express **antes** de Yoga, en `app.all('/api/auth/*', toNodeHandler(auth))`, y sin `express.json()` delante de esa ruta.
+- Instancia creada con `createAuth(adminDb)` en `src/shared/auth/auth.ts`. La conexión de admin se arma en `src/index.ts` (y en `TestServer`), se inyecta en `createApp` y se cierra en el shutdown y en el teardown de los tests.
+- Se monta en Express **antes** de Yoga, en `app.all('/api/auth/*splat', toNodeHandler(auth))` (Express 5 no acepta un `*` sin nombre), y sin `express.json()` delante de esa ruta.
 - Configuración:
   - `magicLink({ expiresIn: 900, sendMagicLink })`. `sendMagicLink` usa el servicio de email.
   - `session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 }`.
   - `rateLimit` con una regla para `/sign-in/magic-link`: 3 pedidos cada 10 minutos. El límite por email se aplica en `sendMagicLink`, contando las filas de `verification` del email en esa ventana.
   - `advanced.database.generateId: () => crypto.randomUUID()`, para cumplir con `id uuid` de `docs/database.md`.
   - `trustedOrigins: [config.WEB_URL]`.
-  - Cookies `httpOnly`, `sameSite: 'lax'` y `secure` fuera de desarrollo.
+  - Cookies `httpOnly` (default de Better Auth), `sameSite: 'lax'` y `useSecureCookies` fuera de desarrollo.
 
 ## Email
 
@@ -39,10 +40,11 @@ Tabla propia:
 |-------|----------|-------|
 | `workspace` | `id uuid`, `owner_user_id uuid` (FK a `user`, único, `ON DELETE CASCADE`), `name text`, `created_at`, `updated_at` | Su `id` es el `tenant_id` del resto de las tablas. |
 
-- `workspace` no lleva `tenant_id` porque es el tenant. Tiene RLS con una policy que solo deja ver la fila cuyo `id` es `app.current_tenant_id`.
-- Las tablas de auth no tienen RLS: solo las toca Better Auth, con la conexión de admin.
+- `workspace` no lleva `tenant_id` porque es el tenant. Tiene RLS (`ENABLE` y `FORCE`) con la policy `workspace_tenant_isolation`, que solo deja ver la fila cuyo `id` es `nullif(current_setting('app.current_tenant_id', true), '')::uuid`. Sin tenant en la conexión devuelve cero filas.
+- Las tablas de auth no tienen RLS: solo las toca Better Auth, con la conexión de admin. La migración les hace `REVOKE ALL ... FROM app_user`, así la conexión de los requests no puede leer sesiones ni tokens.
+- Fechas `timestamp with time zone`.
 - Las tablas futuras con `tenant_id` llevan FK a `workspace(id)` con `ON DELETE CASCADE`.
-- Migración: `yarn migrate:make create_auth_and_workspace`. Aplicarla le toca al usuario.
+- Migraciones: `0001_create_auth_and_workspace` (generada) y `0002_auth_rls_and_privileges` (custom, con el `FORCE` de `workspace` y el `REVOKE` de las tablas de auth). Aplicarlas le toca al usuario.
 
 ## Creación del workspace
 
@@ -85,7 +87,7 @@ type Query {
 ```
 
 - `me` devuelve `null` si no hay sesión, en lugar de lanzar un error. El web lo usa para saber si hay sesión.
-- Login y logout no pasan por GraphQL: son endpoints de Better Auth en `/api/auth/*`.
+- Login y logout no pasan por GraphQL: son endpoints de Better Auth en `/api/auth/*splat`.
 
 ### Capas
 

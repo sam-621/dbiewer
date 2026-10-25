@@ -11,7 +11,10 @@ export default defineConfig({
       NODE_ENV: 'test',
       PORT: '0',
       DATABASE_URL: 'postgres://app_user:app_user@localhost:54329/dbiewer_test',
-      ADMIN_DATABASE_URL: 'postgres://postgres:postgres@localhost:54329/dbiewer_test'
+      ADMIN_DATABASE_URL: 'postgres://postgres:postgres@localhost:54329/dbiewer_test',
+      BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-characters',
+      BETTER_AUTH_URL: 'http://localhost:4000',
+      WEB_URL: 'http://localhost:5173'
     }
   }
 });

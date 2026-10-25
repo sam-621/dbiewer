@@ -70,7 +70,7 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 
 ## Plan de trabajo recomendado
 
-1. [ ] api: Better Auth montado en Express con Drizzle, tablas de auth y `workspace` con su migración y RLS.
+1. [x] api: Better Auth montado en Express con Drizzle, tablas de auth y `workspace` con su migración y RLS.
 2. [ ] api: magic link con envío de email y límite de pedidos.
 3. [ ] api: creación del workspace al crear la cuenta y contexto del request con usuario, workspace y `app.current_tenant_id`.
 4. [ ] api: query `me` y sus tests e2e, incluido el aislamiento por RLS.

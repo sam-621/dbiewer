@@ -13,22 +13,23 @@ type GraphQLResponse<T> = {
   errors?: Array<{ message: string; extensions?: { code?: string } }>;
 };
 
-const getDatabaseUrl = () => {
-  const url = process.env.DATABASE_URL;
+const getEnv = (name: 'DATABASE_URL' | 'ADMIN_DATABASE_URL') => {
+  const url = process.env[name];
 
-  if (!url) throw new Error('DATABASE_URL is required for e2e tests');
+  if (!url) throw new Error(`${name} is required for e2e tests`);
 
   return url;
 };
 
 export class TestServer {
   private readonly headers: Record<string, string>;
-  private readonly database = createDatabase(getDatabaseUrl());
+  private readonly database = createDatabase(getEnv('DATABASE_URL'));
+  private readonly adminDatabase = createDatabase(getEnv('ADMIN_DATABASE_URL'));
   private readonly server: Server;
 
   constructor(options: TestServerOptions = {}) {
     this.headers = options.headers ?? {};
-    this.server = createApp(this.database.db).listen(0);
+    this.server = createApp(this.database.db, this.adminDatabase.db).listen(0);
   }
 
   async query<T>(
@@ -52,5 +53,6 @@ export class TestServer {
       this.server.close(error => (error ? reject(error) : resolve()))
     );
     await this.database.pool.end();
+    await this.adminDatabase.pool.end();
   }
 }
