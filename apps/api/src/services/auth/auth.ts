@@ -4,11 +4,9 @@ import { APIError } from 'better-auth/api';
 import { magicLink } from 'better-auth/plugins/magic-link';
 
 import { config } from '@/config';
+import type { AppContext } from '@/context';
 import { MagicLinkLimitExceededError } from '@/errors/magic-link-errors';
-import type { Database } from '@/persistence/database';
-import { VerificationRepository } from '@/persistence/repositories/verification-repository';
 import * as schema from '@/persistence/schema';
-import { getEmailSender } from '@/services/emails/senders/email-sender';
 import { resolveLocale } from '@/shared/utils/locale';
 import {
   MAGIC_LINK_LIMIT,
@@ -19,18 +17,12 @@ import {
 const MAGIC_LINK_EXPIRES_IN_SECONDS = 15 * 60;
 const EMAIL_FROM_NAME = 'dbiewer';
 
-export const createAuth = (adminDb: Database) => {
-  const magicLinkUseCase = new MagicLinkUseCase(
-    new VerificationRepository(adminDb),
-    getEmailSender(config.emailSender),
-    { email: config.emailSender.from, name: EMAIL_FROM_NAME }
-  );
-
-  return betterAuth({
+export const createAuth = (appContext: AppContext) =>
+  betterAuth({
     baseURL: config.auth.url,
     secret: config.auth.secret,
     trustedOrigins: [config.webUrl],
-    database: drizzleAdapter(adminDb, { provider: 'pg', schema }),
+    database: drizzleAdapter(appContext.databases.admin, { provider: 'pg', schema }),
     session: {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24
@@ -48,6 +40,12 @@ export const createAuth = (adminDb: Database) => {
       magicLink({
         expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
         sendMagicLink: async ({ email, url, token }, ctx) => {
+          const magicLinkUseCase = new MagicLinkUseCase(
+            appContext.repositories.verification,
+            appContext.services.emailSender,
+            { email: config.emailSender.from, name: EMAIL_FROM_NAME }
+          );
+
           try {
             await magicLinkUseCase.send({
               email,
@@ -74,6 +72,5 @@ export const createAuth = (adminDb: Database) => {
       defaultCookieAttributes: { sameSite: 'lax' }
     }
   });
-};
 
 export type Auth = ReturnType<typeof createAuth>;

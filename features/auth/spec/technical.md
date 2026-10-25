@@ -5,7 +5,7 @@ Reglas de negocio y decisiones en `product.md`.
 ## Better Auth (api)
 
 - Paquete `better-auth` con `drizzleAdapter(db, { provider: 'pg' })` y el plugin `magicLink`.
-- Instancia creada con `createAuth(adminDb)` en `src/services/auth/auth.ts` (reexportado por `index.ts`). La conexión de admin se arma en `src/index.ts` (y en `TestServer`), se inyecta en `createApp` y se cierra en el shutdown y en el teardown de los tests.
+- Instancia creada con `createAuth(appContext)` en `src/services/auth/auth.ts` (reexportado por `index.ts`). Usa `appContext.databases.admin` para el adaptador de Drizzle y, en `sendMagicLink`, instancia `MagicLinkUseCase` con `appContext.repositories.verification` y `appContext.services.emailSender`. Las conexiones se arman en `src/index.ts` (y en `TestServer`), entran al app context y se cierran en el shutdown y en el teardown de los tests.
 - Se monta en Express **antes** de Yoga, en `app.all('/api/auth/*splat', toNodeHandler(auth))` (Express 5 no acepta un `*` sin nombre), y sin `express.json()` delante de esa ruta.
 - Configuración:
   - `magicLink({ expiresIn: 900, sendMagicLink })`. `sendMagicLink` usa el servicio de email.

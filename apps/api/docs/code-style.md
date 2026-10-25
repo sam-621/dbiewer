@@ -43,12 +43,13 @@ Los sufijos que piden las herramientas se mantienen con punto: `.test.ts`, `.e2e
   | Carpeta | Archivo principal | Import |
   |---------|-------------------|--------|
   | `config/` | `config.ts` | `@/config` |
+  | `context/` | `app-context.ts` (y el contexto del request cuando exista) | `@/context` |
   | `services/auth/` | `auth.ts` | `@/services/auth` |
   | `services/logger/` | `logger.ts` | `@/services/logger` |
   | `services/emails/senders/resend/` | `resend-sender.ts` | `./resend` |
   | `persistence/repositories/verification/` | `verification-repository.ts` | `@/persistence/repositories/verification` |
 
-- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/use-cases/magic-link-use-case`). Su `index.ts`, si existe, no reexporta: arma algo (`createUseCases`, el array de `resolvers`).
+- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/use-cases/magic-link-use-case`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).
 
 ## Use-case
 
@@ -72,16 +73,18 @@ export class SavedQueryUseCase {
 ## Resolver
 
 ```ts
-export const SavedQueryResolver: Resolvers<Context> = {
+export const SavedQueryResolver: Resolvers = {
   Mutation: {
-    renameSavedQuery: async (_parent, args, ctx) => {
+    renameSavedQuery: async (_parent, args) => {
       const input = RenameSavedQuerySchema.parse(args.input);
 
-      return ctx.useCases.savedQuery.rename(input);
+      return savedQueryUseCase.rename(input);
     }
   }
 };
 ```
+
+De dónde sale `savedQueryUseCase` se define con el contexto del request.
 
 ## Errores
 

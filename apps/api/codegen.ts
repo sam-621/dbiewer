@@ -6,7 +6,6 @@ const config: CodegenConfig = {
     'src/api/codegen.ts': {
       plugins: ['typescript', 'typescript-resolvers'],
       config: {
-        contextType: '@/shared/context#Context',
         useTypeImports: true,
         enumsAsTypes: true
       }

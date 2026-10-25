@@ -50,7 +50,7 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 ## Resolvers
 
 - Validan el input con el schema de `schemas/` (`CreateConnectionSchema.parse(args.input)`); si falla, el error se responde con los issues.
-- Llaman a un solo método del use-case (`ctx.useCases.<recurso>`) y responden. Sin `if` de negocio.
+- Llaman a un solo método del use-case y responden. Sin `if` de negocio. De dónde sale el use-case se define con el contexto del request.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
 
 ## Use-cases
@@ -59,7 +59,7 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 - Reciben por constructor sus repositorios y los services externos que usen.
 - Las reglas de negocio viven aquí. Si una regla la usan varios use-cases, se mueve a `src/shared/` o a un use-case propio.
 - Si una acción escribe en varias tablas, abre una transacción y la pasa a los repositorios.
-- `createUseCases(db)` (`src/use-cases/index.ts`) los arma por request y quedan en el contexto de GraphQL como `useCases`.
+- Se instancian donde se usan, con lo que necesitan del app context (ver "App context"). No hay un registro de use-cases.
 
 ## Services (externos)
 
@@ -90,8 +90,26 @@ src/services/emails/
 - **Una interface** con los métodos que usan los use-cases (`EmailSender.send`), sin tipos del proveedor.
 - **Un adapter por proveedor**, en `<adapter>/<adapter>-<rol>.ts` con su `index.ts`. Siempre hay uno para desarrollo (consola o local) y uno para tests (dummy), para no depender del proveedor real fuera de producción.
 - **Una factory** (`get<Rol>(config)`) que elige el adapter según una variable de entorno (`EMAIL_SENDER`), no según `NODE_ENV`. La factory recibe su parte de la config (`getEmailSender(config.emailSender)`), y `src/config/` exige las credenciales del adapter elegido.
-- La factory se llama en el wiring (`src/app.ts`, `src/services/auth/auth.ts`) y el resultado se pasa al constructor del use-case.
+- La factory se llama una sola vez, en `createAppContext`, y el service queda en `appContext.services`. De ahí se pasa al constructor del use-case.
 - Templates y locales van dentro del service solo si el proveedor los necesita (emails sí; storage no). El use-case arma el contenido con el template y el locale y se lo pasa al service ya listo.
+
+## App context
+
+Hay dos contextos:
+
+- **App context** (`src/context/app-context.ts`, se importa desde `@/context`): lo que vive mientras vive la app. Se arma una sola vez con `createAppContext(databases)` en `src/index.ts` (y en `TestServer`) y se pasa a `createApp(appContext)`, que se lo da a quien lo necesite (`createAuth(appContext)`, el contexto de GraphQL).
+- **Contexto del request** (GraphQL): lo de cada request (sesión, conexión con el tenant). Todavía no existe: Yoga corre sin `context` y se agrega cuando lleguen los resolvers con sesión.
+
+El app context lleva, ya instanciados:
+
+| Clave | Qué |
+|-------|-----|
+| `databases` | `app` (`DATABASE_URL`, con RLS) y `admin` (`ADMIN_DATABASE_URL`, se salta RLS). |
+| `services` | Los services externos (`emailSender`). Su factory se llama aquí. |
+| `repositories` | Los repositorios (`verification`), cada uno con la conexión que le corresponde. |
+
+- **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new MagicLinkUseCase(appContext.repositories.verification, appContext.services.emailSender, ...)`.
+- Un service, repositorio o conexión nuevo se agrega al tipo `AppContext` y a `createAppContext`.
 
 ## Config
 
@@ -121,5 +139,5 @@ src/services/emails/
 - Cada tabla con `tenant_id` tiene RLS en Postgres que lee `app.current_tenant_id`.
 - El middleware de auth abre la conexión del request a la DB propia con `set_config('app.current_tenant_id', ...)`. Ningún use-case filtra por tenant a mano.
 - `ADMIN_DATABASE_URL` se salta RLS. La usan los tests, los scripts y, en runtime, solo Better Auth y la creación del workspace (todavía no hay tenant en el contexto).
-- Las conexiones (`db` con `DATABASE_URL`, `adminDb` con `ADMIN_DATABASE_URL`) se crean en `src/index.ts` y se inyectan en `createApp(db, adminDb)`. Ningún módulo abre su propia conexión al importarse.
+- Las conexiones (`app` con `DATABASE_URL`, `admin` con `ADMIN_DATABASE_URL`) se crean en `src/index.ts` (y en `TestServer`) y entran al app context (`appContext.databases`). Ningún módulo abre su propia conexión al importarse.
 - Sus pools se cierran en el shutdown de `src/index.ts` (`SIGINT`/`SIGTERM`) y en `TestServer.teardown()`.

@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 import { createApp } from '@/app';
+import { createAppContext } from '@/context';
 import { createDatabase } from '@/persistence/database';
 
 type TestServerOptions = {
@@ -29,7 +30,9 @@ export class TestServer {
 
   constructor(options: TestServerOptions = {}) {
     this.headers = options.headers ?? {};
-    this.server = createApp(this.database.db, this.adminDatabase.db).listen(0);
+    this.server = createApp(
+      createAppContext({ app: this.database.db, admin: this.adminDatabase.db })
+    ).listen(0);
   }
 
   async query<T>(

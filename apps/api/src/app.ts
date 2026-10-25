@@ -1,4 +1,3 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import { fileURLToPath } from 'node:url';
 
 import { loadFilesSync } from '@graphql-tools/load-files';
@@ -8,24 +7,21 @@ import express from 'express';
 import { createYoga } from 'graphql-yoga';
 
 import { resolvers } from '@/api/resolvers';
-import type { Database } from '@/persistence/database';
+import type { AppContext } from '@/context';
 import { createAuth } from '@/services/auth';
-import type { Context } from '@/shared/context';
 import { maskError } from '@/shared/errors/error-handler';
-import { createUseCases } from '@/use-cases';
 
 const typeDefs = loadFilesSync(fileURLToPath(new URL('./api/schema', import.meta.url)), {
   extensions: ['gql']
 });
 
-export const createApp = (db: Database, adminDb: Database) => {
-  const auth = createAuth(adminDb);
+export const createApp = (appContext: AppContext) => {
+  const auth = createAuth(appContext);
 
-  const yoga = createYoga<{ req: IncomingMessage; res: ServerResponse }, Context>({
-    schema: makeExecutableSchema<Context>({ typeDefs, resolvers }),
+  const yoga = createYoga({
+    schema: makeExecutableSchema({ typeDefs, resolvers }),
     maskedErrors: { maskError },
-    logging: false,
-    context: () => ({ useCases: createUseCases(db) })
+    logging: false
   });
 
   const app = express();
