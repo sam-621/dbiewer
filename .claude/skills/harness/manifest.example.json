@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "project": "acme",
+  "displayName": "Acme",
+  "description": "Plataforma para que las tiendas vendan en línea",
+  "language": {
+    "docs": "es",
+    "code": "en"
+  },
+  "packageManager": "yarn",
+  "workspaces": true,
+  "commits": {
+    "body": false,
+    "attribution": false
+  },
+  "style": {
+    "comments": "none"
+  },
+  "apps": [
+    {
+      "name": "api",
+      "kind": "backend",
+      "description": "Backend: admin API y storefront API",
+      "stack": "Express, GraphQL Yoga, Knex, Postgres",
+      "architecture": "ddd",
+      "api": "graphql",
+      "db": "knex",
+      "rls": true,
+      "errors": "return",
+      "tests": "full",
+      "agents": true,
+      "location": "apps"
+    },
+    {
+      "name": "admin",
+      "kind": "frontend",
+      "description": "Panel de administración de las tiendas",
+      "stack": "React, Vite, Tailwind, i18next",
+      "framework": "react-vite",
+      "backend": "api",
+      "data": "graphql",
+      "i18n": [
+        "en",
+        "es"
+      ],
+      "uiLanguage": "es",
+      "ui": "shadcn",
+      "forms": "rhf",
+      "tests": "none",
+      "agents": true,
+      "location": "apps"
+    },
+    {
+      "name": "types",
+      "kind": "custom",
+      "location": "packages",
+      "description": "Tipos de GraphQL compartidos",
+      "stack": "TypeScript, graphql-codegen",
+      "purpose": "Tipos generados con codegen desde el schema de apps/api, compartidos con los frontends. Solo tipos: sin código de runtime ni dependencias de producción.",
+      "consumers": [
+        "admin"
+      ],
+      "tests": "none",
+      "agents": true
+    },
+    {
+      "name": "www",
+      "kind": "site",
+      "description": "Landing",
+      "stack": "Astro, Tailwind",
+      "agents": false,
+      "location": "apps"
+    }
+  ]
+}
