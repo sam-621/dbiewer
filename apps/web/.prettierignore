@@ -1,0 +1,5 @@
+dist
+src/lib/api/codegen
+playwright-report
+test-results
+*.md
