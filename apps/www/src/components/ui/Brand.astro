@@ -1,0 +1,17 @@
+---
+import BrandMark from './BrandMark.astro';
+
+interface Props {
+  tag?: string;
+}
+
+const { tag } = Astro.props;
+---
+
+<a href="/" class="flex items-center gap-2">
+  <BrandMark />
+  <span class="text-sm font-semibold tracking-[-0.01em]">
+    dbiewer<span class="ml-0.5 font-normal text-fg-4"> /</span>
+  </span>
+  {tag && <span class="font-mono text-[11px] text-fg-3">{tag}</span>}
+</a>

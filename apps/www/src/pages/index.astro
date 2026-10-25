@@ -1,9 +1,31 @@
 ---
+import Faq from '../components/landing/Faq.astro';
+import FeatureStrip from '../components/landing/FeatureStrip.astro';
+import Features from '../components/landing/Features.astro';
+import FinalCta from '../components/landing/FinalCta.astro';
+import Footer from '../components/landing/Footer.astro';
+import Hero from '../components/landing/Hero.astro';
+import HowItWorks from '../components/landing/HowItWorks.astro';
+import Nav from '../components/landing/Nav.astro';
+import Pricing from '../components/landing/Pricing.astro';
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="dbiewer">
-  <main class="flex min-h-screen items-center justify-center">
-    <h1 class="text-4xl font-bold">dbiewer</h1>
-  </main>
+<Layout
+  title="dbiewer · See your schema. Query it. Ask it."
+  description="A visual workspace for Postgres, MySQL and SQLite: a live schema canvas, an SQL playground with real autocomplete, and an AI that knows your schema."
+>
+  <div class="flex flex-col">
+    <Nav />
+    <main>
+      <Hero />
+      <FeatureStrip />
+      <Features />
+      <HowItWorks />
+      <Pricing />
+      <Faq />
+      <FinalCta />
+    </main>
+    <Footer />
+  </div>
 </Layout>

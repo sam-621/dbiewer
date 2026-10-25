@@ -1,0 +1,27 @@
+---
+import ChatMessage from './ChatMessage.astro';
+import SqlCard from './SqlCard.astro';
+import VisualFrame from './VisualFrame.astro';
+
+const query = `SELECT u.id, u.email, MAX(o.placed_at)
+  FROM users u
+  JOIN orders o ON o.user_id = u.id
+ WHERE o.placed_at >= '2025-10-01'
+   AND u.id NOT IN (
+     SELECT user_id FROM orders
+      WHERE placed_at >= '2025-11-01'
+   )
+ GROUP BY u.id;`;
+---
+
+<VisualFrame label="find churned customers">
+  <div class="flex h-80 flex-col gap-3 overflow-hidden bg-bg p-3.5">
+    <ChatMessage from="user" size="md">
+      Find users who had orders in October but none after.
+    </ChatMessage>
+    <ChatMessage from="bot" size="md">
+      Using <code>orders.placed_at</code> with two date ranges and an anti-join:
+    </ChatMessage>
+    <SqlCard file="churned_users.sql" code={query} size="md" />
+  </div>
+</VisualFrame>

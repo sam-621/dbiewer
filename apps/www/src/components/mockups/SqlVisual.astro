@@ -1,0 +1,53 @@
+---
+import SqlCode from './SqlCode.astro';
+import VisualFrame from './VisualFrame.astro';
+
+const code = `-- Top customers, last 90 days
+SELECT u.full_name, u.email,
+       COUNT(o.*) AS orders,
+       SUM(o.total_cents) / 100.0
+  FROM users u
+  JOIN orders o ON o.user`;
+
+const suggestions = [
+  { name: 'user_id', type: 'uuid', active: true },
+  { name: 'id', type: 'uuid' },
+  { name: 'status', type: 'enum' },
+  { name: 'total_cents', type: 'integer' },
+  { name: 'placed_at', type: 'timestamp' }
+];
+---
+
+<VisualFrame label="top_customers.sql · ">
+  <Fragment slot="label">
+    <span class="text-accent">●</span> unsaved
+  </Fragment>
+  <div class="flex h-80 flex-col bg-bg-canvas">
+    <div class="flex h-[30px] items-center gap-2 border-b border-line bg-bg px-2.5">
+      <div class="inline-flex items-center gap-[5px] rounded bg-accent px-[9px] py-[3px] text-[10.5px] font-semibold text-accent-ink">
+        ▸ Run <span class="ml-1 font-mono font-medium opacity-60">⌘↵</span>
+      </div>
+      <span class="font-mono text-[10.5px] text-fg-3">duento_prod</span>
+      <span class="ml-auto font-mono text-[10.5px] text-good">● 10 rows · 124ms</span>
+    </div>
+    <div class="relative flex-1 overflow-hidden px-3 py-2.5 font-mono text-[11.5px] leading-[1.55] text-fg">
+      <pre class="m-0 inline font-[inherit] whitespace-pre"><SqlCode code={code} tables={['users', 'orders']} columns={['email']} /><span class="bg-[oklch(0.22_0.006_80)] px-px">_<span class="-mx-px inline-block h-[1em] w-[1.5px] bg-accent align-middle"></span></span></pre>
+      <div class="absolute top-20 left-[100px] w-[200px] overflow-hidden rounded-md border border-line bg-bg-elev font-sans text-[11px] shadow-[0_8px_22px_oklch(0_0_0/0.5)]">
+        {suggestions.map(suggestion => (
+          <div
+            class:list={[
+              'flex items-center gap-[7px] px-[9px] py-1',
+              { 'bg-accent-soft': suggestion.active }
+            ]}
+          >
+            <div class="grid size-3.5 flex-none place-items-center rounded-[3px] bg-[oklch(0.5_0.08_160/0.3)] font-mono text-[8px] font-semibold text-[oklch(0.85_0.1_160)]">
+              c
+            </div>
+            <span class="font-mono text-[11px]">{suggestion.name}</span>
+            <span class="ml-auto font-mono text-[10px] text-fg-3">{suggestion.type}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</VisualFrame>

@@ -1,0 +1,52 @@
+---
+import MiniTable from './MiniTable.astro';
+import Relations from './Relations.astro';
+import VisualFrame from './VisualFrame.astro';
+---
+
+<VisualFrame label="public.* — 6 tables · 8 relations">
+  <div class="bg-dots relative h-80 overflow-hidden bg-bg-canvas">
+    <Relations
+      muted
+      relations={[
+        { d: 'M 180 70 C 220 70, 200 70, 240 70' },
+        { d: 'M 180 70 C 230 70, 230 190, 240 190', highlighted: true },
+        { d: 'M 396 70 C 450 70, 450 190, 396 190' }
+      ]}
+    />
+    <MiniTable
+      name="users"
+      x={24}
+      y={30}
+      highlighted
+      columns={[
+        { name: 'id', type: 'uuid', key: 'pk' },
+        { name: 'email', type: 'varchar' },
+        { name: 'plan', type: 'enum' },
+        { name: 'created_at', type: 'timestamp' }
+      ]}
+    />
+    <MiniTable
+      name="workspaces"
+      x={240}
+      y={30}
+      columns={[
+        { name: 'id', type: 'uuid', key: 'pk' },
+        { name: 'owner_id', type: 'uuid', key: 'fk' },
+        { name: 'slug', type: 'varchar' },
+        { name: 'name', type: 'text' }
+      ]}
+    />
+    <MiniTable
+      name="orders"
+      x={240}
+      y={165}
+      columns={[
+        { name: 'id', type: 'uuid', key: 'pk' },
+        { name: 'user_id', type: 'uuid', key: 'fk' },
+        { name: 'status', type: 'enum' },
+        { name: 'total_cents', type: 'integer' }
+      ]}
+    />
+  </div>
+</VisualFrame>

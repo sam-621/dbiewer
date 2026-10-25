@@ -1,0 +1,29 @@
+---
+export interface Relation {
+  d: string;
+  highlighted?: boolean;
+}
+
+interface Props {
+  relations: Relation[];
+  muted?: boolean;
+}
+
+const { relations, muted = false } = Astro.props;
+---
+
+<svg class="pointer-events-none absolute inset-0 overflow-visible" width="100%" height="100%">
+  {relations.map(relation => (
+    <path
+      d={relation.d}
+      class:list={[
+        'fill-none',
+        relation.highlighted
+          ? 'stroke-accent stroke-[1.5]'
+          : muted
+            ? 'stroke-fg-4 stroke-[1.3] opacity-70'
+            : 'stroke-fg-4 stroke-[1.4] opacity-70'
+      ]}
+    />
+  ))}
+</svg>

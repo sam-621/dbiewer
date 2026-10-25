@@ -1,0 +1,14 @@
+---
+import { highlightSql } from '../../lib/sql';
+
+interface Props {
+  code: string;
+  tables?: string[];
+  columns?: string[];
+}
+
+const { code, tables, columns } = Astro.props;
+const tokens = highlightSql(code, { tables, columns });
+---
+
+{tokens.map(token => (token.class ? <span class={token.class}>{token.text}</span> : token.text))}

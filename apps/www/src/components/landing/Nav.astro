@@ -1,0 +1,34 @@
+---
+import { APP_URL } from '../../config';
+import Brand from '../ui/Brand.astro';
+import Button from '../ui/Button.astro';
+
+const links = [
+  { label: 'Features', href: '#features' },
+  { label: 'How it works', href: '#how' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'Changelog', href: '#' },
+  { label: 'Docs', href: '#' }
+];
+---
+
+<nav class="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-md">
+  <div class="mx-auto flex max-w-[1200px] items-center gap-7 px-6 py-3 max-sm:px-4">
+    <Brand tag="v0.1" />
+    <div class="ml-auto flex items-center gap-[22px]">
+      {links.map(link => (
+        <a href={link.href} class="text-[13px] text-fg-2 hover:text-fg max-[900px]:hidden">
+          {link.label}
+        </a>
+      ))}
+      <div class="ml-2 flex gap-1.5">
+        <Button href={APP_URL} variant="ghost" size="sm" class="max-sm:hidden">
+          Sign in
+        </Button>
+        <Button href={APP_URL} variant="primary" size="sm" kbd="↵">
+          Open app
+        </Button>
+      </div>
+    </div>
+  </div>
+</nav>

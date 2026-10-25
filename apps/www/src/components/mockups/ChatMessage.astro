@@ -1,0 +1,27 @@
+---
+interface Props {
+  from: 'user' | 'bot';
+  size?: 'sm' | 'md';
+}
+
+const { from, size = 'sm' } = Astro.props;
+---
+
+<div class="flex gap-[7px]">
+  <div
+    class:list={[
+      'grid size-[18px] flex-none place-items-center rounded text-[9px] font-semibold',
+      from === 'user' ? 'gradient-warm' : 'bg-accent font-mono text-accent-ink'
+    ]}
+  >
+    {from === 'user' ? 'A' : 'db'}
+  </div>
+  <div
+    class:list={[
+      'leading-normal text-fg-2 [&_code]:rounded-[2px] [&_code]:bg-bg-elev [&_code]:px-[3px] [&_code]:font-mono [&_code]:text-[10.5px] [&_code]:text-accent',
+      size === 'sm' ? 'text-[11px]' : 'text-xs'
+    ]}
+  >
+    <slot />
+  </div>
+</div>

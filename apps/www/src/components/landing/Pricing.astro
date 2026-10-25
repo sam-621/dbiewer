@@ -1,0 +1,163 @@
+---
+import { APP_URL } from '../../config';
+import CheckIcon from '../ui/CheckIcon.astro';
+import Code from '../ui/Code.astro';
+import SectionHead from '../ui/SectionHead.astro';
+import PriceCard from './PriceCard.astro';
+
+const billingOptions = [
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'annual', label: 'Annual', badge: '-21%' }
+];
+---
+
+<section
+  id="pricing"
+  data-pricing
+  data-billing="monthly"
+  class="group relative px-6 py-[100px] max-sm:px-4"
+>
+  <div class="mx-auto max-w-[1100px]">
+    <SectionHead
+      eyebrow="pricing"
+      sub="No seats, no usage gotchas. Cancel anytime, your saved queries stay yours."
+      class="mb-0!"
+    >
+      Free to start. <em>Pro when you need it.</em>
+    </SectionHead>
+
+    <div class="mt-9 flex justify-center">
+      <div
+        role="group"
+        aria-label="Billing period"
+        class="inline-flex gap-0.5 rounded-lg border border-line bg-bg-elev p-0.5 text-[12.5px]"
+      >
+        {billingOptions.map(option => (
+          <button
+            type="button"
+            data-billing-option={option.value}
+            aria-pressed={option.value === 'monthly' ? 'true' : 'false'}
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-fg-3 hover:text-fg aria-pressed:bg-bg-elev-2 aria-pressed:text-fg"
+          >
+            {option.label}
+            {option.badge && (
+              <span class="rounded-[3px] bg-accent-soft px-1.5 py-px font-mono text-[10px] font-semibold text-accent">
+                {option.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-2 gap-3.5 max-[900px]:grid-cols-1">
+      <PriceCard
+        name="Free"
+        monthly={{ amount: '$0', note: 'no credit card' }}
+        period="forever"
+        blurb="For solo exploration, local SQLite hacking, or trying out a managed Postgres."
+        cta="Start for free"
+        href={APP_URL}
+      >
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>1</b> live connection + unlimited <Code tone="fg">SQLite</Code>
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>50</b> AI credits per month
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>Schema canvas + SQL playground</span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>7 days</b> of query history
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>Community support</span>
+        </li>
+      </PriceCard>
+
+      <PriceCard
+        name="Pro"
+        monthly={{ amount: '$19', note: 'billed monthly · cancel anytime' }}
+        annual={{ amount: '$15', note: '$180 billed yearly · save $48/year' }}
+        period="month"
+        blurb="For developers and small teams running production databases."
+        cta="Start a 14-day trial"
+        href={APP_URL}
+        flag="recommended"
+        featured
+      >
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>10</b> live connections
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>500</b> AI credits per month <span class="text-fg-4">·</span> extra packs from{' '}
+            <b>$5</b>
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            Schema <b>snapshots</b> + diff between environments
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>Unlimited</b> query history
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>
+            <b>SSH tunnel</b> for private databases
+          </span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>No watermarks on exports</span>
+        </li>
+        <li>
+          <CheckIcon strokeWidth={2.6} />
+          <span>Priority email support</span>
+        </li>
+      </PriceCard>
+    </div>
+
+    <div class="mt-[22px] text-center font-mono text-[11.5px] text-fg-4">
+      need more? team & enterprise plans with SSO, audit log, self-hosted option ·{' '}
+      <a href="#" class="text-accent">
+        talk to us →
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const pricing = document.querySelector<HTMLElement>('[data-pricing]');
+  const options = pricing?.querySelectorAll<HTMLButtonElement>('[data-billing-option]') ?? [];
+
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      if (!pricing) return;
+      pricing.dataset.billing = option.dataset.billingOption;
+      options.forEach(other => other.setAttribute('aria-pressed', String(other === option)));
+    });
+  });
+</script>

@@ -1,0 +1,39 @@
+---
+import SectionHead from '../ui/SectionHead.astro';
+
+const steps = [
+  {
+    label: '01 / connect',
+    title: 'Paste a connection URI.',
+    text: 'Postgres, MySQL or SQLite. We test the connection, pick the schemas to index, and store credentials encrypted.'
+  },
+  {
+    label: '02 / explore',
+    title: 'Get a canvas of your DB.',
+    text: "Every table, every FK. Drag them around, click into a table, hide the noise. It's your map."
+  },
+  {
+    label: '03 / ask',
+    title: 'Query or ask.',
+    text: 'Write SQL with autocomplete or describe what you want in plain English — dbiewer writes it grounded in your real schema.'
+  }
+];
+---
+
+<section id="how" class="relative border-y border-line bg-bg-alt px-6 py-[100px] max-sm:px-4">
+  <div class="mx-auto max-w-[1100px]">
+    <SectionHead eyebrow="three steps">
+      From connection string <em>to insight,</em> in under a minute.
+    </SectionHead>
+
+    <div class="mt-9 grid grid-cols-3 gap-3 max-[900px]:grid-cols-1">
+      {steps.map(step => (
+        <div class="flex flex-col gap-2 rounded-[10px] border border-line bg-bg p-[22px]">
+          <span class="font-mono text-[11px] font-semibold text-accent">{step.label}</span>
+          <h3 class="m-0 text-[17px] font-semibold tracking-[-0.01em]">{step.title}</h3>
+          <p class="m-0 text-[13px] leading-[1.55] text-fg-3">{step.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

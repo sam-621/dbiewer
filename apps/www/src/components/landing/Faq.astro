@@ -1,0 +1,57 @@
+---
+import SectionHead from '../ui/SectionHead.astro';
+---
+
+<section class="relative border-y border-line bg-bg-alt px-6 py-[100px] max-sm:px-4">
+  <div class="mx-auto max-w-[1100px]">
+    <SectionHead eyebrow="questions">
+      Things people ask <em>before connecting.</em>
+    </SectionHead>
+
+    <div class="mt-9 grid grid-cols-2 border-t border-l border-line max-[900px]:grid-cols-1 [&_code]:rounded-[3px] [&_code]:bg-bg-elev [&_code]:px-[5px] [&_code]:py-px [&_code]:font-mono [&_code]:text-[11.5px] [&_code]:text-accent [&_h4]:m-0 [&_h4]:mb-1.5 [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:tracking-[-0.005em] [&_p]:m-0 [&_p]:text-[13px] [&_p]:leading-relaxed [&_p]:text-fg-3 [&>div]:border-r [&>div]:border-b [&>div]:border-line [&>div]:px-6 [&>div]:py-[22px]">
+      <div>
+        <h4>Does dbiewer touch my data?</h4>
+        <p>
+          Only on read. We request <code>SELECT</code> + <code>information_schema</code> at
+          connection time. Writes happen only when you explicitly run a write query, never
+          automatically — not even from the AI assistant.
+        </p>
+      </div>
+      <div>
+        <h4>What's an "AI credit"?</h4>
+        <p>
+          One credit ≈ one assistant message round-trip (your prompt + the response). Schema reads
+          and SQL highlighting don't cost credits — only conversations with the assistant do.
+        </p>
+      </div>
+      <div>
+        <h4>Can I connect to a private database?</h4>
+        <p>
+          Yes — Pro includes a managed <b>SSH tunnel</b>. Paste your bastion details and we tunnel
+          through. For tighter networking, look at Team or self-hosted.
+        </p>
+      </div>
+      <div>
+        <h4>Where are my credentials stored?</h4>
+        <p>
+          Encrypted at rest (AES-256, key per workspace) and decrypted only when establishing a
+          connection. They never appear in chats, exports, or logs.
+        </p>
+      </div>
+      <div>
+        <h4>What databases are supported?</h4>
+        <p>
+          Postgres, MySQL, MariaDB, SQLite, Supabase, Neon, Railway, PlanetScale, ClickHouse. Mongo
+          and BigQuery are in beta — opt in from your workspace settings.
+        </p>
+      </div>
+      <div>
+        <h4>Can I cancel anytime?</h4>
+        <p>
+          Yes. Cancel from your billing page; you keep Pro features until the end of the period.
+          Your saved queries, chats and connections stay accessible on Free (within Free limits).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

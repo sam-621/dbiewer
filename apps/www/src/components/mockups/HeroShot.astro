@@ -1,0 +1,242 @@
+---
+import BrandMark from '../ui/BrandMark.astro';
+import ChatMessage from './ChatMessage.astro';
+import MiniTable, { type MiniTableColumn } from './MiniTable.astro';
+import Relations, { type Relation } from './Relations.astro';
+import SqlCard from './SqlCard.astro';
+
+const schemas = [
+  {
+    name: 'public · 6',
+    tables: [
+      { name: 'users', meta: '14k', active: true },
+      { name: 'workspaces', meta: '2.1k' },
+      { name: 'products', meta: '38k' },
+      { name: 'orders', meta: '91k' },
+      { name: 'order_items', meta: '218k' },
+      { name: 'addresses', meta: '18k' }
+    ]
+  },
+  { name: 'auth · 1', tables: [{ name: 'sessions', meta: '48k' }] },
+  { name: 'analytics · 1', tables: [{ name: 'monthly_revenue', meta: 'VIEW', view: true }] }
+];
+
+const tabs = [
+  { label: 'Schema', dot: 'rounded-[2px] bg-accent', active: true },
+  { label: 'users', dot: 'rounded-[2px] bg-info' },
+  { label: 'top_customers.sql', dot: 'rounded-full bg-good' }
+];
+
+const relations: Relation[] = [
+  { d: 'M 200 92 C 260 92, 240 92, 280 92' },
+  { d: 'M 200 230 C 260 230, 240 174, 280 174' },
+  { d: 'M 200 92 C 260 92, 240 240, 280 240' },
+  { d: 'M 444 240 C 500 240, 500 154, 280 154', highlighted: true },
+  { d: 'M 444 304 C 500 304, 500 196, 280 196' }
+];
+
+const tables: {
+  name: string;
+  x: number;
+  y: number;
+  highlighted?: boolean;
+  columns: MiniTableColumn[];
+}[] = [
+  {
+    name: 'users',
+    x: 40,
+    y: 30,
+    columns: [
+      { name: 'id', type: 'uuid', key: 'pk' },
+      { name: 'email', type: 'varchar' },
+      { name: 'full_name', type: 'text' },
+      { name: 'plan', type: 'enum' },
+      { name: 'created_at', type: 'timestamp' }
+    ]
+  },
+  {
+    name: 'orders',
+    x: 40,
+    y: 200,
+    columns: [
+      { name: 'id', type: 'uuid', key: 'pk' },
+      { name: 'user_id', type: 'uuid', key: 'fk' },
+      { name: 'status', type: 'enum' },
+      { name: 'total_cents', type: 'integer' },
+      { name: 'placed_at', type: 'timestamp' }
+    ]
+  },
+  {
+    name: 'products',
+    x: 280,
+    y: 60,
+    highlighted: true,
+    columns: [
+      { name: 'id', type: 'uuid', key: 'pk' },
+      { name: 'workspace_id', type: 'uuid', key: 'fk' },
+      { name: 'sku', type: 'varchar' },
+      { name: 'title', type: 'text' },
+      { name: 'price_cents', type: 'integer' },
+      { name: 'stock', type: 'integer' }
+    ]
+  },
+  {
+    name: 'order_items',
+    x: 280,
+    y: 270,
+    columns: [
+      { name: 'id', type: 'uuid', key: 'pk' },
+      { name: 'order_id', type: 'uuid', key: 'fk' },
+      { name: 'product_id', type: 'uuid', key: 'fk' },
+      { name: 'quantity', type: 'integer' }
+    ]
+  },
+  {
+    name: 'workspaces',
+    x: 480,
+    y: 30,
+    columns: [
+      { name: 'id', type: 'uuid', key: 'pk' },
+      { name: 'slug', type: 'varchar' },
+      { name: 'name', type: 'text' },
+      { name: 'owner_id', type: 'uuid', key: 'fk' }
+    ]
+  }
+];
+
+const query = `SELECT u.full_name,
+       SUM(o.total_cents)
+         / 100.0 AS revenue,
+       u.plan
+  FROM users u
+  JOIN orders o ON o.user_id = u.id
+ WHERE o.status = 'paid'
+ GROUP BY u.id
+ LIMIT 10;`;
+---
+
+<div class="relative mx-auto mt-6 w-full max-w-[1180px] text-left" aria-hidden="true">
+  <div class="relative overflow-hidden rounded-xl border border-line bg-bg shadow-[inset_0_0_0_1px_oklch(1_0_0/0.04),0_30px_80px_oklch(0_0_0/0.5),0_0_80px_var(--color-accent-soft)]">
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-3 h-px bg-linear-to-r from-transparent via-white/10 to-transparent"></div>
+
+    <div class="flex h-[38px] items-center gap-2 border-b border-line bg-linear-to-b from-[oklch(0.205_0.006_80)] to-[oklch(0.185_0.006_80)] px-3">
+      <BrandMark size="sm" />
+      <div class="flex items-center gap-1.5 rounded-[5px] border border-line bg-bg-elev py-[3px] pr-[7px] pl-[5px] text-[11px]">
+        <div class="size-3.5 rounded-[3px] bg-linear-135 from-[oklch(0.7_0.14_320)] to-[oklch(0.65_0.16_280)]"></div>
+        <span class="text-fg">Duento</span>
+        <span class="text-fg-4">/</span>
+        <span class="font-mono text-[10.5px] text-fg-2">duento_prod</span>
+      </div>
+      <div class="ml-auto hidden items-center gap-[5px] rounded-full border border-line bg-bg-elev px-2 py-0.5 text-fg-2 sm:inline-flex">
+        <span class="size-[5px] rounded-full bg-good shadow-[0_0_0_2px_oklch(0.78_0.14_155/0.18)]"></span>
+        <span class="font-mono text-[10px]">aws-us-east-1.rds</span>
+      </div>
+      <div class="ml-auto inline-flex items-center gap-1.5 rounded-full py-0.5 pr-[7px] pl-0.5 text-[10.5px] sm:ml-0">
+        <span class="gradient-warm grid size-[18px] place-items-center rounded-full text-[9px] font-semibold">
+          AF
+        </span>
+        <span class="text-fg-2">Ana Flores</span>
+      </div>
+    </div>
+
+    <div class="grid h-[480px] grid-cols-[200px_1fr_280px] max-[900px]:grid-cols-[160px_1fr] max-sm:grid-cols-1">
+      <div class="overflow-hidden border-r border-line bg-bg pb-2 text-[11.5px] max-sm:hidden">
+        <div class="mb-1.5 flex border-b border-line text-[10px] font-medium tracking-[0.06em] text-fg-3 uppercase">
+          <div class="relative flex-1 border-r border-line bg-bg-elev py-2 text-center text-fg after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-accent">
+            Schema
+          </div>
+          <div class="flex-1 py-2 text-center">Queries</div>
+        </div>
+        {schemas.map((schema, index) => (
+          <>
+            <div
+              class:list={[
+                'px-2.5 pt-1.5 pb-1 text-[9.5px] font-semibold tracking-[0.06em] text-fg-4 uppercase',
+                { 'mt-2': index > 0 }
+              ]}
+            >
+              {schema.name}
+            </div>
+            {schema.tables.map(table => (
+              <div
+                class:list={[
+                  'flex h-[22px] items-center gap-1.5 py-0.5 pr-2.5',
+                  table.active
+                    ? 'border-l-2 border-accent bg-bg-elev pl-5 text-fg'
+                    : 'pl-[22px] text-fg-2'
+                ]}
+              >
+                {table.name}
+                <span
+                  class:list={[
+                    'ml-auto rounded-[2px] bg-bg-elev-2 px-1 font-mono text-[9px]',
+                    table.view ? 'text-info' : 'text-fg-3'
+                  ]}
+                >
+                  {table.meta}
+                </span>
+              </div>
+            ))}
+          </>
+        ))}
+      </div>
+
+      <div class="flex min-w-0 flex-col bg-bg-canvas">
+        <div class="flex h-8 flex-none border-b border-line bg-bg text-[11px]">
+          {tabs.map(tab => (
+            <div
+              class:list={[
+                'relative flex items-center gap-1.5 border-r border-line px-2.5',
+                tab.active
+                  ? 'bg-bg-canvas text-fg after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-accent'
+                  : 'text-fg-3'
+              ]}
+            >
+              <span class:list={['size-1.5', tab.dot]} />
+              {tab.label}
+            </div>
+          ))}
+        </div>
+        <div class="bg-dots relative flex-1 overflow-hidden bg-bg-canvas">
+          <Relations relations={relations} />
+          {tables.map(table => (
+            <MiniTable {...table} />
+          ))}
+        </div>
+      </div>
+
+      <div class="flex min-w-0 flex-col border-l border-line bg-bg text-[11.5px] max-[900px]:hidden">
+        <div class="flex h-8 items-center gap-[7px] border-b border-line px-2.5">
+          <div class="grid size-[18px] place-items-center rounded bg-accent font-mono text-[9.5px] font-bold text-accent-ink">
+            db
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[11.5px] font-semibold">Top customers by revenue</span>
+            <span class="text-[10px] text-fg-3">● live · reading public.*</span>
+          </div>
+        </div>
+        <div class="flex flex-1 flex-col gap-2.5 overflow-hidden p-2.5">
+          <ChatMessage from="user">
+            Top 10 customers by revenue last 90 days, with their plan.
+          </ChatMessage>
+          <ChatMessage from="bot">
+            Joining <code>users</code> with paid <code>orders</code>:
+          </ChatMessage>
+          <SqlCard file="top_customers_90d.sql" code={query} />
+        </div>
+        <div class="mx-2.5 mb-2.5 flex flex-col gap-1 rounded-md border border-line bg-bg-elev px-2 pt-1.5 pb-1">
+          <span class="text-[11px] text-fg-4">Ask anything about your schema…</span>
+          <div class="flex items-center gap-1.5 font-mono text-[9.5px] text-fg-4">
+            <span class="rounded-[3px] border border-dashed border-line px-[5px] py-px">
+              products
+            </span>
+            <span class="ml-auto">claude · sonnet</span>
+            <span class="grid size-[18px] place-items-center rounded bg-accent text-[10px] text-accent-ink">
+              ↑
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

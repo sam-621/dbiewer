@@ -1,1 +1,88 @@
 @import 'tailwindcss';
+
+@theme {
+  --color-bg: oklch(0.165 0.006 80);
+  --color-bg-alt: oklch(0.155 0.006 80);
+  --color-bg-elev: oklch(0.205 0.006 80);
+  --color-bg-elev-2: oklch(0.235 0.006 80);
+  --color-bg-canvas: oklch(0.145 0.006 80);
+  --color-line: oklch(0.28 0.006 80);
+  --color-line-soft: oklch(0.235 0.006 80);
+  --color-fg: oklch(0.96 0.005 90);
+  --color-fg-2: oklch(0.78 0.008 85);
+  --color-fg-3: oklch(0.58 0.008 85);
+  --color-fg-4: oklch(0.42 0.008 85);
+
+  --color-accent: oklch(0.88 0.18 95);
+  --color-accent-hover: oklch(0.92 0.18 95);
+  --color-accent-soft: oklch(0.88 0.18 95 / 0.14);
+  --color-accent-line: oklch(0.88 0.18 95 / 0.36);
+  --color-accent-ink: oklch(0.18 0.04 95);
+
+  --color-good: oklch(0.78 0.14 155);
+  --color-info: oklch(0.74 0.12 240);
+  --color-pk: oklch(0.78 0.14 95);
+  --color-fk: oklch(0.74 0.12 245);
+
+  --color-sql-kw: oklch(0.86 0.12 320);
+  --color-sql-fn: oklch(0.86 0.1 240);
+  --color-sql-str: oklch(0.85 0.1 60);
+  --color-sql-num: oklch(0.85 0.06 240);
+  --color-sql-tbl: oklch(0.78 0.14 95);
+  --color-sql-col: oklch(0.85 0.06 160);
+  --color-sql-date: oklch(0.82 0.06 60);
+
+  --font-sans: 'Funnel Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif: 'Instrument Serif', serif;
+}
+
+@utility bg-dots {
+  background-image: radial-gradient(circle at 1px 1px, oklch(0.28 0.006 80) 1px, transparent 0);
+  background-size: 16px 16px;
+}
+
+@utility hero-dots {
+  background-image: radial-gradient(circle at 1px 1px, oklch(0.24 0.006 80) 1px, transparent 0);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 60% 80% at 50% 30%, black, transparent 70%);
+}
+
+@utility hero-glow {
+  background: radial-gradient(ellipse at center top, var(--color-accent-soft), transparent 60%);
+}
+
+@utility glow-corner {
+  background:
+    radial-gradient(80% 100% at 0% 0%, var(--color-accent-soft), transparent 70%), var(--color-bg);
+}
+
+@utility glow-top {
+  background:
+    radial-gradient(60% 100% at 50% 0%, var(--color-accent-soft), transparent 70%), var(--color-bg);
+}
+
+@utility gradient-warm {
+  background: linear-gradient(135deg, oklch(0.78 0.14 60), oklch(0.7 0.16 30));
+  color: oklch(0.2 0.04 60);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--color-fg);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-fg);
+  }
+}

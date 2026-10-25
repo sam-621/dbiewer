@@ -1,0 +1,47 @@
+---
+import VisualFrame from './VisualFrame.astro';
+
+const rows = [
+  ['a3f1c2b8', 'ana.flores@duento.io', 'Ana Flores', 'pro', '2024-08-17'],
+  ['8c2e0a91', 'marco@stellaris.co', 'Marco Iturbe', 'team', '2024-09-02'],
+  ['d4e6f1aa', 'sofia.kim@acme.dev', null, 'free', '2025-01-12'],
+  ['1f0b9d22', 'rene.barrera@kapla.mx', 'René Barrera', 'pro', '2024-05-30'],
+  ['7aa45b03', 'yuki.tanaka@hoshi.jp', 'Yuki Tanaka', 'team', '2024-04-15'],
+  ['e29c5f10', 'owen.dale@northpole.is', 'Owen Dale', 'free', '2025-03-04'],
+  ['b81d6e44', 'priya@varma.studio', 'Priya Varma', 'pro', '2024-02-21']
+];
+
+const selectedRow = 1;
+const cell = 'border-r border-b border-line-soft px-[9px] py-1 text-left whitespace-nowrap';
+---
+
+<VisualFrame label="public.users · 14,823 rows · filtered">
+  <div class="h-80 overflow-hidden bg-bg-canvas font-mono text-[10.5px]">
+    <table class="w-full border-separate border-spacing-0">
+      <thead>
+        <tr class="[&_th]:bg-bg-elev [&_th]:font-medium [&_th]:text-fg-2">
+          <th class:list={[cell, 'w-7 text-right! text-fg-4!']}>#</th>
+          <th class={cell}>
+            <span class="mr-1 text-[9px] text-pk">●</span>id
+          </th>
+          <th class={cell}>email</th>
+          <th class={cell}>full_name</th>
+          <th class={cell}>plan</th>
+          <th class={cell}>created_at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([id, email, name, plan, createdAt], index) => (
+          <tr class:list={['text-fg', { '[&_td]:bg-accent-soft': index === selectedRow }]}>
+            <td class:list={[cell, 'text-right! text-fg-4']}>{index + 1}</td>
+            <td class={cell}>{id}</td>
+            <td class={cell}>{email}</td>
+            <td class:list={[cell, { 'text-fg-4 italic': name === null }]}>{name ?? 'NULL'}</td>
+            <td class={cell}>{plan}</td>
+            <td class:list={[cell, 'text-sql-date']}>{createdAt}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</VisualFrame>
