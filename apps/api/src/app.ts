@@ -20,6 +20,7 @@ export const createApp = (db: Database) => {
   const yoga = createYoga<{ req: IncomingMessage; res: ServerResponse }, Context>({
     schema: makeExecutableSchema<Context>({ typeDefs, resolvers }),
     maskedErrors: { maskError },
+    logging: false,
     context: () => ({ services: createServices(db) })
   });
 
