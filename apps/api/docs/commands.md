@@ -9,14 +9,16 @@ Todos se corren dentro de `apps/api`. Esta tabla es el contrato de los scripts d
 | Comando | Para qué |
 |---------|----------|
 | `yarn test [ruta]` | Tests unitarios (`*.test.ts`). Sin Docker. |
+| `yarn test:integration [ruta]` | Tests de integración (`*.integration.test.ts`). Levanta Postgres en Docker, migra, corre y lo baja. |
 | `yarn test:e2e [ruta]` | Tests e2e (`*.e2e.test.ts`). Levanta Postgres en Docker, migra, corre y lo baja. |
+| `yarn emails` | Preview server de React Email con los templates de `src/services/emails/templates`. Se baja con Ctrl+C. `react-email` y `@react-email/preview-server` van fijados en la misma versión exacta (sin `^`): si no coinciden, el preview no arranca. |
 | `yarn lint:check` | Revisa ESLint + Prettier. |
 | `yarn lint:fix` | Arregla lint, formato y orden de imports. |
 | `yarn gen:types` | Regenera los tipos de GraphQL a partir de los `.gql`. Correr cuando cambia un `.gql`. |
 | `yarn migrate:make <nombre>` | Crea el archivo de una migración nueva. No toca ninguna DB. |
 
 - No correr `tsc --noEmit` para verificar ediciones; el diagnóstico del IDE basta. El typecheck real es `yarn build`.
-- Tests: solo los de la feature, nunca la suite completa (ver `testing.md`).
+- Tests: solo los de la feature, nunca la suite completa (ver `testing.md`). Nunca `yarn test:integration` y `yarn test:e2e` en paralelo.
 
 ## Solo los corre el usuario
 

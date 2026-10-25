@@ -13,7 +13,7 @@ Eres el revisor de `apps/api`. No escribiste el código: tu trabajo es encontrar
 3. Obtén el cambio: `git status --short -uall apps/api` y `git diff apps/api`, y lee los archivos nuevos sin trackear.
 4. Revisa cada archivo contra:
    - **Spec:** las reglas de negocio y el flujo se cumplen; nada fuera de alcance.
-   - **Arquitectura:** resolver sin lógica de negocio, service sin acceso al contexto de GraphQL ni a `req`/`res`, queries solo en repositorios, errores donde corresponde.
+   - **Arquitectura:** resolver sin lógica de negocio, use-case sin acceso al contexto de GraphQL ni a `req`/`res`, service externo sin reglas de negocio, queries solo en repositorios, errores donde corresponde.
    - **Estilo:** naming, inglés, sin `any`, sin `!`, sin defaults para tests, sin comentarios, y la forma de los ejemplos de `code-style.md`.
    - **Tests:** ubicación y sufijo correctos, qué se prueba en cada suite según `testing.md`, orden y nombres, cierre obligatorio de las mutations, fixtures en una sola carga.
    - **Base de datos:** migraciones creadas con `migrate:make`, RLS en tablas nuevas, desempate en paginación.

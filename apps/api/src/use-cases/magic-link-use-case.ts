@@ -1,5 +1,6 @@
 import { MagicLinkLimitExceededError } from '@/errors/magic-link-errors';
-import type { VerificationRepository } from '@/persistence/repositories/verification-repository';
+import type { MagicLinkRequestRepository } from '@/persistence/repositories/magic-link-request';
+import type { VerificationRepository } from '@/persistence/repositories/verification';
 import { EmailSubjects } from '@/services/emails/locales/email-subjects';
 import type { EmailAddress, EmailSender } from '@/services/emails/senders/email-sender';
 import { createMagicLinkEmail } from '@/services/emails/templates/magic-link-template';
@@ -17,14 +18,17 @@ export type SendMagicLinkInput = {
 
 export class MagicLinkUseCase {
   constructor(
+    private readonly magicLinkRequestRepository: MagicLinkRequestRepository,
     private readonly verificationRepository: VerificationRepository,
     private readonly emailSender: EmailSender,
     private readonly emailFrom: EmailAddress
   ) {}
 
   async send(input: SendMagicLinkInput) {
+    await this.magicLinkRequestRepository.create(input.email);
+
     const since = new Date(Date.now() - MAGIC_LINK_LIMIT_WINDOW_IN_MINUTES * 60 * 1000);
-    const requested = await this.verificationRepository.countMagicLinksSince(input.email, since);
+    const requested = await this.magicLinkRequestRepository.countSince(input.email, since);
 
     if (requested > MAGIC_LINK_LIMIT) {
       await this.verificationRepository.removeMagicLink(input.token);

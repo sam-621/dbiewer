@@ -16,7 +16,8 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
     }
   },
   "include": ["src", "tests", "scripts", "*.config.ts", "codegen.ts"]

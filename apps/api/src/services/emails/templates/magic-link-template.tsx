@@ -9,18 +9,17 @@ import {
   Tailwind
 } from '@react-email/components';
 
+import { EmailSubjects } from '@/services/emails/locales/email-subjects';
+import { MagicLinkMessages } from '@/services/emails/locales/magic-link-messages';
 import type { Locale } from '@/shared/utils/locale';
 
-import { EmailSubjects } from '../locales/email-subjects';
-import { MagicLinkMessages } from '../locales/magic-link-messages';
-
-import { EmailFooter } from './shared/footer';
+import { EmailFooter } from './_shared/footer';
 import {
   EmailHeader,
   EmailHeaderButton,
   EmailHeaderSubtitle,
   EmailHeaderTitle
-} from './shared/header';
+} from './_shared/header';
 
 const Component = ({ url, locale }: MagicLinkTemplateInput) => {
   const messages = MagicLinkMessages[locale];

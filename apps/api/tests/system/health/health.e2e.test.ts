@@ -1,7 +1,6 @@
+import { destroyDatabase, loadFixtures, resetDatabase } from '@tests/utils/database';
+import { TestServer } from '@tests/utils/test-server';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
-
-import { destroyDatabase, loadFixtures, resetDatabase } from '../../utils/database';
-import { TestServer } from '../../utils/test-server';
 
 const HEALTH_QUERY = /* GraphQL */ `
   query Health {

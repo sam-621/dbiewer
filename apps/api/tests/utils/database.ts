@@ -15,6 +15,8 @@ const getAdminUrl = () => {
 
 const { db: adminDb, pool: adminPool } = createDatabase(getAdminUrl());
 
+export const testDatabase = adminDb;
+
 export const loadFixtures = async (fixtures: Fixture<PgTable>[]) => {
   for (const fixture of fixtures) {
     if (fixture.rows.length) await adminDb.insert(fixture.table).values(fixture.rows);

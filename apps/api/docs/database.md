@@ -26,6 +26,7 @@ Base de datos propia de la api (usuarios, conexiones, queries guardadas, histori
 - Toda query paginada termina su `ORDER BY` con una columna única (`id`). Sin eso, `LIMIT/OFFSET` pierde y duplica filas entre páginas.
 - `created_at` no sirve para desempatar: es `now()`, que en Postgres es el inicio de la transacción, así que todo lo insertado en una misma transacción comparte el valor.
 - Índices sobre FKs que se usan para filtrar o hacer join.
+- Un filtro sin distinguir mayúsculas compara `lower(<columna>)` y su índice es de expresión sobre `lower(<columna>)` (p. ej. `magic_link_request_email_created_at_idx` sobre `(lower(email), created_at)`); un índice sobre la columna sola no lo usa.
 
 ## RLS e índices
 

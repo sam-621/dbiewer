@@ -8,12 +8,14 @@
     "build": "tsc && tsup",
     "start": "node --env-file=.env dist/index.js",
     "test": "vitest run",
-    "test:e2e": "scripts/test-e2e.sh",
+    "test:e2e": "scripts/test-database.sh vitest.e2e.config.ts",
+    "test:integration": "scripts/test-database.sh vitest.integration.config.ts",
     "lint:check": "eslint . && prettier --check .",
     "lint:fix": "eslint . --fix && prettier --write .",
     "gen:types": "graphql-codegen --config codegen.ts",
     "migrate:make": "drizzle-kit generate --name",
-    "migrate": "tsx scripts/migrate.ts"
+    "migrate": "tsx scripts/migrate.ts",
+    "emails": "email dev --dir ./src/services/emails/templates"
   },
   "dependencies": {
     "@graphql-tools/load-files": "^8.0.6",
@@ -36,6 +38,7 @@
     "@graphql-codegen/cli": "^7.4.6",
     "@graphql-codegen/typescript": "^6.1.2",
     "@graphql-codegen/typescript-resolvers": "^6.1.1",
+    "@react-email/preview-server": "5.2.10",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
@@ -46,6 +49,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "prettier": "^3.9.10",
+    "react-email": "5.2.10",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "~6.0.0",

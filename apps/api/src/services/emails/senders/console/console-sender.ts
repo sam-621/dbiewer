@@ -1,6 +1,5 @@
+import type { EmailData, EmailSender } from '@/services/emails/senders/email-sender';
 import type { Logger } from '@/services/logger';
-
-import type { EmailData, EmailSender } from '../email-sender';
 
 export class ConsoleSender implements EmailSender {
   constructor(private readonly logger: Logger) {}

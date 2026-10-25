@@ -5,12 +5,18 @@ Reglas de negocio y decisiones en `product.md`.
 ## Better Auth (api)
 
 - Paquete `better-auth` con `drizzleAdapter(db, { provider: 'pg' })` y el plugin `magicLink`.
-- Instancia creada con `createAuth(appContext)` en `src/services/auth/auth.ts` (reexportado por `index.ts`). Usa `appContext.databases.admin` para el adaptador de Drizzle y, en `sendMagicLink`, instancia `MagicLinkUseCase` con `appContext.repositories.verification` y `appContext.services.emailSender`. Las conexiones se arman en `src/index.ts` (y en `TestServer`), entran al app context y se cierran en el shutdown y en el teardown de los tests.
+- Instancia creada con `createAuth(appContext)` en `src/services/auth/auth.ts` (reexportado por `index.ts`). Usa `appContext.databases.admin` para el adaptador de Drizzle y, en `sendMagicLink`, instancia `MagicLinkUseCase` con `appContext.repositories.verification`, `appContext.repositories.magicLinkRequest` y `appContext.services.emailSender`. Las conexiones se arman en `src/index.ts` (y en `TestServer`), entran al app context y se cierran en el shutdown y en el teardown de los tests.
 - Se monta en Express **antes** de Yoga, en `app.all('/api/auth/*splat', toNodeHandler(auth))` (Express 5 no acepta un `*` sin nombre), y sin `express.json()` delante de esa ruta.
 - Configuración:
   - `magicLink({ expiresIn: 900, sendMagicLink })`. `sendMagicLink` usa el servicio de email.
   - `session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 }`.
-  - `rateLimit` con una regla para `/sign-in/magic-link`: 3 pedidos cada 10 minutos. El límite por email se aplica en `sendMagicLink`, contando las filas de `verification` del email en esa ventana.
+  - `rateLimit` con una regla para `/sign-in/magic-link`: 3 pedidos cada 10 minutos por IP. Desactivado en `test`.
+  - Límite por email en `MagicLinkUseCase.send`, contando la tabla propia `magic_link_request` (no `verification`, porque Better Auth borra la fila cuando el link se usa):
+    - Primero registra el intento, siempre (también los rechazados y los que después fallan al enviarse).
+    - Después cuenta los intentos del email en los últimos 10 minutos, sin distinguir mayúsculas, incluido el actual.
+    - Si son más de 3, borra la fila de `verification` del token y lanza `MagicLinkLimitExceededError`. Si no, envía el email.
+    - Registrar antes de contar evita que pedidos simultáneos pasen el límite: cada uno ve también a los demás.
+  - Better Auth no pasa los errores por el mapper de GraphQL: en `sendMagicLink`, `MagicLinkLimitExceededError` se convierte en `APIError('TOO_MANY_REQUESTS', { code: 'MAGIC_LINK_LIMIT_EXCEEDED' })`, que responde 429.
   - `advanced.database.generateId: () => crypto.randomUUID()`, para cumplir con `id uuid` de `docs/database.md`.
   - `trustedOrigins: [config.webUrl]`.
   - Cookies `httpOnly` (default de Better Auth), `sameSite: 'lax'` y `useSecureCookies` fuera de desarrollo.
@@ -39,12 +45,13 @@ Tabla propia:
 | Tabla | Columnas | Notas |
 |-------|----------|-------|
 | `workspace` | `id uuid`, `owner_user_id uuid` (FK a `user`, único, `ON DELETE CASCADE`), `name text`, `created_at`, `updated_at` | Su `id` es el `tenant_id` del resto de las tablas. |
+| `magic_link_request` | `id uuid`, `email text`, `created_at`, `updated_at`; índice `(lower(email), created_at)` | Un registro por intento de pedir un magic link, para el límite por email. Sin tenant, solo la conexión de admin. |
 
 - `workspace` no lleva `tenant_id` porque es el tenant. Tiene RLS (`ENABLE` y `FORCE`) con la policy `workspace_tenant_isolation`, que solo deja ver la fila cuyo `id` es `nullif(current_setting('app.current_tenant_id', true), '')::uuid`. Sin tenant en la conexión devuelve cero filas.
 - Las tablas de auth no tienen RLS: solo las toca Better Auth, con la conexión de admin. La migración les hace `REVOKE ALL ... FROM app_user`, así la conexión de los requests no puede leer sesiones ni tokens.
 - Fechas `timestamp with time zone`.
 - Las tablas futuras con `tenant_id` llevan FK a `workspace(id)` con `ON DELETE CASCADE`.
-- Migraciones: `0001_create_auth_and_workspace` (generada) y `0002_auth_rls_and_privileges` (custom, con el `FORCE` de `workspace` y el `REVOKE` de las tablas de auth). Aplicarlas le toca al usuario.
+- Migraciones: `0001_create_auth_and_workspace` (generada), `0002_auth_rls_and_privileges` (custom, con el `FORCE` de `workspace` y el `REVOKE` de las tablas de auth), `0003_create_magic_link_request` (generada) y `0004_magic_link_request_privileges` (custom, `REVOKE ALL` a `app_user`). Aplicarlas le toca al usuario.
 
 ## Creación del workspace
 
@@ -56,7 +63,7 @@ Tabla propia:
 
 - El `context` de Yoga (o un middleware en `src/shared/middlewares/auth.middleware.ts`) llama a `auth.api.getSession({ headers })`.
 - Con sesión: busca el workspace del usuario, abre la conexión del request con `set_config('app.current_tenant_id', workspace.id, true)` dentro de una transacción y arma el contexto.
-- `Context` pasa a ser `{ useCases, session: { user, workspace } | null }`.
+- Hoy Yoga corre sin `context`. El contexto del request se crea en este paso con `session: { user, workspace } | null` y lo que haga falta para instanciar los use-cases de los resolvers (ver `architecture.md` > App context).
 - Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga un helper `requireSession(context)` en `src/services/auth/`, no cada resolver por su cuenta.
 
 ## API GraphQL
@@ -97,16 +104,17 @@ type Query {
 | Resolvers | `src/api/resolvers/account-resolver.ts` |
 | Use-cases | `src/use-cases/account-use-case.ts`, `src/use-cases/workspace-use-case.ts`, `src/use-cases/magic-link-use-case.ts` |
 | Services externos | `src/services/auth/` (Better Auth), `src/services/emails/` |
-| Repositorios | `src/persistence/repositories/workspace/`, `src/persistence/repositories/verification/` |
-| Errores | `src/errors/account-errors.ts` |
+| Repositorios | `src/persistence/repositories/workspace/`, `src/persistence/repositories/verification/`, `src/persistence/repositories/magic-link-request/` |
+| Errores | `src/errors/account-errors.ts`, `src/errors/magic-link-errors.ts`, `src/errors/email-errors.ts` |
 
 ### Errores
 
 | `code` | Cuándo |
 |--------|--------|
 | `UNAUTHENTICATED` | Una operación que requiere sesión se llama sin sesión. |
+| `MAGIC_LINK_LIMIT_EXCEEDED` | Más de 3 magic links para el mismo email en 10 minutos. Lo responde `/api/auth/sign-in/magic-link` con 429, no GraphQL. El web lo traduce. |
 
-Se registra en el mapper de `src/shared/errors/error-handler.ts`.
+`UNAUTHENTICATED` se registra en el mapper de `src/shared/errors/error-handler.ts`. `MAGIC_LINK_LIMIT_EXCEEDED` no pasa por GraphQL: se arma como `APIError` en `src/services/auth/auth.ts`.
 
 ## Config (api)
 
@@ -137,8 +145,7 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 ## Impacto en código existente
 
 - `apps/api/src/app.ts`: monta Better Auth antes de Yoga, y el contexto resuelve la sesión.
-- `apps/api/src/shared/context.ts`: agrega `session`.
-- `apps/api/src/use-cases/index.ts`: registra los use-cases nuevos.
+- `apps/api/src/context/`: el contexto del request, con `session`.
 - `apps/api/docs/architecture.md`: el apartado Multi-tenant pasa a decir que el tenant es el workspace y cómo llega al contexto. El cambio se propone al terminar el paso 3.
 - `apps/web/src/app/app.tsx`: rutas `/login` y `/`, con sus guards.
 - `apps/web/vite.config.ts`: proxy a la api.
@@ -148,5 +155,6 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 ## Tests
 
 - **api, e2e** (`tests/account/me/`): `me` con sesión y sin sesión, creación del workspace en el primer acceso, y que el RLS no deja leer el workspace de otro usuario. La sesión se crea con el magic link leído de `verification`.
-- **api, unit:** el nombre inicial del workspace.
+- **api, unit:** el nombre inicial del workspace; `MagicLinkUseCase` (límite, registro del intento antes de contar y enviar, también el rechazado, contenido del email) y la resolución del idioma.
+- **api, integración** (`*.integration.test.ts`): los repositorios `verification` y `magic-link-request` contra la DB, y los senders de email (`resend` con el SDK mockeado, `console`) y su factory. Better Auth, templates y logger no se testean.
 - **web, e2e** (`e2e/account/`): acceso con magic link, redirects de las guards y logout.

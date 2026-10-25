@@ -41,6 +41,7 @@ export const createAuth = (appContext: AppContext) =>
         expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
         sendMagicLink: async ({ email, url, token }, ctx) => {
           const magicLinkUseCase = new MagicLinkUseCase(
+            appContext.repositories.magicLinkRequest,
             appContext.repositories.verification,
             appContext.services.emailSender,
             { email: config.emailSender.from, name: EMAIL_FROM_NAME }

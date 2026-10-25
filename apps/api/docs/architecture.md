@@ -36,7 +36,7 @@ src/
 │   ├── schema/                        schema de Drizzle
 │   └── repositories/<recurso>/        una carpeta por repositorio
 │       ├── <recurso>-repository.ts
-│       ├── <recurso>-repository.test.ts
+│       ├── __tests__/                 <recurso>-repository.integration.test.ts y fixtures/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
 ├── services/<servicio>/               servicios externos (ver "Services (externos)")
 ├── schemas/<recurso>-schemas.ts       schemas de zod del input
@@ -83,7 +83,7 @@ src/services/emails/
 │   └── dummy/                       tests: no hace nada
 ├── templates/
 │   ├── <email>-template.tsx         react-email: componente, PreviewProps, export default y create<Email>Email(input)
-│   └── shared/                      componentes compartidos entre templates
+│   └── _shared/                     componentes compartidos entre templates (con `_` para que el preview de React Email no la muestre)
 └── locales/                         textos y asuntos por locale (`en`, `es`)
 ```
 
@@ -106,9 +106,9 @@ El app context lleva, ya instanciados:
 |-------|-----|
 | `databases` | `app` (`DATABASE_URL`, con RLS) y `admin` (`ADMIN_DATABASE_URL`, se salta RLS). |
 | `services` | Los services externos (`emailSender`). Su factory se llama aquí. |
-| `repositories` | Los repositorios (`verification`), cada uno con la conexión que le corresponde. |
+| `repositories` | Los repositorios (`magicLinkRequest`, `verification`), cada uno con la conexión que le corresponde. |
 
-- **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new MagicLinkUseCase(appContext.repositories.verification, appContext.services.emailSender, ...)`.
+- **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new MagicLinkUseCase(appContext.repositories.magicLinkRequest, appContext.repositories.verification, appContext.services.emailSender, ...)`.
 - Un service, repositorio o conexión nuevo se agrega al tipo `AppContext` y a `createAppContext`.
 
 ## Config

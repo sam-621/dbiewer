@@ -17,7 +17,8 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 
 - ESLint + Prettier mandan. Correr `yarn lint:fix`; no reordenar imports a mano.
 - Grupos de imports (los impone `simple-import-sort`): externos → `@/...` → relativos `../` → relativos `./`.
-- `@/` apunta a `src/`. Se usa para cruzar capas; relativos solo dentro de la misma carpeta.
+- `@/` apunta a `src/` y `@tests/` a `tests/` (utilidades de test: `@tests/utils/database`, `@tests/utils/fixture`). Se usan para cruzar carpetas; relativos solo dentro de la misma carpeta.
+- Un alias nuevo se agrega en `tsconfig.json` (`paths`) y en las tres configs de vitest (`resolve.alias`).
 - `import type` para lo que solo es tipo (regla `consistent-type-imports`).
 - Argumentos sin usar se prefijan con `_` (`_repositories`).
 
@@ -33,11 +34,11 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
 | Error | describe el caso + `Error` | `ConnectionNotFoundError` |
 
-Los sufijos que piden las herramientas se mantienen con punto: `.test.ts`, `.e2e.test.ts`, `.gql`, `*.config.ts`.
+Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.integration.test.ts`, `.e2e.test.ts`, `.gql`, `*.config.ts`) y los fixtures de los tests (`<recurso>.fixtures.ts`, p. ej. `verification.fixtures.ts`).
 
 ## Carpetas e `index.ts`
 
-- **Carpeta por pieza** cuando la pieza va acompañada de otros archivos, casi siempre su test: `persistence/repositories/verification/` con `verification-repository.ts` y `verification-repository.test.ts`.
+- **Carpeta por pieza** cuando la pieza va acompañada de otros archivos, casi siempre su test: `persistence/repositories/verification/` con `verification-repository.ts` y su test en `__tests__/`.
 - **Barrel `index.ts` solo cuando la carpeta lleva el nombre de su archivo principal.** El `index.ts` hace `export * from './<archivo>'` y se importa por la carpeta, para no repetir el nombre en la ruta:
 
   | Carpeta | Archivo principal | Import |
