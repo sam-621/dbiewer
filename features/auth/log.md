@@ -67,6 +67,7 @@
 - (api) Docs de módulos: `architecture.md` (capas, estructura, errores), `code-style.md` (naming de use-cases, barrels), `CLAUDE.md` de la api y `technical.md` > Capas.
 - (api) Paso 4: query `me` (`User`, `Me`) en `account.gql` y `account-resolver.ts`; devuelve la sesión del contexto, o `null` sin sesión. e2e en `tests/account/me/` (con workspace, sin workspace aunque exista el de otro usuario, sin sesión). `yarn build` y e2e pasan.
 - (api) Docs: resolvers que devuelven algo del contexto sin use-case (`architecture.md` > Resolvers), un `TestServer` por `describe` con `signIn(email)` en cada test (`testing.md` > Tests e2e) e ids UUID de fixtures comparados con su constante (`testing.md` > Reglas generales). `technical.md` > Tests: `me` no devuelve el workspace de otro usuario, sin hablar de RLS.
+- (web) Cliente de Better Auth: paquete `better-auth` (`^1.7.12`, como la api) y `src/lib/api/auth-client.ts` con `createAuthClient` de `better-auth/react` y `magicLinkClient()`, sin `baseURL` (mismo origen vía el proxy de Vite). `yarn build` pasa.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
