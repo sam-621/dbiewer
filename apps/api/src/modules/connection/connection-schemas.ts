@@ -18,3 +18,16 @@ export const CreateConnectionSchema = z.object({
 export const UpdateConnectionSchema = CreateConnectionSchema.extend({
   id: z.string()
 });
+
+const NullableTestConnectionSchema = z.object({
+  host: z.string().nullish(),
+  port: z.number().nullish(),
+  database: z.string().nullish(),
+  username: z.string().nullish(),
+  password: z.string().nullish(),
+  sslMode: z.enum(connection.sslMode.enumValues).nullish()
+});
+
+export const TestConnectionSchema = NullableTestConnectionSchema.pipe(
+  CreateConnectionSchema.omit({ name: true })
+);

@@ -71,6 +71,7 @@ export type Mutation = {
   createConnection: ConnectionResult;
   createWorkspace: WorkspaceResult;
   removeConnection: RemoveConnectionResult;
+  testConnection: TestConnectionResult;
   updateConnection: ConnectionResult;
   updateUserProfile: UserResult;
 };
@@ -85,6 +86,10 @@ export type MutationCreateWorkspaceArgs = {
 
 export type MutationRemoveConnectionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationTestConnectionArgs = {
+  input: TestConnectionInput;
 };
 
 export type MutationUpdateConnectionArgs = {
@@ -109,6 +114,21 @@ export type QueryConnectionArgs = {
 
 export type RemoveConnectionResult = {
   __typename?: 'RemoveConnectionResult';
+  apiErrors: Array<ConnectionErrorResult>;
+  success?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type TestConnectionInput = {
+  database?: InputMaybe<Scalars['String']['input']>;
+  host?: InputMaybe<Scalars['String']['input']>;
+  password?: InputMaybe<Scalars['String']['input']>;
+  port?: InputMaybe<Scalars['Int']['input']>;
+  sslMode?: InputMaybe<ConnectionSslMode>;
+  username?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TestConnectionResult = {
+  __typename?: 'TestConnectionResult';
   apiErrors: Array<ConnectionErrorResult>;
   success?: Maybe<Scalars['Boolean']['output']>;
 };
@@ -283,6 +303,8 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RemoveConnectionResult: ResolverTypeWrapper<RemoveConnectionResult>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  TestConnectionInput: TestConnectionInput;
+  TestConnectionResult: ResolverTypeWrapper<TestConnectionResult>;
   UpdateConnectionInput: UpdateConnectionInput;
   UpdateUserProfileInput: UpdateUserProfileInput;
   User: ResolverTypeWrapper<User>;
@@ -311,6 +333,8 @@ export type ResolversParentTypes = {
   Query: Record<PropertyKey, never>;
   RemoveConnectionResult: RemoveConnectionResult;
   String: Scalars['String']['output'];
+  TestConnectionInput: TestConnectionInput;
+  TestConnectionResult: TestConnectionResult;
   UpdateConnectionInput: UpdateConnectionInput;
   UpdateUserProfileInput: UpdateUserProfileInput;
   User: User;
@@ -396,6 +420,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemoveConnectionArgs, 'id'>
   >;
+  testConnection?: Resolver<
+    ResolversTypes['TestConnectionResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationTestConnectionArgs, 'input'>
+  >;
   updateConnection?: Resolver<
     ResolversTypes['ConnectionResult'],
     ParentType,
@@ -429,6 +459,15 @@ export type RemoveConnectionResultResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['RemoveConnectionResult'] =
     ResolversParentTypes['RemoveConnectionResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+};
+
+export type TestConnectionResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['TestConnectionResult'] =
+    ResolversParentTypes['TestConnectionResult']
 > = {
   apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
   success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
@@ -497,6 +536,7 @@ export type Resolvers<ContextType = RequestContext> = {
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
+  TestConnectionResult?: TestConnectionResultResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserErrorResult?: UserErrorResultResolvers<ContextType>;
   UserResult?: UserResultResolvers<ContextType>;

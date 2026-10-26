@@ -45,12 +45,26 @@ input UpdateConnectionInput {
   sslMode: ConnectionSslMode!
 }
 
+input TestConnectionInput {
+  host: String
+  port: Int
+  database: String
+  username: String
+  password: String
+  sslMode: ConnectionSslMode
+}
+
 type ConnectionResult {
   apiErrors: [ConnectionErrorResult!]!
   connection: Connection
 }
 
 type RemoveConnectionResult {
+  apiErrors: [ConnectionErrorResult!]!
+  success: Boolean
+}
+
+type TestConnectionResult {
   apiErrors: [ConnectionErrorResult!]!
   success: Boolean
 }
@@ -70,4 +84,5 @@ type Mutation {
   createConnection(input: CreateConnectionInput!): ConnectionResult!
   updateConnection(input: UpdateConnectionInput!): ConnectionResult!
   removeConnection(id: ID!): RemoveConnectionResult!
+  testConnection(input: TestConnectionInput!): TestConnectionResult!
 }

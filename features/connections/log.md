@@ -29,6 +29,7 @@
 - (web) Se quitan las secciones Server y Authentication del modal: los campos quedan sin agrupar.
 - (web) Vuelve el campo URL al modal, debajo de Name + SSL, para autocompletar los campos (`parseConnectionUrl`). Una URL inválida frena el guardado.
 - (web) `product.md`, `ui.md` y `technical.md` actualizados con el modal de nueva conexión, la URL debajo de Name + SSL, `PostgresIcon`, `WorkspaceLayout` y `connection-row/`. `architecture.md` suma el patrón de modales con formulario y la excepción a `<X>Details` mientras el web no edite; `design-system.md`, los logos de motores.
+- (api) Mutation `testConnection` (sin id ni nombre, input nullable validado con `TestConnectionSchema`), `PostgresService.testConnection` con `pg` y sus e2e. Si no conecta responde `success: false`, sin código de error.
 
 **Decisiones:**
 - Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.

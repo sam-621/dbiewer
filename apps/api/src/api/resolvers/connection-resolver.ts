@@ -1,6 +1,7 @@
 import type {
   MutationCreateConnectionArgs,
   MutationRemoveConnectionArgs,
+  MutationTestConnectionArgs,
   MutationUpdateConnectionArgs,
   QueryConnectionArgs,
   Resolvers
@@ -10,6 +11,7 @@ import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
 import { ConnectionCreator } from '@/modules/connection/use-cases/connection-creator';
 import { ConnectionRemover } from '@/modules/connection/use-cases/connection-remover';
+import { ConnectionTester } from '@/modules/connection/use-cases/connection-tester';
 import { ConnectionUpdater } from '@/modules/connection/use-cases/connection-updater';
 import type { Connection } from '@/persistence/repositories/connection';
 import { UnitOfWork } from '@/persistence/unit-of-work';
@@ -93,6 +95,18 @@ async function removeConnection(
   return apiResponse(result, 'success');
 }
 
+async function testConnection(
+  _parent: unknown,
+  args: MutationTestConnectionArgs,
+  ctx: SessionContext
+) {
+  const connectionTester = new ConnectionTester(ctx.services.postgresService);
+
+  const result = await connectionTester.execute(args.input);
+
+  return apiResponse(result, 'success');
+}
+
 export const ConnectionResolver: Resolvers = {
   ConnectionSslMode: {
     DISABLE: 'disable',
@@ -106,6 +120,7 @@ export const ConnectionResolver: Resolvers = {
   Mutation: {
     createConnection: requireSession(createConnection),
     updateConnection: requireSession(updateConnection),
-    removeConnection: requireSession(removeConnection)
+    removeConnection: requireSession(removeConnection),
+    testConnection: requireSession(testConnection)
   }
 };
