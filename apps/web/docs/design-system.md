@@ -15,7 +15,7 @@ Componentes y tokens de [coss ui](https://coss.com/ui) (sobre Base UI), con el a
   ```
 
 - Los componentes quedan en `src/shared/components/ui`, los hooks en `src/shared/hooks` y las utils en `src/shared/utils`. Si el CLI deja algo fuera de esos alias, se mueve y se corrigen los imports.
-- No se escriben componentes base a mano ni se usan los de Radix o shadcn. Las piezas propias que componen los de coss (como `Brand`) van en `src/shared/components/`, fuera de `ui/`. Los íconos viven en `src/shared/components/icons/icons.tsx` y las banderas en `src/shared/i18n/components/flags.tsx`; los assets estáticos que no son SVG (como el PNG de una bandera) van en `public/`.
+- No se escriben componentes base a mano ni se usan los de Radix o shadcn. Las piezas propias que componen los de coss (como `Brand`) van en `src/shared/components/`, fuera de `ui/`. Los íconos viven en `src/shared/components/icons/icons.tsx`, los logos de los motores de base de datos en su propio archivo junto a ellos (`icons/postgres-icon.tsx`, porque exportar un componente desde `icons.tsx` rompe `react-refresh/only-export-components`) y las banderas en `src/shared/i18n/components/flags.tsx`; los assets estáticos que no son SVG (como el PNG de una bandera) van en `public/`.
 - Después de agregar uno, revisar lo que el CLI instala de más: `@coss/fonts` agrega Inter y Geist, y `utils` crea un duplicado de `cn`. Eso no se deja.
 - Las primitivas de Base UI usan `render` en lugar de `asChild`: `<Button render={<Link to="/" />}>`.
 
@@ -36,7 +36,7 @@ Viven en `src/app/app.css` (Tailwind v4, sin `tailwind.config.js`).
 ## Reglas
 
 - Colores solo por token (`bg-primary`, `text-muted-foreground`, `text-sql-kw`). Nada de literales (`#fff`, `bg-blue-500`) en pantallas.
-- Excepción: assets de marca o de país (banderas en `src/shared/i18n/components/flags.tsx`) pueden llevar sus colores propios.
+- Excepción: assets de marca o de país (logos de motores como `PostgresIcon`, banderas en `src/shared/i18n/components/flags.tsx`) pueden llevar sus colores propios.
 - El amarillo se usa con `primary` o `brand`, nunca con un valor copiado.
 - Campos de email con `inputMode="email"` y no `type="email"`: el `Form` de Base UI cancela el submit con la validación nativa y muestra su propio mensaje sin traducir. La validación la hace el schema de zod.
 - Un grupo de opciones (tema, idioma) va en `Fieldset` con `FieldsetLegend` tipografiado como `FieldLabel` (`text-base/4.5 font-medium sm:text-sm/4`), así se ve igual que la etiqueta de un campo. Las opciones son `ToggleGroup` sin borde con ícono y texto; el seleccionado usa `data-pressed:bg-accent`, texto `foreground` e ícono `solid`, y el resto `text-muted-foreground`.

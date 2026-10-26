@@ -4,10 +4,25 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+export type ConnectionErrorCode =
+  | 'CONNECTION_NAME_ALREADY_EXISTS'
+  | 'CONNECTION_NOT_FOUND'
+  | 'INVALID_INPUT';
+
 export type ConnectionSslMode =
   | 'DISABLE'
   | 'REQUIRE'
   | 'VERIFY_FULL';
+
+export type CreateConnectionInput = {
+  database: string;
+  host: string;
+  name: string;
+  password?: string | null | undefined;
+  port: number;
+  sslMode: ConnectionSslMode;
+  username: string;
+};
 
 export type CreateWorkspaceInput = {
   name: string;
@@ -49,6 +64,20 @@ export type GetConnectionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetConnectionsQuery = { connections: { items: Array<{ ' $fragmentRefs'?: { 'CommonConnectionFragment': CommonConnectionFragment } }> } };
+
+export type CreateConnectionMutationVariables = Exact<{
+  input: CreateConnectionInput;
+}>;
+
+
+export type CreateConnectionMutation = { createConnection: { apiErrors: Array<{ code: ConnectionErrorCode, message: string }>, connection: { ' $fragmentRefs'?: { 'CommonConnectionFragment': CommonConnectionFragment } } | null } };
+
+export type RemoveConnectionMutationVariables = Exact<{
+  connectionId: string | number;
+}>;
+
+
+export type RemoveConnectionMutation = { removeConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -142,3 +171,36 @@ export const GetConnectionsDocument = new TypedDocumentString(`
   hasPassword
   sslMode
 }`) as unknown as TypedDocumentString<GetConnectionsQuery, GetConnectionsQueryVariables>;
+export const CreateConnectionDocument = new TypedDocumentString(`
+    mutation CreateConnection($input: CreateConnectionInput!) {
+  createConnection(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    connection {
+      ...CommonConnection
+    }
+  }
+}
+    fragment CommonConnection on Connection {
+  id
+  name
+  host
+  port
+  database
+  username
+  hasPassword
+  sslMode
+}`) as unknown as TypedDocumentString<CreateConnectionMutation, CreateConnectionMutationVariables>;
+export const RemoveConnectionDocument = new TypedDocumentString(`
+    mutation RemoveConnection($connectionId: ID!) {
+  removeConnection(id: $connectionId) {
+    apiErrors {
+      code
+      message
+    }
+    success
+  }
+}
+    `) as unknown as TypedDocumentString<RemoveConnectionMutation, RemoveConnectionMutationVariables>;

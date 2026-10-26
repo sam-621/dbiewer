@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { GridIcon } from '@/shared/components/icons/icons';
-import { Button } from '@/shared/components/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -11,6 +9,8 @@ import {
   EmptyMedia,
   EmptyTitle
 } from '@/shared/components/ui/empty';
+
+import { NewConnectionDialog } from '../new-connection-dialog/new-connection-dialog';
 
 export const ConnectionsEmpty = () => {
   const { t } = useTranslation();
@@ -29,7 +29,7 @@ export const ConnectionsEmpty = () => {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button render={<Link to="/connections/new" />}>{t('New connection')}</Button>
+        <NewConnectionDialog />
       </EmptyContent>
     </Empty>
   );

@@ -1,11 +1,8 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SessionUser } from '@/lib/account/components/session-user/session-user';
-import { useGetMe } from '@/lib/account/hooks/use-get-me';
+import { ConnectionsDevList } from '@/lib/connection/components/connections-dev-list/connections-dev-list';
 import { ConnectionsEmpty } from '@/lib/connection/components/connections-empty/connections-empty';
 import { useGetConnections } from '@/lib/connection/hooks/use-get-connections';
-import { Brand } from '@/shared/components/brand';
 import { Button } from '@/shared/components/ui/button';
 import {
   Empty,
@@ -16,9 +13,10 @@ import {
 } from '@/shared/components/ui/empty';
 import { Spinner } from '@/shared/components/ui/spinner';
 
+import { WorkspaceLayout } from '../components/workspace-layout/workspace-layout';
+
 export const WorkspacePage = () => {
   const { t } = useTranslation();
-  const { me } = useGetMe();
   const { connections, isLoading, isError, isFetching, refetch } = useGetConnections();
 
   if (isLoading) {
@@ -49,30 +47,9 @@ export const WorkspacePage = () => {
     );
   }
 
-  if (!connections.length) {
-    return (
-      <WorkspaceLayout>
-        <ConnectionsEmpty />
-      </WorkspaceLayout>
-    );
-  }
-
   return (
     <WorkspaceLayout>
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-        <Brand />
-        {me?.workspace && <h1 className="text-xl font-semibold">{me.workspace.name}</h1>}
-      </div>
+      {connections.length ? <ConnectionsDevList connections={connections} /> : <ConnectionsEmpty />}
     </WorkspaceLayout>
   );
 };
-
-const WorkspaceLayout = ({ children }: { children: ReactNode }) => (
-  <main className="flex min-h-svh flex-col">
-    <header className="flex items-center justify-between gap-4 border-b px-4 py-3">
-      <Brand />
-      <SessionUser />
-    </header>
-    {children}
-  </main>
-);

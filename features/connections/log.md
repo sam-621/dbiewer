@@ -22,6 +22,13 @@
 - (web) Header en `/` con la marca a la izquierda y el perfil (avatar, nombre y email, sin acciones) a la derecha. Se quita la marca del estado vacío y el botón "Sign out".
 - (web) El estado vacío lleva arriba el ícono `grid-2x2` de amicons (`GridIcon`) en `EmptyMedia` con variante `icon`.
 - (web) `ui.md` actualizado: header del workspace con el perfil, ícono del estado vacío y sin "Sign out".
+- (web) Formulario de nueva conexión en `/connections/new` con el header del workspace (`WorkspaceLayout`), campo URL que autocompleta los campos (`parseConnectionUrl`), validaciones y errores de la api; al guardar vuelve a `/` (paso 4).
+- (web) Listado temporal en `/` con eliminar y confirmación (`AlertDialog`), `useCreateConnection`, `useRemoveConnection` y sus tests (paso 5).
+- (web) Se quita la nota de solo Postgres del formulario.
+- (web) El formulario de nueva conexión pasa de la página `/connections/new` a un modal (`NewConnectionDialog`) con el ícono de Postgres (`PostgresIcon`) y "PostgreSQL" arriba, Name y SSL en la misma fila, y las secciones Server (host, puerto, base) y Authentication (usuario, contraseña). Se quitan el campo URL y `parseConnectionUrl`.
+- (web) Se quitan las secciones Server y Authentication del modal: los campos quedan sin agrupar.
+- (web) Vuelve el campo URL al modal, debajo de Name + SSL, para autocompletar los campos (`parseConnectionUrl`). Una URL inválida frena el guardado.
+- (web) `product.md`, `ui.md` y `technical.md` actualizados con el modal de nueva conexión, la URL debajo de Name + SSL, `PostgresIcon`, `WorkspaceLayout` y `connection-row/`. `architecture.md` suma el patrón de modales con formulario y la excepción a `<X>Details` mientras el web no edite; `design-system.md`, los logos de motores.
 
 **Decisiones:**
 - Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.
@@ -37,3 +44,4 @@
 - La contraseña nunca sale de la api. Al editar sin contraseña se mantiene la anterior.
 - Los errores de la api siguen el patrón de vendyx: la api nunca devuelve el detalle de un error inesperado, y el plugin `useErrorLogger` lo loguea completo.
 - En web solo van el estado vacío y el formulario de creación, que son de producción, y un listado temporal con eliminar para probar en local. La vista con conexiones llega con el shell.
+- El formulario de nueva conexión es un modal sobre `/`, sin ruta propia. La URL queda como campo para autocompletar, sin tabs.

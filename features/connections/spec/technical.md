@@ -136,11 +136,13 @@ type Mutation {
 
 ## Web
 
-- **Módulo:** `src/lib/connection/` con `pages/` (`new-connection-page.tsx`), `components/` (`connections-empty/`, `connection-form/` con `use-connection-form.ts`, `connections-dev-list/`), `hooks/` (`use-get-connections`, `use-create-connection`, `use-remove-connection`), `constants/cache-keys.ts` y `utils/connection-url.utils.ts`.
+- **Módulo:** `src/lib/connection/` con `components/` (`connections-empty/`, `new-connection-dialog/`, `connection-form/` con `use-connection-form.ts`, `connections-dev-list/` con `connection-row/`), `hooks/` (`use-get-connections`, `use-create-connection`, `use-remove-connection`), `constants/cache-keys.ts` y `utils/connection-url.utils.ts`.
 - **Operations:** `src/lib/api/operations/connection.operations.ts` con `COMMON_CONNECTION_FRAGMENT`, `GET_CONNECTIONS_QUERY`, `CREATE_CONNECTION_MUTATION` y `REMOVE_CONNECTION_MUTATION`.
 - **Errores:** `src/lib/api/errors/connection.errors.ts` con `getConnectionError(code)`.
 - **URL:** `parseConnectionUrl(url)` acepta `postgres://` y `postgresql://` y devuelve los campos que encuentra (usuario, contraseña, host, puerto, base y `sslmode` del query string, decodificados). Si la URL no es válida, devuelve `null`.
-- **Rutas:** `/connections/new` dentro de `Protect`. `WorkspacePage` en `/` muestra el estado vacío si `connections` está vacío y el listado temporal si no.
+- **Modal:** `NewConnectionDialog` maneja su estado abierto/cerrado y renderiza `ConnectionForm`, que lo cierra con `onSuccess`. Sin ruta propia.
+- **Workspace:** `WorkspacePage` en `/` muestra el estado vacío si `connections` está vacío y el listado temporal si no, dentro de `WorkspaceLayout` (`src/lib/workspace/components/workspace-layout/`), que lleva el header.
+- **Ícono:** `PostgresIcon` en `src/shared/components/icons/postgres-icon.tsx`, con los colores del logo.
 - Después de `createConnection` y `removeConnection` se refresca `ConnectionCacheKeys.Connections`.
 
 ## Impacto en código existente
@@ -152,7 +154,6 @@ type Mutation {
 - `apps/api/src/errors/email-errors.ts` pasa a `src/services/emails/email-errors.ts`: los errores de un service viven en su carpeta.
 - `apps/api/docs/`: `architecture.md` describe el esquema de cifrado, el service sin proveedor externo y los errores dentro del service; `code-style.md`, `testing.md` y `commands.md` suman `EncryptionService` y la variable.
 - `apps/web/src/lib/workspace/pages/workspace-page.tsx`: muestra el estado vacío o el listado temporal.
-- `apps/web/src/app/app.tsx`: ruta `/connections/new`.
 - Locales `en.json` y `es.json`: textos del estado vacío, el formulario y el listado.
 
 ## Tests
@@ -160,4 +161,4 @@ type Mutation {
 - **api, unit:** `EncryptionService`: ida y vuelta, IV distinto en cada cifrado, falla con otro dato asociado, con el valor alterado y con una versión desconocida.
 - **api, integración:** `ConnectionRepository` contra la DB, incluido el índice único por nombre.
 - **api, e2e** (`tests/connection/<operación>/`): cada query y mutation, sus errores de negocio, que la contraseña queda cifrada en la tabla y nunca sale en la respuesta, que `updateConnection` sin contraseña la mantiene, aislamiento entre workspaces y `UNAUTHENTICATED`.
-- **web, unit:** `parseConnectionUrl`, la página de nueva conexión (pegar URL, validaciones, errores de la api) y `WorkspacePage` con y sin conexiones, con el fetcher mockeado.
+- **web, unit:** `parseConnectionUrl`, el modal de nueva conexión (pegar URL, validaciones, errores de la api) y `WorkspacePage` con y sin conexiones, con el fetcher mockeado.

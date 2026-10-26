@@ -22,3 +22,29 @@ export const GET_CONNECTIONS_QUERY = graphql(`
     }
   }
 `);
+
+export const CREATE_CONNECTION_MUTATION = graphql(`
+  mutation CreateConnection($input: CreateConnectionInput!) {
+    createConnection(input: $input) {
+      apiErrors {
+        code
+        message
+      }
+      connection {
+        ...CommonConnection
+      }
+    }
+  }
+`);
+
+export const REMOVE_CONNECTION_MUTATION = graphql(`
+  mutation RemoveConnection($connectionId: ID!) {
+    removeConnection(id: $connectionId) {
+      apiErrors {
+        code
+        message
+      }
+      success
+    }
+  }
+`);

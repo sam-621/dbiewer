@@ -130,6 +130,8 @@ Cada módulo define `constants/cache-keys.ts` con un objeto `<Módulo>CacheKeys`
 
 Cada entidad editable tiene un solo componente `<X>Details` que sirve para crear y para editar. Si recibe la entidad, edita; si no, crea.
 
+Mientras el web solo cree una entidad y no la edite (como las conexiones), su formulario sigue la forma de [formularios que no son `<X>Details`](#formularios-que-no-son-xdetails). Cuando llegue la edición, pasa a `<X>Details`.
+
 ```
 components/details/
 ├── <x>-details.tsx           el componente: provider + Form + layout de la página
@@ -185,6 +187,22 @@ components/<pieza>/
 
 - `use<Pieza>Form(params)`: sigue la forma de los [hooks de formulario](#hooks-de-formulario), con `defaultValues` vacíos.
 - Los mensajes del schema son keys de i18n y se muestran con `t(errors.<campo>.message)`.
+
+## Modales con formulario
+
+Un formulario que se abre en un modal tiene un componente `<acción>-<x>-dialog/` con el `Dialog` de coss, su botón y su estado abierto/cerrado adentro. El formulario va aparte, con la forma de [formularios que no son `<X>Details`](#formularios-que-no-son-xdetails):
+
+```
+components/
+├── new-<x>-dialog/
+│   └── new-<x>-dialog.tsx    Dialog + DialogTrigger + DialogHeader, y el estado isOpen
+└── <x>-form/
+    ├── <x>-form.tsx          Form envolviendo DialogPanel (campos) y DialogFooter (botones)
+    └── use-<x>-form.ts
+```
+
+- El modal se cierra desde el formulario con un callback por parámetro: `<ConnectionForm onSuccess={() => setIsOpen(false)} />`. "Cancel" es un `DialogClose`.
+- Después de guardar no se navega: la mutation refresca la cache y la pantalla de atrás se actualiza sola.
 
 ## Hooks de formulario
 

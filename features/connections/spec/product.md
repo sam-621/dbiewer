@@ -19,9 +19,9 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 ## Flujo
 
 1. El usuario termina el onboarding y entra a `/`. Como no tiene conexiones, ve el estado vacío con la acción para crear una.
-2. Abre el formulario de nueva conexión. Puede pegar una URL `postgres://…` para que se completen los campos, o llenarlos a mano.
+2. Abre el modal de nueva conexión. Puede pegar una URL `postgres://…` para que se completen los campos, o llenarlos a mano.
 3. Guarda. La api cifra la contraseña y guarda la conexión en su workspace.
-4. Vuelve a `/`. Como ya tiene conexiones, ve un listado temporal con cada conexión y la opción de eliminarla. Si elimina todas, vuelve al estado vacío.
+4. Se cierra el modal. Como ya tiene conexiones, ve un listado temporal con cada conexión y la opción de eliminarla. Si elimina todas, vuelve al estado vacío.
 
 ## Reglas de negocio
 
@@ -75,5 +75,5 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 1. [x] api: service de cifrado con AES-256-GCM, variable `CONNECTIONS_ENCRYPTION_KEY` y sus tests.
 2. [x] api: tabla `connection` con RLS, su migración y su repositorio.
 3. [x] api: queries `connections` y `connection`, mutations `createConnection`, `updateConnection` y `removeConnection`, con sus tests e2e.
-4. [ ] web: estado vacío en `/` y formulario de nueva conexión, con el parseo de la URL.
-5. [ ] web: listado temporal en `/` con eliminar.
+4. [x] web: estado vacío en `/` y modal de nueva conexión, con el parseo de la URL.
+5. [x] web: listado temporal en `/` con eliminar.

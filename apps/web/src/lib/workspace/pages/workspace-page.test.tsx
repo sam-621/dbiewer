@@ -30,9 +30,10 @@ const CONNECTION = {
 
 type Connections = (typeof CONNECTION)[] | Error | Promise<never>;
 
-const mockApi = (connections: Connections = []) => {
+const mockApi = (connections: Connections = [], removeConnection: unknown = null) => {
   vi.mocked(gqlFetcher).mockImplementation(async document => {
     if (document.toString().includes('query GetMe')) return { me: ME };
+    if (document.toString().includes('mutation RemoveConnection')) return { removeConnection };
 
     const result = await connections;
     if (result instanceof Error) throw result;
@@ -43,7 +44,6 @@ const mockApi = (connections: Connections = []) => {
 const renderPage = () =>
   render(
     <Routes>
-      <Route path="/connections/new" element={<p>New connection form</p>} />
       <Route element={<Protect />}>
         <Route path="/" element={<WorkspacePage />} />
       </Route>
@@ -83,14 +83,15 @@ describe('WorkspacePage', () => {
     expect(within(header).queryByRole('button')).not.toBeInTheDocument();
   });
 
-  test('goes to the new connection form from the empty state', async () => {
+  test('opens the new connection dialog from the empty state', async () => {
     mockApi();
 
     renderPage();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('link', { name: 'Nueva conexión' }));
+    await user.click(await screen.findByRole('button', { name: 'Nueva conexión' }));
 
-    expect(await screen.findByText('New connection form')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('heading', { name: 'Nueva conexión' })).toBeInTheDocument();
   });
 
   test('shows a loading state while the connections load', async () => {
@@ -127,13 +128,79 @@ describe('WorkspacePage', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders the workspace name when there are connections', async () => {
+  test('shows the connections list when there are connections', async () => {
     mockApi([CONNECTION]);
 
     renderPage();
 
-    expect(await screen.findByRole('heading', { name: "Ana's workspace" })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
+    expect(screen.getByText('Acme prod')).toBeInTheDocument();
+    expect(screen.getByText('ana@db.acme.dev:5432/acme_prod')).toBeInTheDocument();
     expect(within(screen.getByRole('banner')).getByText('dbiewer')).toBeInTheDocument();
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
+  });
+
+  test('opens the new connection dialog from the connections list', async () => {
+    mockApi([CONNECTION]);
+
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Nueva conexión' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('heading', { name: 'Nueva conexión' })).toBeInTheDocument();
+  });
+
+  test('does not remove the connection when the confirmation is cancelled', async () => {
+    mockApi([CONNECTION]);
+
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByText('Acme prod')).toBeInTheDocument();
+    expect(
+      vi
+        .mocked(gqlFetcher)
+        .mock.calls.some(([document]) => document.toString().includes('RemoveConnection'))
+    ).toBe(false);
+  });
+
+  test('removes the last connection after confirming and shows the empty state', async () => {
+    mockApi([CONNECTION]);
+
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(
+      within(dialog).getByText('Acme prod se eliminará de forma definitiva.')
+    ).toBeInTheDocument();
+
+    mockApi([], { apiErrors: [], success: true });
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Conecta tu primera base de datos' })
+    ).toBeInTheDocument();
+    expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), { connectionId: 'connection-1' });
+  });
+
+  test('shows the remove error on the connection row', async () => {
+    mockApi([CONNECTION], {
+      apiErrors: [{ code: 'CONNECTION_NOT_FOUND', message: 'Not found' }],
+      success: null
+    });
+
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    expect(await screen.findByText('Esta conexión ya no existe')).toBeInTheDocument();
+    expect(screen.getByText('Acme prod')).toBeInTheDocument();
   });
 });
