@@ -1,8 +1,13 @@
-import type { MutationCreateWorkspaceArgs, Resolvers } from '@/api/codegen';
+import type {
+  MutationCreateWorkspaceArgs,
+  MutationUpdateUserProfileArgs,
+  Resolvers
+} from '@/api/codegen';
 import type { SessionContext } from '@/api/middlewares/require-session';
 import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
 import type { RequestContext } from '@/context';
+import { UserProfileUpdater } from '@/modules/user/use-cases/user-profile-updater';
 import { WorkspaceForUserCreator } from '@/modules/workspace/use-cases/workspace-for-user-creator';
 import { UnitOfWork } from '@/persistence/unit-of-work';
 
@@ -29,11 +34,28 @@ async function createWorkspace(
   return apiResponse(result, 'workspace');
 }
 
+async function updateUserProfile(
+  _parent: unknown,
+  args: MutationUpdateUserProfileArgs,
+  ctx: SessionContext
+) {
+  const userProfileUpdater = new UserProfileUpdater(ctx.auth);
+
+  const result = await userProfileUpdater.execute({
+    user: ctx.session.user,
+    headers: ctx.headers,
+    name: args.input.name
+  });
+
+  return apiResponse(result, 'user');
+}
+
 export const AccountResolver: Resolvers = {
   Query: {
     me
   },
   Mutation: {
-    createWorkspace: requireSession(createWorkspace)
+    createWorkspace: requireSession(createWorkspace),
+    updateUserProfile: requireSession(updateUserProfile)
   }
 };

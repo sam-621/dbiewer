@@ -37,6 +37,26 @@ enum WorkspaceErrorCode {
   WORKSPACE_ALREADY_EXISTS
 }
 
+input UpdateUserProfileInput {
+  name: String!
+}
+
+type UserResult {
+  apiErrors: [UserErrorResult!]!
+  user: User
+}
+
+type UserErrorResult {
+  code: UserErrorCode!
+  message: String!
+}
+
+enum UserErrorCode {
+  USER_NAME_REQUIRED
+  USER_NAME_TOO_LONG
+}
+
 type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): WorkspaceResult!
+  updateUserProfile(input: UpdateUserProfileInput!): UserResult!
 }

@@ -25,10 +25,15 @@ export type Me = {
 export type Mutation = {
   __typename?: 'Mutation';
   createWorkspace: WorkspaceResult;
+  updateUserProfile: UserResult;
 };
 
 export type MutationCreateWorkspaceArgs = {
   input: CreateWorkspaceInput;
+};
+
+export type MutationUpdateUserProfileArgs = {
+  input: UpdateUserProfileInput;
 };
 
 export type Query = {
@@ -37,12 +42,30 @@ export type Query = {
   me?: Maybe<Me>;
 };
 
+export type UpdateUserProfileInput = {
+  name: Scalars['String']['input'];
+};
+
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   image?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+};
+
+export type UserErrorCode = 'USER_NAME_REQUIRED' | 'USER_NAME_TOO_LONG';
+
+export type UserErrorResult = {
+  __typename?: 'UserErrorResult';
+  code: UserErrorCode;
+  message: Scalars['String']['output'];
+};
+
+export type UserResult = {
+  __typename?: 'UserResult';
+  apiErrors: Array<UserErrorResult>;
+  user?: Maybe<User>;
 };
 
 export type Workspace = {
@@ -169,7 +192,11 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  UpdateUserProfileInput: UpdateUserProfileInput;
   User: ResolverTypeWrapper<User>;
+  UserErrorCode: UserErrorCode;
+  UserErrorResult: ResolverTypeWrapper<UserErrorResult>;
+  UserResult: ResolverTypeWrapper<UserResult>;
   Workspace: ResolverTypeWrapper<Workspace>;
   WorkspaceErrorCode: WorkspaceErrorCode;
   WorkspaceErrorResult: ResolverTypeWrapper<WorkspaceErrorResult>;
@@ -185,7 +212,10 @@ export type ResolversParentTypes = {
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
+  UpdateUserProfileInput: UpdateUserProfileInput;
   User: User;
+  UserErrorResult: UserErrorResult;
+  UserResult: UserResult;
   Workspace: Workspace;
   WorkspaceErrorResult: WorkspaceErrorResult;
   WorkspaceResult: WorkspaceResult;
@@ -209,6 +239,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateWorkspaceArgs, 'input'>
   >;
+  updateUserProfile?: Resolver<
+    ResolversTypes['UserResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateUserProfileArgs, 'input'>
+  >;
 };
 
 export type QueryResolvers<
@@ -227,6 +263,23 @@ export type UserResolvers<
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type UserErrorResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['UserErrorResult'] =
+    ResolversParentTypes['UserErrorResult']
+> = {
+  code?: Resolver<ResolversTypes['UserErrorCode'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type UserResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['UserResult'] = ResolversParentTypes['UserResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['UserErrorResult']>, ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
 };
 
 export type WorkspaceResolvers<
@@ -260,6 +313,8 @@ export type Resolvers<ContextType = RequestContext> = {
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+  UserErrorResult?: UserErrorResultResolvers<ContextType>;
+  UserResult?: UserResultResolvers<ContextType>;
   Workspace?: WorkspaceResolvers<ContextType>;
   WorkspaceErrorResult?: WorkspaceErrorResultResolvers<ContextType>;
   WorkspaceResult?: WorkspaceResultResolvers<ContextType>;

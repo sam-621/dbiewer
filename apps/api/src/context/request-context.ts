@@ -16,7 +16,9 @@ export type Session = {
 };
 
 export type RequestContext = {
+  auth: Auth;
   database: Database;
+  headers: Headers;
   rlsContext: RLSContext;
   services: AppContext['services'];
   session: Session | null;
@@ -44,7 +46,9 @@ export const createRequestContext =
     const session = await resolveSession(appContext, auth, request.headers);
 
     return {
+      auth,
       database: appContext.databases.app,
+      headers: request.headers,
       rlsContext: { tenantId: session?.workspace?.id ?? null },
       services: appContext.services,
       session
