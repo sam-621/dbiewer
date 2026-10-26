@@ -32,7 +32,7 @@ El trabajo sobre una feature empieza con `/session-start <slug>`. Sin él, no le
 
 - Al terminar cada tarea, agregarla a la entrada de hoy del autor en `log.md` (`## YYYY-MM-DD — <autor>`, autor = parte antes de la `@` de `git config user.email`). Si la entrada no existe, crearla al final.
 - Al terminar un paso del plan de trabajo recomendado, marcarlo `[x]` en `spec/product.md`.
-- Si cambia una regla, decisión, parte técnica o de UI, proponer el cambio al `spec/` y escribirlo solo cuando el usuario confirme.
+- Si el usuario pide en la sesión algo que cambia una regla, decisión, parte técnica o de UI, o que contradice el `spec/` (por ejemplo, algo que estaba fuera de alcance), lo que pide manda: actualizar `product.md`, `technical.md` y `ui.md` sin pedir confirmación. Los cambios a `docs/` de las apps sí siguen necesitando confirmación.
 - Conflictos de git en `log.md`: aceptar ambas versiones.
 
 ## Docs de las apps

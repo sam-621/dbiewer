@@ -29,13 +29,15 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
   - En una fila, "Name" (`Acme prod`) y "SSL" (Disable, Require, Verify full).
   - Debajo, "Connection URL": campo opcional para pegar `postgres://ana:secret@db.acme.dev:5432/acme_prod?sslmode=require`, con una línea que explica que completa los campos.
   - Debajo, "Host" (`db.acme.dev`) y "Port" (`5432`) en una fila, "Database" (`acme_prod`), "User" (`ana`) y "Password" (oculto, con opción de mostrarlo). Sin tabs ni secciones.
-  - Botones "Save connection" y "Cancel".
+  - Botones: "Test connection" a la izquierda, y "Cancel" y "Save" a la derecha.
 - **Permite:**
   - Pegar una URL: completa los campos que trae, y SSL si trae `sslmode`, y deja los demás como estaban. El nombre no se completa.
   - Llenar o corregir los campos a mano.
   - Guardar. Al terminar, se cierra el modal y `/` muestra el listado.
   - Cancelar, que cierra el modal sin guardar.
+  - Probar la conexión con los datos cargados. El botón se habilita cuando host, puerto, base y usuario tienen valor.
 - **Estados:**
+  - Probando: el botón muestra un indicador de carga. Al terminar, queda unos 2 s en verde ("Connected") o en rojo ("Connection failed") y vuelve a su estado normal.
   - URL no válida: validación en el campo de la URL, sin tocar los demás. No deja guardar.
   - Campos obligatorios vacíos, nombre de más de 50 caracteres o puerto fuera de rango: validación en cada campo.
   - Nombre repetido: validación en el campo de nombre.

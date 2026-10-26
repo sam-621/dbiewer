@@ -1,5 +1,5 @@
 ---
-status: active
+status: done
 apps: [api, web]
 created: 2026-10-26
 ---
@@ -20,8 +20,9 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 
 1. El usuario termina el onboarding y entra a `/`. Como no tiene conexiones, ve el estado vacío con la acción para crear una.
 2. Abre el modal de nueva conexión. Puede pegar una URL `postgres://…` para que se completen los campos, o llenarlos a mano.
-3. Guarda. La api cifra la contraseña y guarda la conexión en su workspace.
-4. Se cierra el modal. Como ya tiene conexiones, ve un listado temporal con cada conexión y la opción de eliminarla. Si elimina todas, vuelve al estado vacío.
+3. Si quiere, prueba la conexión antes de guardar: la api intenta conectarse con esos datos y le dice si funcionó.
+4. Guarda. La api cifra la contraseña y guarda la conexión en su workspace.
+5. Se cierra el modal. Como ya tiene conexiones, ve un listado temporal con cada conexión y la opción de eliminarla. Si elimina todas, vuelve al estado vacío.
 
 ## Reglas de negocio
 
@@ -45,6 +46,13 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 - La contraseña nunca sale de la api: ninguna respuesta la incluye, ni cifrada.
 - Al editar, si no se manda una contraseña, se mantiene la que estaba.
 
+### Probar la conexión
+
+- Usa host, puerto, base, usuario, contraseña y SSL, con las mismas reglas que al crear. No necesita nombre.
+- Si falta algún campo, la api lo rechaza con un solo error que dice cuáles faltan.
+- Solo responde si se pudo conectar o no, sin el motivo. No guarda nada.
+- No bloquea guardar: se puede guardar una conexión que no pasó la prueba.
+
 ### Eliminar
 
 - Eliminar una conexión la borra definitivamente.
@@ -61,12 +69,12 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 
 ## Fuera de alcance
 
-- Probar la conexión antes de guardarla y conectarse a la base del usuario.
+- Conectarse a la base del usuario más allá de probar la conexión.
 - Elegir los esquemas de la conexión.
 - Editar una conexión desde el web. La api sí la permite.
 - El shell de la app y la vista del workspace con conexiones cargadas.
 - Pedir una sesión reciente para crear o editar credenciales.
-- Bloquear localhost y redes internas (SSRF). Aplica cuando la api se conecte a la base del usuario.
+- Bloquear localhost y redes internas (SSRF) al probar la conexión.
 - Límite de conexiones por plan (milestone 10).
 - Otros motores (milestone 13) y SSH tunnel (milestone 14).
 
@@ -77,3 +85,5 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 3. [x] api: queries `connections` y `connection`, mutations `createConnection`, `updateConnection` y `removeConnection`, con sus tests e2e.
 4. [x] web: estado vacío en `/` y modal de nueva conexión, con el parseo de la URL.
 5. [x] web: listado temporal en `/` con eliminar.
+6. [x] api: mutation `testConnection` con sus tests e2e.
+7. [x] web: botón para probar la conexión en el modal de nueva conexión.

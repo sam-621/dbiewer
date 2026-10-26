@@ -109,6 +109,7 @@ type Mutation {
   createConnection(input: CreateConnectionInput!): ConnectionResult!
   updateConnection(input: UpdateConnectionInput!): ConnectionResult!
   removeConnection(id: ID!): RemoveConnectionResult!
+  testConnection(input: TestConnectionInput!): TestConnectionResult!
 }
 ```
 
@@ -122,22 +123,45 @@ type Mutation {
 - `updateConnection` y `removeConnection` devuelven `CONNECTION_NOT_FOUND` si la conexión no existe o es de otro workspace.
 - `CONNECTION_NAME_ALREADY_EXISTS` lo verifica el use-case antes de escribir; el índice único cubre el resto.
 
+### Probar la conexión
+
+```graphql
+input TestConnectionInput {
+  host: String
+  port: Int
+  database: String
+  username: String
+  password: String
+  sslMode: ConnectionSslMode
+}
+
+type TestConnectionResult {
+  apiErrors: [ConnectionErrorResult!]!
+  success: Boolean
+}
+```
+
+- Los campos del input son nullable para que los faltantes lleguen a zod: `TestConnectionSchema` (nullish con `.pipe()` a `CreateConnectionSchema.omit({ name: true })`) devuelve un solo `INVALID_INPUT` que los nombra.
+- No abre `UnitOfWork` ni toca la tabla `connection`. El use-case `ConnectionTester` recibe solo `PostgresService`.
+- `PostgresService.testConnection` (`src/services/postgres/`, en `appContext.services.postgresService`) abre un `Client` de `pg` de un solo uso con 10 s de timeout, corre `select 1` y siempre lo cierra. SSL: `disable` sin SSL, `require` sin verificar el certificado, `verify-full` verificándolo.
+- Si no conecta, el service lanza `PostgresConnectionFailedError` y el use-case responde `success: false` sin `apiErrors`.
+
 ### Capas
 
 | Capa | Archivo |
 |------|---------|
 | Schema | `src/api/schema/connection.gql` |
 | Resolvers | `src/api/resolvers/connection-resolver.ts` |
-| Use-cases | `src/modules/connection/use-cases/`: `connection-creator.ts`, `connection-updater.ts`, `connection-remover.ts`. Las queries `connections` y `connection` no llevan use-case: el resolver llama a `findAll()` y `findOne({ id })` del repositorio |
-| Schemas | `src/modules/connection/connection-schemas.ts`: `CreateConnectionSchema` y `UpdateConnectionSchema`. Los use-cases extienden `UseCase` |
-| Errores | `src/modules/connection/connection-errors.ts`, `src/services/encryption/encryption-errors.ts` |
-| Services | `src/services/encryption/` |
+| Use-cases | `src/modules/connection/use-cases/`: `connection-creator.ts`, `connection-updater.ts`, `connection-remover.ts`, `connection-tester.ts`. Las queries `connections` y `connection` no llevan use-case: el resolver llama a `findAll()` y `findOne({ id })` del repositorio |
+| Schemas | `src/modules/connection/connection-schemas.ts`: `CreateConnectionSchema`, `UpdateConnectionSchema` y `TestConnectionSchema`. Los use-cases extienden `UseCase` |
+| Errores | `src/modules/connection/connection-errors.ts`, `src/services/encryption/encryption-errors.ts`, `src/services/postgres/postgres-errors.ts` |
+| Services | `src/services/encryption/`, `src/services/postgres/` |
 | Repositorios | `src/persistence/repositories/connection/` |
 
 ## Web
 
-- **Módulo:** `src/lib/connection/` con `components/` (`connections-empty/`, `new-connection-dialog/`, `connection-form/` con `use-connection-form.ts`, `connections-dev-list/` con `connection-row/`), `hooks/` (`use-get-connections`, `use-create-connection`, `use-remove-connection`), `constants/cache-keys.ts` y `utils/connection-url.utils.ts`.
-- **Operations:** `src/lib/api/operations/connection.operations.ts` con `COMMON_CONNECTION_FRAGMENT`, `GET_CONNECTIONS_QUERY`, `CREATE_CONNECTION_MUTATION` y `REMOVE_CONNECTION_MUTATION`.
+- **Módulo:** `src/lib/connection/` con `components/` (`connections-empty/`, `new-connection-dialog/`, `connection-form/` con `use-connection-form.ts` y `test-connection-button/`, `connections-dev-list/` con `connection-row/`), `hooks/` (`use-get-connections`, `use-create-connection`, `use-remove-connection`, `use-test-connection`), `constants/cache-keys.ts` y `utils/connection-url.utils.ts`.
+- **Operations:** `src/lib/api/operations/connection.operations.ts` con `COMMON_CONNECTION_FRAGMENT`, `GET_CONNECTIONS_QUERY`, `CREATE_CONNECTION_MUTATION`, `REMOVE_CONNECTION_MUTATION` y `TEST_CONNECTION_MUTATION`.
 - **Errores:** `src/lib/api/errors/connection.errors.ts` con `getConnectionError(code)`.
 - **URL:** `parseConnectionUrl(url)` acepta `postgres://` y `postgresql://` y devuelve los campos que encuentra (usuario, contraseña, host, puerto, base y `sslmode` del query string, decodificados). Si la URL no es válida, devuelve `null`.
 - **Modal:** `NewConnectionDialog` maneja su estado abierto/cerrado y renderiza `ConnectionForm`, que lo cierra con `onSuccess`. Sin ruta propia.
@@ -160,5 +184,5 @@ type Mutation {
 
 - **api, unit:** `EncryptionService`: ida y vuelta, IV distinto en cada cifrado, falla con otro dato asociado, con el valor alterado y con una versión desconocida.
 - **api, integración:** `ConnectionRepository` contra la DB, incluido el índice único por nombre.
-- **api, e2e** (`tests/connection/<operación>/`): cada query y mutation, sus errores de negocio, que la contraseña queda cifrada en la tabla y nunca sale en la respuesta, que `updateConnection` sin contraseña la mantiene, aislamiento entre workspaces y `UNAUTHENTICATED`.
-- **web, unit:** `parseConnectionUrl`, el modal de nueva conexión (pegar URL, validaciones, errores de la api) y `WorkspacePage` con y sin conexiones, con el fetcher mockeado.
+- **api, e2e** (`tests/connection/<operación>/`): cada query y mutation, sus errores de negocio, que la contraseña queda cifrada en la tabla y nunca sale en la respuesta, que `updateConnection` sin contraseña la mantiene, aislamiento entre workspaces y `UNAUTHENTICATED`. `testConnection`: éxito contra la DB de test, `INVALID_INPUT` con campos faltantes, `success: false` con credenciales malas y `UNAUTHENTICATED`.
+- **web, unit:** `parseConnectionUrl`, el modal de nueva conexión (pegar URL, validaciones, errores de la api, probar la conexión) y `WorkspacePage` con y sin conexiones, con el fetcher mockeado.
