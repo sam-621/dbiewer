@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import { maskError as maskUnknownError } from 'graphql-yoga';
-import { ZodError } from 'zod';
 
 import { UnauthenticatedError } from '@/errors/account-errors';
 
@@ -18,12 +17,6 @@ const getOriginalError = (error: unknown) =>
 
 export const maskError = (error: unknown, message: string, isDev?: boolean) => {
   const original = getOriginalError(error);
-
-  if (original instanceof ZodError) {
-    return new GraphQLError('Invalid input', {
-      extensions: { code: 'BAD_USER_INPUT', issues: original.issues }
-    });
-  }
 
   if (original instanceof DbiewerError) {
     const entry = ERROR_CODES.find(([ErrorClass]) => original instanceof ErrorClass);

@@ -74,6 +74,6 @@ Como usuario recién llegado a dbiewer, quiero cargar los datos de mi base Postg
 
 1. [x] api: service de cifrado con AES-256-GCM, variable `CONNECTIONS_ENCRYPTION_KEY` y sus tests.
 2. [x] api: tabla `connection` con RLS, su migración y su repositorio.
-3. [ ] api: queries `connections` y `connection`, mutations `createConnection`, `updateConnection` y `removeConnection`, con sus tests e2e.
+3. [x] api: queries `connections` y `connection`, mutations `createConnection`, `updateConnection` y `removeConnection`, con sus tests e2e.
 4. [ ] web: estado vacío en `/` y formulario de nueva conexión, con el parseo de la URL.
 5. [ ] web: listado temporal en `/` con eliminar.

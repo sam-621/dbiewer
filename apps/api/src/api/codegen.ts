@@ -24,12 +24,37 @@ export type Connection = {
   username: Scalars['String']['output'];
 };
 
+export type ConnectionErrorCode =
+  'CONNECTION_NAME_ALREADY_EXISTS' | 'CONNECTION_NOT_FOUND' | 'INVALID_INPUT';
+
+export type ConnectionErrorResult = {
+  __typename?: 'ConnectionErrorResult';
+  code: ConnectionErrorCode;
+  message: Scalars['String']['output'];
+};
+
 export type ConnectionList = {
   __typename?: 'ConnectionList';
   items: Array<Connection>;
 };
 
+export type ConnectionResult = {
+  __typename?: 'ConnectionResult';
+  apiErrors: Array<ConnectionErrorResult>;
+  connection?: Maybe<Connection>;
+};
+
 export type ConnectionSslMode = 'disable' | 'require' | 'verify-full';
+
+export type CreateConnectionInput = {
+  database: Scalars['String']['input'];
+  host: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
+  port: Scalars['Int']['input'];
+  sslMode: ConnectionSslMode;
+  username: Scalars['String']['input'];
+};
 
 export type CreateWorkspaceInput = {
   name: Scalars['String']['input'];
@@ -43,12 +68,27 @@ export type Me = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createConnection: ConnectionResult;
   createWorkspace: WorkspaceResult;
+  removeConnection: RemoveConnectionResult;
+  updateConnection: ConnectionResult;
   updateUserProfile: UserResult;
+};
+
+export type MutationCreateConnectionArgs = {
+  input: CreateConnectionInput;
 };
 
 export type MutationCreateWorkspaceArgs = {
   input: CreateWorkspaceInput;
+};
+
+export type MutationRemoveConnectionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationUpdateConnectionArgs = {
+  input: UpdateConnectionInput;
 };
 
 export type MutationUpdateUserProfileArgs = {
@@ -65,6 +105,23 @@ export type Query = {
 
 export type QueryConnectionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type RemoveConnectionResult = {
+  __typename?: 'RemoveConnectionResult';
+  apiErrors: Array<ConnectionErrorResult>;
+  success?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type UpdateConnectionInput = {
+  database: Scalars['String']['input'];
+  host: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  password?: InputMaybe<Scalars['String']['input']>;
+  port: Scalars['Int']['input'];
+  sslMode: ConnectionSslMode;
+  username: Scalars['String']['input'];
 };
 
 export type UpdateUserProfileInput = {
@@ -212,15 +269,21 @@ export type DirectiveResolverFn<
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Connection: ResolverTypeWrapper<Connection>;
+  ConnectionErrorCode: ConnectionErrorCode;
+  ConnectionErrorResult: ResolverTypeWrapper<ConnectionErrorResult>;
   ConnectionList: ResolverTypeWrapper<ConnectionList>;
+  ConnectionResult: ResolverTypeWrapper<ConnectionResult>;
   ConnectionSslMode: null;
+  CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Me: ResolverTypeWrapper<Me>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  RemoveConnectionResult: ResolverTypeWrapper<RemoveConnectionResult>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  UpdateConnectionInput: UpdateConnectionInput;
   UpdateUserProfileInput: UpdateUserProfileInput;
   User: ResolverTypeWrapper<User>;
   UserErrorCode: UserErrorCode;
@@ -236,14 +299,19 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   Connection: Connection;
+  ConnectionErrorResult: ConnectionErrorResult;
   ConnectionList: ConnectionList;
+  ConnectionResult: ConnectionResult;
+  CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
   Me: Me;
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
+  RemoveConnectionResult: RemoveConnectionResult;
   String: Scalars['String']['output'];
+  UpdateConnectionInput: UpdateConnectionInput;
   UpdateUserProfileInput: UpdateUserProfileInput;
   User: User;
   UserErrorResult: UserErrorResult;
@@ -267,11 +335,29 @@ export type ConnectionResolvers<
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type ConnectionErrorResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['ConnectionErrorResult'] =
+    ResolversParentTypes['ConnectionErrorResult']
+> = {
+  code?: Resolver<ResolversTypes['ConnectionErrorCode'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
 export type ConnectionListResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['ConnectionList'] = ResolversParentTypes['ConnectionList']
 > = {
   items?: Resolver<Array<ResolversTypes['Connection']>, ParentType, ContextType>;
+};
+
+export type ConnectionResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['ConnectionResult'] =
+    ResolversParentTypes['ConnectionResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
+  connection?: Resolver<Maybe<ResolversTypes['Connection']>, ParentType, ContextType>;
 };
 
 export type ConnectionSslModeResolvers = {
@@ -292,11 +378,29 @@ export type MutationResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
 > = {
+  createConnection?: Resolver<
+    ResolversTypes['ConnectionResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateConnectionArgs, 'input'>
+  >;
   createWorkspace?: Resolver<
     ResolversTypes['WorkspaceResult'],
     ParentType,
     ContextType,
     RequireFields<MutationCreateWorkspaceArgs, 'input'>
+  >;
+  removeConnection?: Resolver<
+    ResolversTypes['RemoveConnectionResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveConnectionArgs, 'id'>
+  >;
+  updateConnection?: Resolver<
+    ResolversTypes['ConnectionResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateConnectionArgs, 'input'>
   >;
   updateUserProfile?: Resolver<
     ResolversTypes['UserResult'],
@@ -319,6 +423,15 @@ export type QueryResolvers<
   connections?: Resolver<ResolversTypes['ConnectionList'], ParentType, ContextType>;
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
+};
+
+export type RemoveConnectionResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['RemoveConnectionResult'] =
+    ResolversParentTypes['RemoveConnectionResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
 };
 
 export type UserResolvers<
@@ -376,11 +489,14 @@ export type WorkspaceResultResolvers<
 
 export type Resolvers<ContextType = RequestContext> = {
   Connection?: ConnectionResolvers<ContextType>;
+  ConnectionErrorResult?: ConnectionErrorResultResolvers<ContextType>;
   ConnectionList?: ConnectionListResolvers<ContextType>;
+  ConnectionResult?: ConnectionResultResolvers<ContextType>;
   ConnectionSslMode?: ConnectionSslModeResolvers;
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserErrorResult?: UserErrorResultResolvers<ContextType>;
   UserResult?: UserResultResolvers<ContextType>;

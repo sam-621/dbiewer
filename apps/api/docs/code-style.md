@@ -30,7 +30,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Archivos | `<recurso>-<capa>.ts`, con guion y no con punto, así el único punto extra es el de los tests (`<recurso>-<capa>.test.ts`) | `connection-resolver.ts`, `connection-errors.ts`, `connection-repository.ts` |
 | Clases | `<Recurso><Capa>` | `ConnectionRepository`, `ConnectionResolver` |
 | Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; archivo en kebab-case en `modules/<modulo>/use-cases/`; carpeta con el mismo nombre solo si tiene test | `modules/workspace/use-cases/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
-| Método del use-case | uno solo, `execute` | `new WorkspaceForUserCreator(ctx).execute(user)` |
+| Método del use-case | se llama `execute`, que hereda de `UseCase`; la lógica va en `run` | `new ConnectionCreator(ctx, encryptionService).execute(args.input)` |
 | Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `resend/resend-sender.ts`, `ResendSender` |
 | Templates de email | `<email>-template.tsx` | `magic-link-template.tsx` |
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
@@ -58,11 +58,13 @@ Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int
 ## Use-case
 
 ```ts
-export class SavedQueryRenamer {
-  constructor(private readonly ctx: UowContext) {}
+export class SavedQueryRenamer extends UseCase<typeof RenameSavedQuerySchema> {
+  constructor(private readonly ctx: UowContext) {
+    super(RenameSavedQuerySchema);
+  }
 
-  async execute(
-    input: RenameSavedQueryInput
+  async run(
+    input: z.output<typeof RenameSavedQuerySchema>
   ): Promise<SavedQuery | SavedQueryNotFoundError | SavedQueryNameAlreadyTakenError> {
     const savedQuery = await this.ctx.repositories.savedQuery.findOne({ id: input.savedQueryId });
 

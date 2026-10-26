@@ -23,3 +23,51 @@ type Query {
   connections: ConnectionList!
   connection(id: ID!): Connection
 }
+
+input CreateConnectionInput {
+  name: String!
+  host: String!
+  port: Int!
+  database: String!
+  username: String!
+  password: String
+  sslMode: ConnectionSslMode!
+}
+
+input UpdateConnectionInput {
+  id: ID!
+  name: String!
+  host: String!
+  port: Int!
+  database: String!
+  username: String!
+  password: String
+  sslMode: ConnectionSslMode!
+}
+
+type ConnectionResult {
+  apiErrors: [ConnectionErrorResult!]!
+  connection: Connection
+}
+
+type RemoveConnectionResult {
+  apiErrors: [ConnectionErrorResult!]!
+  success: Boolean
+}
+
+type ConnectionErrorResult {
+  code: ConnectionErrorCode!
+  message: String!
+}
+
+enum ConnectionErrorCode {
+  INVALID_INPUT
+  CONNECTION_NAME_ALREADY_EXISTS
+  CONNECTION_NOT_FOUND
+}
+
+type Mutation {
+  createConnection(input: CreateConnectionInput!): ConnectionResult!
+  updateConnection(input: UpdateConnectionInput!): ConnectionResult!
+  removeConnection(id: ID!): RemoveConnectionResult!
+}

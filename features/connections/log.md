@@ -12,8 +12,13 @@
 - (api) `code-style.md` y `architecture.md` > Repositorios: se usan directo los métodos públicos del base, sin envolverlos.
 - (api) Queries `connections` y `connection(id)` con sus e2e (parte del paso 3).
 - (api) `architecture.md`, `testing.md` y `technical.md` actualizados: queries sin use-case, enum resolver con `enumValues` y fixtures con orden fijo.
+- (api) Mutations `createConnection`, `updateConnection` y `removeConnection` con sus use-cases, `ConnectionValidator` y sus tests unit y e2e (paso 3).
+- (api) Clase base `UseCase` con zod (`src/shared/use-case.ts`) e `InvalidInputError`. Los use-cases de conexiones la extienden; se borran `ConnectionValidator` y los 6 códigos de error de formato.
+- (api) `INVALID_INPUT` con el mensaje de `z.prettifyError`; se borra la rama de `ZodError` del error handler. `architecture.md`, `code-style.md` y `technical.md` actualizados con `UseCase`, los schemas e `INVALID_INPUT`.
 
 **Decisiones:**
+- Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.
+- En `updateConnection`, una contraseña `""` mantiene la anterior, igual que `null` o ausente.
 - Las queries que solo leen no llevan use-case: el resolver abre el `UnitOfWork` y llama directo al repositorio.
 - Los valores de un enum de GraphQL que en la DB se guardan distinto se traducen con un enum resolver y `enumValues` en `codegen.ts`, no a mano en el resolver.
 - Un repositorio no envuelve los métodos del base: se usan directo. Solo agrega lo que el base no resuelve (orden, `lower()`, `runWithoutRLS`).

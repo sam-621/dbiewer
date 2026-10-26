@@ -100,13 +100,8 @@ type ConnectionErrorResult {
 }
 
 enum ConnectionErrorCode {
-  CONNECTION_NAME_REQUIRED
-  CONNECTION_NAME_TOO_LONG
+  INVALID_INPUT
   CONNECTION_NAME_ALREADY_EXISTS
-  CONNECTION_HOST_REQUIRED
-  CONNECTION_PORT_INVALID
-  CONNECTION_DATABASE_REQUIRED
-  CONNECTION_USERNAME_REQUIRED
   CONNECTION_NOT_FOUND
 }
 
@@ -122,8 +117,8 @@ type Mutation {
 - `connection(id)` devuelve `null` si no existe o es de otro workspace.
 - `hasPassword` es `password_encrypted IS NOT NULL`. El tipo `Connection` no expone la contraseña.
 - `ConnectionSslMode` se traduce a `disable`/`require`/`verify-full` con un enum resolver y `enumValues` en `codegen.ts`.
-- `createConnection` y `updateConnection` recortan nombre, host, base y usuario y validan según `product.md`. Una contraseña vacía (`""`) cuenta como sin contraseña.
-- `updateConnection` con `password` `null` o ausente mantiene `password_encrypted`. Con valor, lo vuelve a cifrar con el mismo `id` como dato asociado.
+- `createConnection` y `updateConnection` recortan nombre, host, base y usuario y validan según `product.md` con `CreateConnectionSchema` y `UpdateConnectionSchema`. Cualquier error de forma devuelve `INVALID_INPUT` con el mensaje de zod. Una contraseña vacía (`""`) cuenta como sin contraseña; en `updateConnection` mantiene la anterior, igual que `null` o ausente.
+- `updateConnection` con `password` `null`, `""` o ausente mantiene `password_encrypted`. Con valor, lo vuelve a cifrar con el mismo `id` como dato asociado.
 - `updateConnection` y `removeConnection` devuelven `CONNECTION_NOT_FOUND` si la conexión no existe o es de otro workspace.
 - `CONNECTION_NAME_ALREADY_EXISTS` lo verifica el use-case antes de escribir; el índice único cubre el resto.
 
@@ -134,7 +129,7 @@ type Mutation {
 | Schema | `src/api/schema/connection.gql` |
 | Resolvers | `src/api/resolvers/connection-resolver.ts` |
 | Use-cases | `src/modules/connection/use-cases/`: `connection-creator.ts`, `connection-updater.ts`, `connection-remover.ts`. Las queries `connections` y `connection` no llevan use-case: el resolver llama a `findAll()` y `findOne({ id })` del repositorio |
-| Validación compartida | `src/modules/connection/connection-validator.ts`, la usan el creator y el updater |
+| Schemas | `src/modules/connection/connection-schemas.ts`: `CreateConnectionSchema` y `UpdateConnectionSchema`. Los use-cases extienden `UseCase` |
 | Errores | `src/modules/connection/connection-errors.ts`, `src/services/encryption/encryption-errors.ts` |
 | Services | `src/services/encryption/` |
 | Repositorios | `src/persistence/repositories/connection/` |
@@ -162,7 +157,7 @@ type Mutation {
 
 ## Tests
 
-- **api, unit:** `EncryptionService`: ida y vuelta, IV distinto en cada cifrado, falla con otro dato asociado, con el valor alterado y con una versión desconocida. `ConnectionValidator`.
+- **api, unit:** `EncryptionService`: ida y vuelta, IV distinto en cada cifrado, falla con otro dato asociado, con el valor alterado y con una versión desconocida.
 - **api, integración:** `ConnectionRepository` contra la DB, incluido el índice único por nombre.
 - **api, e2e** (`tests/connection/<operación>/`): cada query y mutation, sus errores de negocio, que la contraseña queda cifrada en la tabla y nunca sale en la respuesta, que `updateConnection` sin contraseña la mantiene, aislamiento entre workspaces y `UNAUTHENTICATED`.
 - **web, unit:** `parseConnectionUrl`, la página de nueva conexión (pegar URL, validaciones, errores de la api) y `WorkspacePage` con y sin conexiones, con el fetcher mockeado.
