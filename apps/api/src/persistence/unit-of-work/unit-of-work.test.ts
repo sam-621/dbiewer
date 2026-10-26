@@ -129,8 +129,9 @@ describe('UnitOfWork', () => {
         throw new Error('original error');
       })
     ).rejects.toThrow('original error');
-    expect(error).toHaveBeenCalledWith('Failed to roll back the transaction', {
-      error: new Error('rollback failed')
-    });
+    expect(error).toHaveBeenCalledWith(
+      'Failed to roll back the transaction',
+      new Error('rollback failed')
+    );
   });
 });

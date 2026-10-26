@@ -15,7 +15,7 @@ const isGraphQLError = (error: unknown): error is GraphQLError =>
 const getOriginalError = (error: unknown) =>
   isGraphQLError(error) && error.originalError ? error.originalError : error;
 
-export const maskError = (error: unknown, message: string, isDev?: boolean) => {
+export const maskError = (error: unknown, message: string) => {
   const original = getOriginalError(error);
 
   if (original instanceof DbiewerError) {
@@ -24,5 +24,5 @@ export const maskError = (error: unknown, message: string, isDev?: boolean) => {
     if (entry) return new GraphQLError(original.message, { extensions: { code: entry[1] } });
   }
 
-  return maskUnknownError(error, message, isDev);
+  return maskUnknownError(error, message, false);
 };

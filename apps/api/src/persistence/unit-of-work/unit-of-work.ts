@@ -38,7 +38,7 @@ export class UnitOfWork {
       });
     } catch (error) {
       if (!workFailed) throw error;
-      if (error !== workError) logger.error('Failed to roll back the transaction', { error });
+      if (error !== workError) logger.error('Failed to roll back the transaction', error);
 
       throw workError;
     }

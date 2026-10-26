@@ -30,6 +30,8 @@ src/
 ├── api/                               todo lo de GraphQL
 │   ├── schema/<recurso>.gql
 │   ├── resolvers/<recurso>-resolver.ts
+│   ├── middlewares/<nombre>/          middlewares de GraphQL que envuelven al resolver (requireSession)
+│   ├── plugins/<nombre>.ts            plugins de Yoga (useErrorLogger)
 │   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
 ├── modules/<modulo>/                 un módulo por dominio (workspace, connection...): use-cases/, <modulo>-schemas.ts y <modulo>-errors.ts
@@ -57,7 +59,7 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 `createApp(appContext)` (`src/app.ts`) arma Express y monta las rutas en este orden:
 
 - `/api/auth/*splat`: `cors({ origin: config.webUrl, credentials: true })` y después `toNodeHandler(auth)`, sin `express.json()` delante. Con `app.all`, así el preflight `OPTIONS` pasa por `cors`.
-- `/graphql`: Yoga, con su opción `cors: { origin: config.webUrl, credentials: true }`. No se usa el paquete `cors` ahí.
+- `/graphql`: Yoga, con su opción `cors: { origin: config.webUrl, credentials: true }`. No se usa el paquete `cors` ahí. Lleva `logging: false` y sus plugins en `plugins` (`useErrorLogger`).
 
 La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WEB_URL`. Un middleware HTTP nuevo se monta en `createApp`, delante de la ruta que lo necesita.
 
@@ -133,7 +135,7 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 
 ## Services (externos)
 
-Un service es una capa de abstracción sobre un proveedor externo: emails (Resend), autenticación (Better Auth, `services/auth/`), logs (`services/logger/`, hoy winston a consola; más adelante un proveedor de logs), billing, almacenamiento de archivos (S3), etc. Permite cambiar de proveedor, o usar uno falso en desarrollo y tests, sin tocar los use-cases.
+Un service es una capa de abstracción sobre un proveedor externo: emails (Resend), autenticación (Better Auth, `services/auth/`), logs (`services/logger/`, hoy winston a consola; más adelante un proveedor de logs. `createLogger(context)` devuelve un `Logger` con `info`, `warn` y `error(message, error?, meta?)`, que pasa el error por `formatError` (`message`, `name`, `cause`, `stack`) para que salga completo también en el JSON de producción; el formato inline imprime su stack), billing, almacenamiento de archivos (S3), etc. Permite cambiar de proveedor, o usar uno falso en desarrollo y tests, sin tocar los use-cases.
 
 Un service sin proveedor externo (cifrado, `services/encryption/`) es una sola clase (`EncryptionService`), sin interface, adapters ni factory: corre igual en todos los ambientes. Se instancia en `createAppContext` con su parte de la config y queda en `appContext.services`. Lo demás de esta sección aplica igual.
 
@@ -246,7 +248,8 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
   - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`, `SecretDecryptionFailedError`). Extienden `DbiewerError` directo y se lanzan.
 - Los use-cases **devuelven** el error de negocio, no lo lanzan: es parte de su tipo de retorno (`Promise<Workspace | WorkspaceAlreadyExistsError>`). El resolver lo pasa a `apiResponse` (ver "Resolvers") y llega al cliente en `apiErrors` del payload con su `code` y `message`.
 - Como el error se devuelve, el `UnitOfWork` hace commit: el use-case verifica sus reglas y devuelve el error antes de escribir.
-- Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles.
+- Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles (`Unexpected error.`, `INTERNAL_SERVER_ERROR`) en todos los ambientes: nunca sale `originalError`, stack ni causa.
+- El plugin `useErrorLogger` (`src/api/plugins/use-error-logger.ts`) loguea con `logger.error` cada error de la respuesta cuyo `originalError` sea un `DbiewerError` o un `Error`, con la ruta y el `path` y `code` de GraphQL. Los `GraphQLError` (validación de la query del cliente) no se loguean. Corre antes del enmascarado, así ve el error original.
 - Un error de negocio nuevo no se registra en el handler: su `code` se agrega primero al enum `<Recurso>ErrorCode` del `.gql`, se corre `yarn gen:types` y después se crea la clase.
 
 ## Multi-tenant

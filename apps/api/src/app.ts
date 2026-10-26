@@ -7,6 +7,7 @@ import cors from 'cors';
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
 
+import { useErrorLogger } from '@/api/plugins/use-error-logger';
 import { resolvers } from '@/api/resolvers';
 import { config } from '@/config';
 import type { AppContext, RequestContext } from '@/context';
@@ -26,6 +27,7 @@ export const createApp = (appContext: AppContext) => {
     context: createRequestContext(appContext, auth),
     cors: { origin: config.webUrl, credentials: true },
     maskedErrors: { maskError },
+    plugins: [useErrorLogger()],
     logging: false
   });
 

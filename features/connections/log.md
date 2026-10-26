@@ -17,6 +17,8 @@
 - (api) `INVALID_INPUT` con el mensaje de `z.prettifyError`; se borra la rama de `ZodError` del error handler. `architecture.md`, `code-style.md` y `technical.md` actualizados con `UseCase`, los schemas e `INVALID_INPUT`.
 - (web) Avatar generado con `boring-avatars` (`UserAvatar`, variante `marble`, a partir del id del usuario) para los usuarios sin foto (parte del paso 4).
 - (web) Estado vacío de conexiones en `/` con el perfil del usuario en sesión (`SessionUser`: avatar, nombre, email y Sign out), carga y error con reintento. `GET_CONNECTIONS_QUERY` y `useGetConnections` (parte del paso 4).
+- (api) Los errores inesperados ya no salen con `originalError` en ningún ambiente. Se loguean con el patrón de vendyx: plugin `useErrorLogger` de yoga, `Logger` con `error(message, error, meta)` y `formatError`.
+- (api) `architecture.md` y `testing.md` actualizados con `api/plugins/`, `useErrorLogger`, la firma del logger y el error genérico en todos los ambientes.
 
 **Decisiones:**
 - Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.
@@ -30,4 +32,5 @@
 - La api guarda y recibe cada campo por separado. La URL solo completa el formulario del web.
 - Solo se cifra la contraseña, con AES-256-GCM (`node:crypto`), una llave en `CONNECTIONS_ENCRYPTION_KEY`, prefijo de versión `v1` y el id de la conexión como dato asociado. Se descartan `pgcrypto` y KMS por ahora.
 - La contraseña nunca sale de la api. Al editar sin contraseña se mantiene la anterior.
+- Los errores de la api siguen el patrón de vendyx: la api nunca devuelve el detalle de un error inesperado, y el plugin `useErrorLogger` lo loguea completo.
 - En web solo van el estado vacío y el formulario de creación, que son de producción, y un listado temporal con eliminar para probar en local. La vista con conexiones llega con el shell.

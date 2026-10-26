@@ -1,12 +1,15 @@
 import winston from 'winston';
 
+const getStack = (error: unknown) =>
+  typeof error === 'object' && error !== null && 'stack' in error ? error.stack : undefined;
+
 export const inlineLoggerFormat = [
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.colorize(),
   winston.format.errors({ stack: true }),
   winston.format.printf(({ timestamp, level, message, ...rest }) => {
-    if (rest.error instanceof Error) {
-      return `${timestamp} ${level}: ${rest.error.stack}`;
+    if (rest.error) {
+      return `${timestamp} ${level}: ${getStack(rest.error)}`;
     }
     return `${timestamp} ${level}: ${message}`;
   })

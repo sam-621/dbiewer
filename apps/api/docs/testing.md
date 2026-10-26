@@ -43,7 +43,8 @@ No se testean:
 
 - **Auth (Better Auth)**: es configuración de una librería ya probada; lo que importa se cubre con los e2e que usan la sesión y con el test del use-case que llama.
 - **Templates de email**: son presentación; se revisan con `yarn emails`, y el use-case comprueba que el email lleve el link.
-- **Logger**: envoltorio fino de winston, sin lógica.
+- **Logger**: envoltorio de winston; `formatError` solo copia los campos del error.
+- **Plugins de Yoga** (`api/plugins/`): solo loguean lo que ya trae la respuesta.
 - **`shared/`**: utilidades que se cubren a través de quien las usa. Si una tiene lógica propia que no queda cubierta, lleva su unit.
 - **Adapters que no hacen nada** (`dummy`).
 
