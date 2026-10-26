@@ -125,4 +125,7 @@
 - (web) Se quita del login la línea "Si todavía no tienes cuenta, la creamos al entrar." y su key.
 - Docs web: `architecture.md` (módulos `account` y `workspace`, errores y mutation del auth client, formularios que no son `<X>Details`), `design-system.md` (piezas propias en `shared/components/`, tema oscuro por defecto, `inputMode="email"`, avisos en línea sin `ToastProvider`) y `testing.md` (mock de `auth-client`). Spec: `ui.md` sin la línea de cuenta nueva; `technical.md` con `errorCallbackURL`, 429, tema oscuro y módulo `workspace`.
 - (web) Se borra el módulo `src/lib/system/` (home de health check, `useGetHealth`, cache keys y test), su e2e `e2e/system/home.spec.ts`, `system.operations.ts` y sus keys de i18n. `yarn gen:types`, lint y `yarn build` pasan.
+- Spec: `ui.md` y `technical.md` reflejan que se borró la home de health check.
+- (web) Logout: `use-sign-out.ts` (`authClient.signOut()` e invalida `AccountCacheKeys.Me`; la guard manda a `/login`) y botón "Sign out" provisorio en `workspace-page.tsx`, con test. Lint, tests y `yarn build` pasan.
+- Docs web: `architecture.md` > Mutation (la sesión se invalida con `invalidateQueries`; lo demás con `refetchQueries`) y > Mutation del auth client (se traduce con `get<Dominio>Error` solo si hay un code para esa acción).
 

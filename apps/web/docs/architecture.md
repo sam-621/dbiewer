@@ -57,7 +57,7 @@ export const useGetConnections = () => {
 ### Mutation
 
 - Devuelve `Promise<ActionResult<XErrorCode>>`: `{ isSuccess: true }` o `{ isSuccess: false, error, errorCode }`.
-- Si la API lanza un error de negocio (`isApiError(error)`), se traduce con `get<Dominio>Error`. Si todo sale bien, se refrescan las queries afectadas por sus cache keys.
+- Si la API lanza un error de negocio (`isApiError(error)`), se traduce con `get<Dominio>Error`. Si todo sale bien, se refrescan las queries afectadas por sus cache keys con `refetchQueries`. La sesión (`AccountCacheKeys.Me`) es la excepción: se invalida con `invalidateQueries` después del login o el logout, para que las guards reaccionen.
 - Errores inesperados: `Logger.error(error)` y `GENERIC_ERROR`.
 
 ```ts
@@ -91,7 +91,7 @@ export const useRemoveConnection = () => {
 
 ### Mutation del auth client
 
-Las acciones de Better Auth (login, logout) usan `useMutation` de react-query sobre `authClient` en vez de `useGqlMutation`. El cliente no lanza: devuelve `{ data, error }`, así que el hook lee `error` y lo traduce con `get<Dominio>Error`. Devuelve el mismo `ActionResult`. Las URLs de callback van absolutas (`${window.location.origin}/...`), porque Better Auth resuelve las relativas contra la URL de la api.
+Las acciones de Better Auth (login, logout) usan `useMutation` de react-query sobre `authClient` en vez de `useGqlMutation`. El cliente no lanza: devuelve `{ data, error }`, así que el hook lee `error` y lo traduce con `get<Dominio>Error` solo si el dominio tiene un code que corresponda a esa acción (el 429 del magic link). Si no hay ninguno (logout), todo error va a `Logger.error` y `GENERIC_ERROR`, y el hook devuelve `ActionResult` sin code. Devuelve el mismo `ActionResult`. Las URLs de callback van absolutas (`${window.location.origin}/...`), porque Better Auth resuelve las relativas contra la URL de la api.
 
 ```ts
 export const useSignInMagicLink = () => {

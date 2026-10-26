@@ -36,5 +36,5 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
 
 ### Página de inicio actual (health check)
 
-- **Ubicación:** `src/lib/system/pages/home-page.tsx`, hoy en `/`.
-- **Cambia:** deja de ser la ruta `/`, que pasa a ocupar la pantalla de Workspace.
+- **Ubicación:** `src/lib/system/pages/home-page.tsx`, en `/`.
+- **Cambia:** se borra junto con el módulo `system` y su e2e. `/` pasa a ser la pantalla de Workspace.

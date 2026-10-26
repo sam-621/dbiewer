@@ -167,7 +167,7 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 - **Errores:** `src/lib/api/errors/account.errors.ts` traduce los `code` de la tabla de errores.
 - **Login:** `authClient.signIn.magicLink({ email, callbackURL, errorCallbackURL })`, con las dos URLs absolutas (`/` y `/login` del web). Los errores del redirect (link vencido o ya usado) llegan a `/login` como query param `error`. El 429 del rate limit se traduce por status en `account.errors.ts`.
 - **Tema:** la app arranca en modo oscuro.
-- `/` pasa a ser el workspace, dentro de `protect`. La página de health check de `lib/system` deja de ocupar esa ruta.
+- `/` pasa a ser el workspace, dentro de `protect`. Se borra el módulo `lib/system` (home de health check, su operation y su e2e).
 
 ## Impacto en código existente
 
