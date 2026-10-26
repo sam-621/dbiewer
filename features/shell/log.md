@@ -10,6 +10,7 @@
 - (api) `PostgresConnectionFailedError` recibe las `PostgresCredentials` y se instancia donde se lanza.
 - (api) Query `connectionSchema`: una sola consulta a `pg_catalog` arma el árbol de esquemas, tablas, vistas, funciones y columnas. Con e2e e integración. Cierra el paso 1.
 - (api) Los e2e de operaciones que usan `PostgresService` lo mockean en vez de preparar la DB de test. `apiResponse` vale también para queries. Reglas en `testing.md` y `architecture.md`.
+- (api) Queries `tableStructure` y `tableRows` (filtros, orden con desempate por PK, páginas de 50 y conteo exacto), con e2e e integración. Cierra el paso 3.
 
 **Decisiones:**
 - El esquema se lee en vivo de la base del usuario y no se guarda. El árbol completo llega en una sola consulta; lo pesado se pide al abrir la tabla.

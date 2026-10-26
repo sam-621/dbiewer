@@ -1,5 +1,5 @@
 import type { ClientConfig, PoolClient, QueryResult, QueryResultRow } from 'pg';
-import { Client, Pool } from 'pg';
+import { Client, escapeIdentifier, Pool } from 'pg';
 
 import type { Logger } from '@/services/logger';
 import { createLogger } from '@/services/logger';
@@ -34,6 +34,60 @@ export type PostgresSchema = {
   views: Array<{ name: string; columns: PostgresColumn[] }>;
   functions: Array<{ name: string; arguments: string; kind: PostgresFunctionKind }>;
 };
+
+type PostgresObject = { schema: string; name: string };
+
+type PostgresColumnDetail = {
+  name: string;
+  type: string;
+  isNullable: boolean;
+  default: string | null;
+  isPrimaryKey: boolean;
+};
+
+type PostgresIndex = { name: string; definition: string; isUnique: boolean };
+
+type PostgresForeignKey = {
+  columns: string[];
+  referencedSchema: string;
+  referencedTable: string;
+  referencedColumns: string[];
+  onDelete: string;
+};
+
+export type PostgresTableStructure = {
+  columns: PostgresColumnDetail[];
+  indexes: PostgresIndex[];
+  foreignKeys: PostgresForeignKey[];
+  definition: string;
+};
+
+type PostgresRelationRow = {
+  kind: string;
+  columns: PostgresColumnDetail[];
+  indexes: PostgresIndex[];
+  foreignKeys: PostgresForeignKey[];
+  constraints: Array<{ name: string; definition: string }>;
+  viewDefinition: string | null;
+};
+
+type PostgresFilterOperator =
+  'EQ' | 'NEQ' | 'GT' | 'GTE' | 'LT' | 'LTE' | 'CONTAINS' | 'IS_NULL' | 'IS_NOT_NULL';
+
+type PostgresFilter = { column: string; operator: PostgresFilterOperator; value?: string | null };
+
+type PostgresSortDirection = 'ASC' | 'DESC';
+
+type PostgresOrder = { column: string; direction: PostgresSortDirection };
+
+type PostgresRowsQuery = PostgresObject & {
+  filters: PostgresFilter[];
+  orderBy: PostgresOrder | null;
+  primaryKeyColumns: string[];
+  page: number;
+};
+
+export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: number };
 
 export class PostgresService {
   private static readonly CONNECTION_TIMEOUT_MS = 10_000;
@@ -123,6 +177,106 @@ export class PostgresService {
     where sr.relnamespace is not null or sf.pronamespace is not null
     order by n.nspname
   `;
+  private static readonly RELATION_SQL = `
+    with relation as (
+      select c.oid, c.relkind
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = $1 and c.relname = $2 and c.relkind in ('r', 'p', 'v', 'm')
+    )
+    select
+      r.relkind as kind,
+      (
+        select coalesce(
+          json_agg(
+            json_build_object(
+              'name', a.attname,
+              'type', pg_catalog.format_type(a.atttypid, a.atttypmod),
+              'isNullable', not a.attnotnull,
+              'default', pg_catalog.pg_get_expr(d.adbin, d.adrelid),
+              'isPrimaryKey', exists (
+                select 1 from pg_catalog.pg_constraint k
+                where k.conrelid = a.attrelid and k.contype = 'p' and a.attnum = any (k.conkey)
+              )
+            )
+            order by a.attnum
+          ),
+          '[]'::json
+        )
+        from pg_catalog.pg_attribute a
+        left join pg_catalog.pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
+        where a.attrelid = r.oid and a.attnum > 0 and not a.attisdropped
+      ) as columns,
+      (
+        select coalesce(
+          json_agg(
+            json_build_object(
+              'name', i.relname,
+              'definition', pg_catalog.pg_get_indexdef(x.indexrelid),
+              'isUnique', x.indisunique
+            )
+            order by i.relname
+          ),
+          '[]'::json
+        )
+        from pg_catalog.pg_index x
+        join pg_catalog.pg_class i on i.oid = x.indexrelid
+        where x.indrelid = r.oid
+      ) as indexes,
+      (
+        select coalesce(
+          json_agg(
+            json_build_object(
+              'columns', (
+                select json_agg(a.attname order by k.position)
+                from unnest(c.conkey) with ordinality k (attnum, position)
+                join pg_catalog.pg_attribute a on a.attrelid = c.conrelid and a.attnum = k.attnum
+              ),
+              'referencedSchema', rn.nspname,
+              'referencedTable', rc.relname,
+              'referencedColumns', (
+                select json_agg(a.attname order by k.position)
+                from unnest(c.confkey) with ordinality k (attnum, position)
+                join pg_catalog.pg_attribute a on a.attrelid = c.confrelid and a.attnum = k.attnum
+              ),
+              'onDelete', case c.confdeltype
+                when 'r' then 'RESTRICT'
+                when 'c' then 'CASCADE'
+                when 'n' then 'SET NULL'
+                when 'd' then 'SET DEFAULT'
+                else 'NO ACTION'
+              end
+            )
+            order by c.conname
+          ),
+          '[]'::json
+        )
+        from pg_catalog.pg_constraint c
+        join pg_catalog.pg_class rc on rc.oid = c.confrelid
+        join pg_catalog.pg_namespace rn on rn.oid = rc.relnamespace
+        where c.conrelid = r.oid and c.contype = 'f'
+      ) as "foreignKeys",
+      (
+        select coalesce(
+          json_agg(
+            json_build_object('name', c.conname, 'definition', pg_catalog.pg_get_constraintdef(c.oid))
+            order by case c.contype when 'p' then 0 when 'u' then 1 when 'f' then 2 else 3 end, c.conname
+          ),
+          '[]'::json
+        )
+        from pg_catalog.pg_constraint c
+        where c.conrelid = r.oid and c.contype in ('p', 'u', 'f', 'c', 'x')
+      ) as constraints,
+      case when r.relkind in ('v', 'm') then pg_catalog.pg_get_viewdef(r.oid, true) end
+        as "viewDefinition"
+    from relation r
+  `;
+  private static readonly VIEW_KINDS = ['v', 'm'];
+  private static readonly PAGE_SIZE = 50;
+  private static readonly COMPARISON_OPERATORS: Record<
+    Exclude<PostgresFilterOperator, 'CONTAINS' | 'IS_NULL' | 'IS_NOT_NULL'>,
+    string
+  > = { EQ: '=', NEQ: '<>', GT: '>', GTE: '>=', LT: '<', LTE: '<=' };
 
   private readonly pools = new Map<string, Pool>();
   private readonly sslByMode: Record<PostgresSslMode, ClientConfig['ssl']>;
@@ -155,27 +309,69 @@ export class PostgresService {
     sql: string,
     values?: unknown[]
   ): Promise<QueryResult<T>> {
-    let client: PoolClient;
-
-    try {
-      client = await this.getPool(connection).connect();
-    } catch (error) {
-      throw new PostgresConnectionFailedError(connection, this.toReason(error));
-    }
-
-    try {
-      return await client.query<T>(sql, values);
-    } catch (error) {
-      throw new PostgresQueryFailedError(this.toReason(error));
-    } finally {
-      client.release();
-    }
+    return this.withClient(connection, client => client.query<T>(sql, values));
   }
 
   async readSchemas(connection: PostgresConnection) {
     const result = await this.query<PostgresSchema>(connection, PostgresService.SCHEMAS_SQL);
 
     return result.rows;
+  }
+
+  async readTableStructure(
+    connection: PostgresConnection,
+    object: PostgresObject
+  ): Promise<PostgresTableStructure | null> {
+    const result = await this.query<PostgresRelationRow>(connection, PostgresService.RELATION_SQL, [
+      object.schema,
+      object.name
+    ]);
+    const [relation] = result.rows;
+
+    if (!relation) return null;
+
+    if (PostgresService.VIEW_KINDS.includes(relation.kind)) {
+      return {
+        columns: relation.columns,
+        indexes: [],
+        foreignKeys: [],
+        definition: relation.viewDefinition ?? ''
+      };
+    }
+
+    return {
+      columns: relation.columns,
+      indexes: relation.indexes,
+      foreignKeys: relation.foreignKeys,
+      definition: this.toTableDefinition(object, relation)
+    };
+  }
+
+  async readTableRows(
+    connection: PostgresConnection,
+    rowsQuery: PostgresRowsQuery
+  ): Promise<PostgresTableRows> {
+    const values: unknown[] = [];
+    const where = this.toWhereClause(rowsQuery.filters, values);
+    const from = `from ${escapeIdentifier(rowsQuery.schema)}.${escapeIdentifier(rowsQuery.name)}${where}`;
+    const orderBy = this.toOrderByClause(rowsQuery.orderBy, rowsQuery.primaryKeyColumns);
+    const limit = `limit $${values.length + 1} offset $${values.length + 2}`;
+    const offset = (rowsQuery.page - 1) * PostgresService.PAGE_SIZE;
+
+    return this.withClient(connection, async client => {
+      const rows = await client.query<Array<string | null>>({
+        text: `select * ${from}${orderBy} ${limit}`,
+        values: [...values, PostgresService.PAGE_SIZE, offset],
+        rowMode: 'array',
+        types: { getTypeParser: () => (value: string) => value }
+      });
+      const count = await client.query<{ total: string }>(
+        `select count(*) as total ${from}`,
+        values
+      );
+
+      return { rows: rows.rows, totalRows: Number(count.rows[0]?.total) };
+    });
   }
 
   async discardPool(connectionId: string) {
@@ -192,6 +388,27 @@ export class PostgresService {
 
     this.pools.clear();
     await Promise.all(pools.map(pool => pool.end()));
+  }
+
+  private async withClient<T>(
+    connection: PostgresConnection,
+    run: (client: PoolClient) => Promise<T>
+  ): Promise<T> {
+    let client: PoolClient;
+
+    try {
+      client = await this.getPool(connection).connect();
+    } catch (error) {
+      throw new PostgresConnectionFailedError(connection, this.toReason(error));
+    }
+
+    try {
+      return await run(client);
+    } catch (error) {
+      throw new PostgresQueryFailedError(this.toReason(error));
+    } finally {
+      client.release();
+    }
   }
 
   private getPool(connection: PostgresConnection) {
@@ -216,6 +433,61 @@ export class PostgresService {
     this.pools.set(connection.id, pool);
 
     return pool;
+  }
+
+  private toTableDefinition(object: PostgresObject, relation: PostgresRelationRow) {
+    const columns = relation.columns.map(column =>
+      [
+        escapeIdentifier(column.name),
+        column.type,
+        column.isNullable ? null : 'NOT NULL',
+        column.default === null ? null : `DEFAULT ${column.default}`
+      ]
+        .filter(part => part !== null)
+        .join(' ')
+    );
+    const constraints = relation.constraints.map(
+      constraint => `CONSTRAINT ${escapeIdentifier(constraint.name)} ${constraint.definition}`
+    );
+    const lines = [...columns, ...constraints].map(line => `  ${line}`).join(',\n');
+
+    return `CREATE TABLE ${escapeIdentifier(object.schema)}.${escapeIdentifier(object.name)} (\n${lines}\n);`;
+  }
+
+  private toOrderByClause(orderBy: PostgresOrder | null, primaryKeyColumns: string[]) {
+    const tieBreakers = primaryKeyColumns
+      .filter(column => column !== orderBy?.column)
+      .map(column => ({ column, direction: 'ASC' as const }));
+    const orders = [...(orderBy ? [orderBy] : []), ...tieBreakers];
+
+    if (!orders.length) return '';
+
+    const columns = orders.map(
+      order => `${escapeIdentifier(order.column)} ${order.direction.toLowerCase()}`
+    );
+
+    return ` order by ${columns.join(', ')}`;
+  }
+
+  private toWhereClause(filters: PostgresFilter[], values: unknown[]) {
+    if (!filters.length) return '';
+
+    const conditions = filters.map(filter => {
+      const column = escapeIdentifier(filter.column);
+
+      if (filter.operator === 'IS_NULL') return `${column} is null`;
+      if (filter.operator === 'IS_NOT_NULL') return `${column} is not null`;
+
+      values.push(filter.value);
+
+      if (filter.operator === 'CONTAINS') {
+        return `${column}::text ilike '%' || $${values.length} || '%'`;
+      }
+
+      return `${column} ${PostgresService.COMPARISON_OPERATORS[filter.operator]} $${values.length}`;
+    });
+
+    return ` where ${conditions.join(' and ')}`;
   }
 
   private toClientConfig(credentials: PostgresCredentials): ClientConfig {

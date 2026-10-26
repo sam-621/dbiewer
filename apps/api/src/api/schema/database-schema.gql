@@ -39,6 +39,99 @@ type ConnectionSchemaResult {
   schemas: [DbSchema!]
 }
 
+input DbObjectInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+}
+
+type DbTableStructure {
+  columns: [DbColumnDetail!]!
+  indexes: [DbIndex!]!
+  foreignKeys: [DbForeignKey!]!
+  definition: String!
+}
+
+type DbColumnDetail {
+  name: String!
+  type: String!
+  isNullable: Boolean!
+  default: String
+  isPrimaryKey: Boolean!
+}
+
+type DbIndex {
+  name: String!
+  definition: String!
+  isUnique: Boolean!
+}
+
+type DbForeignKey {
+  columns: [String!]!
+  referencedSchema: String!
+  referencedTable: String!
+  referencedColumns: [String!]!
+  onDelete: String!
+}
+
+enum DbFilterOperator {
+  EQ
+  NEQ
+  GT
+  GTE
+  LT
+  LTE
+  CONTAINS
+  IS_NULL
+  IS_NOT_NULL
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input DbFilterInput {
+  column: String!
+  operator: DbFilterOperator!
+  value: String
+}
+
+input DbOrderInput {
+  column: String!
+  direction: SortDirection!
+}
+
+input TableRowsInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+  filters: [DbFilterInput!]
+  orderBy: DbOrderInput
+  page: Int!
+}
+
+type DbResultColumn {
+  name: String!
+  type: String!
+}
+
+type TableRows {
+  columns: [DbResultColumn!]!
+  rows: [[String]!]!
+  totalRows: Int!
+}
+
+type TableStructureResult {
+  apiErrors: [ShellErrorResult!]!
+  structure: DbTableStructure
+}
+
+type TableRowsResult {
+  apiErrors: [ShellErrorResult!]!
+  tableRows: TableRows
+}
+
 type ShellErrorResult {
   code: ShellErrorCode!
   message: String!
@@ -48,8 +141,12 @@ enum ShellErrorCode {
   INVALID_INPUT
   CONNECTION_NOT_FOUND
   CONNECTION_FAILED
+  OBJECT_NOT_FOUND
+  QUERY_FAILED
 }
 
 type Query {
   connectionSchema(connectionId: ID!): ConnectionSchemaResult!
+  tableStructure(input: DbObjectInput!): TableStructureResult!
+  tableRows(input: TableRowsInput!): TableRowsResult!
 }

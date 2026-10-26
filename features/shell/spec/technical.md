@@ -194,7 +194,7 @@ type Query {
 
 - Sirven para tablas y vistas. `definition` es el DDL armado de las columnas y constraints en una tabla, y `pg_get_viewdef` en una vista. Una vista devuelve `indexes` y `foreignKeys` vacíos.
 - `functionDefinition` usa `pg_get_functiondef`.
-- `tableRows` valida `filters` y `orderBy` contra las columnas reales: una columna que no existe es `INVALID_INPUT`. `CONTAINS` es `<col>::text ILIKE '%' || $n || '%'`. Páginas de 50 con `LIMIT/OFFSET`, `page` desde 1. Sin `orderBy`, ordena por la PK si hay.
+- `tableRows` valida `filters` y `orderBy` contra las columnas reales: una columna que no existe es `INVALID_INPUT`. `CONTAINS` es `<col>::text ILIKE '%' || $n || '%'`. Los operadores de comparación y `CONTAINS` requieren `value`; sin él, `INVALID_INPUT`. Páginas de 50 con `LIMIT/OFFSET`, `page` desde 1. Sin `orderBy`, ordena por la PK si hay; con `orderBy`, desempata por la PK. El service arma el orden y la página, así lo cubre la integración.
 - `totalRows` es un `count(*)` con los mismos filtros.
 - Los valores salen como texto (`null` para `NULL`), tal como los devuelve `pg` con los parsers de tipo en texto, para no perder precisión en `numeric`, `bigint` o fechas.
 

@@ -74,6 +74,33 @@ export type DbColumn = {
   type: Scalars['String']['output'];
 };
 
+export type DbColumnDetail = {
+  __typename?: 'DbColumnDetail';
+  default?: Maybe<Scalars['String']['output']>;
+  isNullable: Scalars['Boolean']['output'];
+  isPrimaryKey: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type DbFilterInput = {
+  column: Scalars['String']['input'];
+  operator: DbFilterOperator;
+  value?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type DbFilterOperator =
+  'CONTAINS' | 'EQ' | 'GT' | 'GTE' | 'IS_NOT_NULL' | 'IS_NULL' | 'LT' | 'LTE' | 'NEQ';
+
+export type DbForeignKey = {
+  __typename?: 'DbForeignKey';
+  columns: Array<Scalars['String']['output']>;
+  onDelete: Scalars['String']['output'];
+  referencedColumns: Array<Scalars['String']['output']>;
+  referencedSchema: Scalars['String']['output'];
+  referencedTable: Scalars['String']['output'];
+};
+
 export type DbFunction = {
   __typename?: 'DbFunction';
   arguments: Scalars['String']['output'];
@@ -82,6 +109,30 @@ export type DbFunction = {
 };
 
 export type DbFunctionKind = 'function' | 'procedure';
+
+export type DbIndex = {
+  __typename?: 'DbIndex';
+  definition: Scalars['String']['output'];
+  isUnique: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type DbObjectInput = {
+  connectionId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  schema: Scalars['String']['input'];
+};
+
+export type DbOrderInput = {
+  column: Scalars['String']['input'];
+  direction: SortDirection;
+};
+
+export type DbResultColumn = {
+  __typename?: 'DbResultColumn';
+  name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
 
 export type DbSchema = {
   __typename?: 'DbSchema';
@@ -96,6 +147,14 @@ export type DbTable = {
   columns: Array<DbColumn>;
   estimatedRows?: Maybe<Scalars['Int']['output']>;
   name: Scalars['String']['output'];
+};
+
+export type DbTableStructure = {
+  __typename?: 'DbTableStructure';
+  columns: Array<DbColumnDetail>;
+  definition: Scalars['String']['output'];
+  foreignKeys: Array<DbForeignKey>;
+  indexes: Array<DbIndex>;
 };
 
 export type DbView = {
@@ -151,6 +210,8 @@ export type Query = {
   connections: ConnectionList;
   health: Scalars['Boolean']['output'];
   me?: Maybe<Me>;
+  tableRows: TableRowsResult;
+  tableStructure: TableStructureResult;
 };
 
 export type QueryConnectionArgs = {
@@ -161,18 +222,61 @@ export type QueryConnectionSchemaArgs = {
   connectionId: Scalars['ID']['input'];
 };
 
+export type QueryTableRowsArgs = {
+  input: TableRowsInput;
+};
+
+export type QueryTableStructureArgs = {
+  input: DbObjectInput;
+};
+
 export type RemoveConnectionResult = {
   __typename?: 'RemoveConnectionResult';
   apiErrors: Array<ConnectionErrorResult>;
   success?: Maybe<Scalars['Boolean']['output']>;
 };
 
-export type ShellErrorCode = 'CONNECTION_FAILED' | 'CONNECTION_NOT_FOUND' | 'INVALID_INPUT';
+export type ShellErrorCode =
+  | 'CONNECTION_FAILED'
+  | 'CONNECTION_NOT_FOUND'
+  | 'INVALID_INPUT'
+  | 'OBJECT_NOT_FOUND'
+  | 'QUERY_FAILED';
 
 export type ShellErrorResult = {
   __typename?: 'ShellErrorResult';
   code: ShellErrorCode;
   message: Scalars['String']['output'];
+};
+
+export type SortDirection = 'ASC' | 'DESC';
+
+export type TableRows = {
+  __typename?: 'TableRows';
+  columns: Array<DbResultColumn>;
+  rows: Array<Array<Maybe<Scalars['String']['output']>>>;
+  totalRows: Scalars['Int']['output'];
+};
+
+export type TableRowsInput = {
+  connectionId: Scalars['ID']['input'];
+  filters?: InputMaybe<Array<DbFilterInput>>;
+  name: Scalars['String']['input'];
+  orderBy?: InputMaybe<DbOrderInput>;
+  page: Scalars['Int']['input'];
+  schema: Scalars['String']['input'];
+};
+
+export type TableRowsResult = {
+  __typename?: 'TableRowsResult';
+  apiErrors: Array<ShellErrorResult>;
+  tableRows?: Maybe<TableRows>;
+};
+
+export type TableStructureResult = {
+  __typename?: 'TableStructureResult';
+  apiErrors: Array<ShellErrorResult>;
+  structure?: Maybe<DbTableStructure>;
 };
 
 export type TestConnectionInput = {
@@ -355,10 +459,19 @@ export type ResolversTypes = {
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   DbColumn: ResolverTypeWrapper<DbColumn>;
+  DbColumnDetail: ResolverTypeWrapper<DbColumnDetail>;
+  DbFilterInput: DbFilterInput;
+  DbFilterOperator: DbFilterOperator;
+  DbForeignKey: ResolverTypeWrapper<DbForeignKey>;
   DbFunction: ResolverTypeWrapper<DbFunction>;
   DbFunctionKind: null;
+  DbIndex: ResolverTypeWrapper<DbIndex>;
+  DbObjectInput: DbObjectInput;
+  DbOrderInput: DbOrderInput;
+  DbResultColumn: ResolverTypeWrapper<DbResultColumn>;
   DbSchema: ResolverTypeWrapper<DbSchema>;
   DbTable: ResolverTypeWrapper<DbTable>;
+  DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
@@ -368,7 +481,12 @@ export type ResolversTypes = {
   RemoveConnectionResult: ResolverTypeWrapper<RemoveConnectionResult>;
   ShellErrorCode: ShellErrorCode;
   ShellErrorResult: ResolverTypeWrapper<ShellErrorResult>;
+  SortDirection: SortDirection;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  TableRows: ResolverTypeWrapper<TableRows>;
+  TableRowsInput: TableRowsInput;
+  TableRowsResult: ResolverTypeWrapper<TableRowsResult>;
+  TableStructureResult: ResolverTypeWrapper<TableStructureResult>;
   TestConnectionInput: TestConnectionInput;
   TestConnectionResult: ResolverTypeWrapper<TestConnectionResult>;
   UpdateConnectionInput: UpdateConnectionInput;
@@ -394,9 +512,17 @@ export type ResolversParentTypes = {
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   DbColumn: DbColumn;
+  DbColumnDetail: DbColumnDetail;
+  DbFilterInput: DbFilterInput;
+  DbForeignKey: DbForeignKey;
   DbFunction: DbFunction;
+  DbIndex: DbIndex;
+  DbObjectInput: DbObjectInput;
+  DbOrderInput: DbOrderInput;
+  DbResultColumn: DbResultColumn;
   DbSchema: DbSchema;
   DbTable: DbTable;
+  DbTableStructure: DbTableStructure;
   DbView: DbView;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
@@ -406,6 +532,10 @@ export type ResolversParentTypes = {
   RemoveConnectionResult: RemoveConnectionResult;
   ShellErrorResult: ShellErrorResult;
   String: Scalars['String']['output'];
+  TableRows: TableRows;
+  TableRowsInput: TableRowsInput;
+  TableRowsResult: TableRowsResult;
+  TableStructureResult: TableStructureResult;
   TestConnectionInput: TestConnectionInput;
   TestConnectionResult: TestConnectionResult;
   UpdateConnectionInput: UpdateConnectionInput;
@@ -482,6 +612,28 @@ export type DbColumnResolvers<
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type DbColumnDetailResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DbColumnDetail'] = ResolversParentTypes['DbColumnDetail']
+> = {
+  default?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  isNullable?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isPrimaryKey?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DbForeignKeyResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DbForeignKey'] = ResolversParentTypes['DbForeignKey']
+> = {
+  columns?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  onDelete?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  referencedColumns?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  referencedSchema?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  referencedTable?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
 export type DbFunctionResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['DbFunction'] = ResolversParentTypes['DbFunction']
@@ -492,6 +644,23 @@ export type DbFunctionResolvers<
 };
 
 export type DbFunctionKindResolvers = { FUNCTION: 'function'; PROCEDURE: 'procedure' };
+
+export type DbIndexResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DbIndex'] = ResolversParentTypes['DbIndex']
+> = {
+  definition?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  isUnique?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DbResultColumnResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DbResultColumn'] = ResolversParentTypes['DbResultColumn']
+> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
 
 export type DbSchemaResolvers<
   ContextType = RequestContext,
@@ -510,6 +679,17 @@ export type DbTableResolvers<
   columns?: Resolver<Array<ResolversTypes['DbColumn']>, ParentType, ContextType>;
   estimatedRows?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DbTableStructureResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DbTableStructure'] =
+    ResolversParentTypes['DbTableStructure']
+> = {
+  columns?: Resolver<Array<ResolversTypes['DbColumnDetail']>, ParentType, ContextType>;
+  definition?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  foreignKeys?: Resolver<Array<ResolversTypes['DbForeignKey']>, ParentType, ContextType>;
+  indexes?: Resolver<Array<ResolversTypes['DbIndex']>, ParentType, ContextType>;
 };
 
 export type DbViewResolvers<
@@ -589,6 +769,18 @@ export type QueryResolvers<
   connections?: Resolver<ResolversTypes['ConnectionList'], ParentType, ContextType>;
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
+  tableRows?: Resolver<
+    ResolversTypes['TableRowsResult'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryTableRowsArgs, 'input'>
+  >;
+  tableStructure?: Resolver<
+    ResolversTypes['TableStructureResult'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryTableStructureArgs, 'input'>
+  >;
 };
 
 export type RemoveConnectionResultResolvers<
@@ -607,6 +799,33 @@ export type ShellErrorResultResolvers<
 > = {
   code?: Resolver<ResolversTypes['ShellErrorCode'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type TableRowsResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['TableRows'] = ResolversParentTypes['TableRows']
+> = {
+  columns?: Resolver<Array<ResolversTypes['DbResultColumn']>, ParentType, ContextType>;
+  rows?: Resolver<Array<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+  totalRows?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+};
+
+export type TableRowsResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['TableRowsResult'] =
+    ResolversParentTypes['TableRowsResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  tableRows?: Resolver<Maybe<ResolversTypes['TableRows']>, ParentType, ContextType>;
+};
+
+export type TableStructureResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['TableStructureResult'] =
+    ResolversParentTypes['TableStructureResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  structure?: Resolver<Maybe<ResolversTypes['DbTableStructure']>, ParentType, ContextType>;
 };
 
 export type TestConnectionResultResolvers<
@@ -679,16 +898,24 @@ export type Resolvers<ContextType = RequestContext> = {
   ConnectionSchemaResult?: ConnectionSchemaResultResolvers<ContextType>;
   ConnectionSslMode?: ConnectionSslModeResolvers;
   DbColumn?: DbColumnResolvers<ContextType>;
+  DbColumnDetail?: DbColumnDetailResolvers<ContextType>;
+  DbForeignKey?: DbForeignKeyResolvers<ContextType>;
   DbFunction?: DbFunctionResolvers<ContextType>;
   DbFunctionKind?: DbFunctionKindResolvers;
+  DbIndex?: DbIndexResolvers<ContextType>;
+  DbResultColumn?: DbResultColumnResolvers<ContextType>;
   DbSchema?: DbSchemaResolvers<ContextType>;
   DbTable?: DbTableResolvers<ContextType>;
+  DbTableStructure?: DbTableStructureResolvers<ContextType>;
   DbView?: DbViewResolvers<ContextType>;
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
   ShellErrorResult?: ShellErrorResultResolvers<ContextType>;
+  TableRows?: TableRowsResolvers<ContextType>;
+  TableRowsResult?: TableRowsResultResolvers<ContextType>;
+  TableStructureResult?: TableStructureResultResolvers<ContextType>;
   TestConnectionResult?: TestConnectionResultResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   UserErrorResult?: UserErrorResultResolvers<ContextType>;

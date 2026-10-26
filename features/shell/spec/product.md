@@ -46,7 +46,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Una vista se ve igual que una tabla, en solo lectura.
 - Las filas se leen de a 50 por página.
 - Filtros: una o más condiciones unidas con `AND`, cada una con columna, operador y valor. Operadores: `=`, `!=`, `>`, `>=`, `<`, `<=`, `contains` (sin distinguir mayúsculas), `is null` e `is not null`.
-- Orden: una columna, ascendente o descendente. Por defecto, por la PK si existe.
+- Orden: una columna, ascendente o descendente. Por defecto, por la PK si existe. Si la columna se repite, se desempata por la PK para que las páginas no repitan ni pierdan filas.
 - La api solo acepta columnas que existen en la tabla. Los valores de los filtros nunca se concatenan al SQL.
 
 ### Funciones
@@ -113,7 +113,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 1. [x] api: pool de conexiones en `PostgresService` e introspección con la query `connectionSchema`, con sus tests e2e.
 2. [ ] web: shell con header y selector de conexión, sidebar con Explorer y buscador; reemplaza el listado temporal.
-3. [ ] api: queries `tableStructure` y `tableRows` con filtros, orden y paginación, con sus tests e2e.
+3. [x] api: queries `tableStructure` y `tableRows` con filtros, orden y paginación, con sus tests e2e.
 4. [ ] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
 5. [ ] api: tabla `query_history`, mutation `runQuery` con límites y query `queryHistory`, con sus tests e2e.
 6. [ ] web: pestaña SQL con editor, ejecutar, Results, Messages e History, y pestaña de función en solo lectura.
