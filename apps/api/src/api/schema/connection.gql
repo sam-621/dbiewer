@@ -1,0 +1,25 @@
+enum ConnectionSslMode {
+  DISABLE
+  REQUIRE
+  VERIFY_FULL
+}
+
+type Connection {
+  id: ID!
+  name: String!
+  host: String!
+  port: Int!
+  database: String!
+  username: String!
+  hasPassword: Boolean!
+  sslMode: ConnectionSslMode!
+}
+
+type ConnectionList {
+  items: [Connection!]!
+}
+
+type Query {
+  connections: ConnectionList!
+  connection(id: ID!): Connection
+}

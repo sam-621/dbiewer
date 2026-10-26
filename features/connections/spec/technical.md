@@ -121,6 +121,7 @@ type Mutation {
 - `connections` devuelve las del workspace ordenadas por `created_at desc, id`. Sin paginación.
 - `connection(id)` devuelve `null` si no existe o es de otro workspace.
 - `hasPassword` es `password_encrypted IS NOT NULL`. El tipo `Connection` no expone la contraseña.
+- `ConnectionSslMode` se traduce a `disable`/`require`/`verify-full` con un enum resolver y `enumValues` en `codegen.ts`.
 - `createConnection` y `updateConnection` recortan nombre, host, base y usuario y validan según `product.md`. Una contraseña vacía (`""`) cuenta como sin contraseña.
 - `updateConnection` con `password` `null` o ausente mantiene `password_encrypted`. Con valor, lo vuelve a cifrar con el mismo `id` como dato asociado.
 - `updateConnection` y `removeConnection` devuelven `CONNECTION_NOT_FOUND` si la conexión no existe o es de otro workspace.
@@ -132,7 +133,7 @@ type Mutation {
 |------|---------|
 | Schema | `src/api/schema/connection.gql` |
 | Resolvers | `src/api/resolvers/connection-resolver.ts` |
-| Use-cases | `src/modules/connection/use-cases/`: `connection-creator.ts`, `connection-updater.ts`, `connection-remover.ts`, `connections-finder.ts`, `connection-finder.ts` |
+| Use-cases | `src/modules/connection/use-cases/`: `connection-creator.ts`, `connection-updater.ts`, `connection-remover.ts`. Las queries `connections` y `connection` no llevan use-case: el resolver llama a `findAll()` y `findOne({ id })` del repositorio |
 | Validación compartida | `src/modules/connection/connection-validator.ts`, la usan el creator y el updater |
 | Errores | `src/modules/connection/connection-errors.ts`, `src/services/encryption/encryption-errors.ts` |
 | Services | `src/services/encryption/` |

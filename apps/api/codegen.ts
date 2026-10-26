@@ -8,7 +8,14 @@ const config: CodegenConfig = {
       config: {
         contextType: '@/context#RequestContext',
         useTypeImports: true,
-        enumsAsTypes: true
+        enumsAsTypes: true,
+        enumValues: {
+          ConnectionSslMode: {
+            DISABLE: 'disable',
+            REQUIRE: 'require',
+            VERIFY_FULL: 'verify-full'
+          }
+        }
       }
     }
   }

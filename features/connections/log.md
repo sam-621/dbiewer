@@ -10,8 +10,12 @@
 - (api) Los métodos del `Repository` base (`findMany`, `findOne`, `insert`, `update`, `remove`) pasan a públicos. `ConnectionRepository` deja solo `findAll` y `existsByName`.
 - (api) Los tests de repositorio corren como `app_user` (`testAppDatabase`), con RLS. `testing.md` actualizado.
 - (api) `code-style.md` y `architecture.md` > Repositorios: se usan directo los métodos públicos del base, sin envolverlos.
+- (api) Queries `connections` y `connection(id)` con sus e2e (parte del paso 3).
+- (api) `architecture.md`, `testing.md` y `technical.md` actualizados: queries sin use-case, enum resolver con `enumValues` y fixtures con orden fijo.
 
 **Decisiones:**
+- Las queries que solo leen no llevan use-case: el resolver abre el `UnitOfWork` y llama directo al repositorio.
+- Los valores de un enum de GraphQL que en la DB se guardan distinto se traducen con un enum resolver y `enumValues` en `codegen.ts`, no a mano en el resolver.
 - Un repositorio no envuelve los métodos del base: se usan directo. Solo agrega lo que el base no resuelve (orden, `lower()`, `runWithoutRLS`).
 - El código que se prueba corre siempre como `app_user`; el superusuario solo prepara y lee datos.
 - El cifrado es una clase `EncryptionService`, sin interface ni adapters.

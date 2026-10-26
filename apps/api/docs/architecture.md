@@ -10,7 +10,7 @@ Capas clásicas, organizadas por tipo de pieza. Sin módulos ni capa de dominio.
 src/api/schema      los .gql del schema de GraphQL
         │
         ▼
-src/api/resolvers   validan el input, llaman al use-case, responden
+src/api/resolvers   llaman al use-case (o al repositorio, si la query solo lee) y responden
         │
         ▼
 src/modules/<modulo>/use-cases   reglas de negocio ──► src/services   servicios externos
@@ -19,7 +19,7 @@ src/modules/<modulo>/use-cases   reglas de negocio ──► src/services   serv
 src/persistence/repositories   acceso a datos
 ```
 
-- Cada capa solo llama a la de abajo. Un resolver nunca llama a un repositorio ni a un service; un use-case nunca toca el contexto de GraphQL ni `req`/`res`.
+- Cada capa solo llama a la de abajo. Un resolver nunca llama a un service, ni a un repositorio salvo en una query que solo lee (ver "Resolvers"); un use-case nunca toca el contexto de GraphQL ni `req`/`res`.
 - Los use-cases son los únicos que usan services. Un service no llama a use-cases ni a repositorios.
 - Lo compartido va en `src/shared/` (`errors/`, `middlewares/`, `utils/`).
 
@@ -66,6 +66,8 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 - Usan `args.input` tal como llega, con el tipo del codegen. No lo validan con zod ni lo transforman.
 - Llaman a un solo método del use-case y responden. Sin `if` de negocio. De dónde sale el use-case se define con el contexto del request.
 - Excepción: si lo que se devuelve ya está en el contexto del request (como la sesión), el resolver lo devuelve directo, sin use-case ni `UnitOfWork`. Por ejemplo, `me` devuelve `ctx.session`, o `null` si no hay sesión, y por eso no va envuelto en `requireSession`.
+- Excepción: una query que solo lee, sin reglas de negocio, no lleva use-case. El resolver abre el `UnitOfWork` y llama directo al repositorio (`uow.execute(repositories => repositories.connection.findAll())`). Si la lectura necesita una regla, va a un use-case.
+- Un enum de GraphQL cuyos valores se guardan distinto en la DB (`VERIFY_FULL` y `verify-full`) se traduce con un enum resolver en el `Resolvers` del recurso (`ConnectionSslMode: { VERIFY_FULL: 'verify-full', ... }`) y los mismos valores en `enumValues` de `codegen.ts`, así el tipo generado usa los de la DB. Nunca se traduce a mano en el resolver.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
 - Una mutation que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
 

@@ -12,6 +12,25 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
+export type Connection = {
+  __typename?: 'Connection';
+  database: Scalars['String']['output'];
+  hasPassword: Scalars['Boolean']['output'];
+  host: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  port: Scalars['Int']['output'];
+  sslMode: ConnectionSslMode;
+  username: Scalars['String']['output'];
+};
+
+export type ConnectionList = {
+  __typename?: 'ConnectionList';
+  items: Array<Connection>;
+};
+
+export type ConnectionSslMode = 'disable' | 'require' | 'verify-full';
+
 export type CreateWorkspaceInput = {
   name: Scalars['String']['input'];
 };
@@ -38,8 +57,14 @@ export type MutationUpdateUserProfileArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  connection?: Maybe<Connection>;
+  connections: ConnectionList;
   health: Scalars['Boolean']['output'];
   me?: Maybe<Me>;
+};
+
+export type QueryConnectionArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type UpdateUserProfileInput = {
@@ -186,8 +211,12 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Connection: ResolverTypeWrapper<Connection>;
+  ConnectionList: ResolverTypeWrapper<ConnectionList>;
+  ConnectionSslMode: null;
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Me: ResolverTypeWrapper<Me>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -206,8 +235,11 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  Connection: Connection;
+  ConnectionList: ConnectionList;
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: Scalars['ID']['output'];
+  Int: Scalars['Int']['output'];
   Me: Me;
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
@@ -219,6 +251,33 @@ export type ResolversParentTypes = {
   Workspace: Workspace;
   WorkspaceErrorResult: WorkspaceErrorResult;
   WorkspaceResult: WorkspaceResult;
+};
+
+export type ConnectionResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['Connection'] = ResolversParentTypes['Connection']
+> = {
+  database?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hasPassword?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  host?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  port?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  sslMode?: Resolver<ResolversTypes['ConnectionSslMode'], ParentType, ContextType>;
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type ConnectionListResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['ConnectionList'] = ResolversParentTypes['ConnectionList']
+> = {
+  items?: Resolver<Array<ResolversTypes['Connection']>, ParentType, ContextType>;
+};
+
+export type ConnectionSslModeResolvers = {
+  DISABLE: 'disable';
+  REQUIRE: 'require';
+  VERIFY_FULL: 'verify-full';
 };
 
 export type MeResolvers<
@@ -251,6 +310,13 @@ export type QueryResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
+  connection?: Resolver<
+    Maybe<ResolversTypes['Connection']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryConnectionArgs, 'id'>
+  >;
+  connections?: Resolver<ResolversTypes['ConnectionList'], ParentType, ContextType>;
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
 };
@@ -309,6 +375,9 @@ export type WorkspaceResultResolvers<
 };
 
 export type Resolvers<ContextType = RequestContext> = {
+  Connection?: ConnectionResolvers<ContextType>;
+  ConnectionList?: ConnectionListResolvers<ContextType>;
+  ConnectionSslMode?: ConnectionSslModeResolvers;
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

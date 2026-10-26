@@ -105,4 +105,5 @@ No se testean:
 
 - Viven en `fixtures/` junto al test, en `<recurso>.fixtures.ts` (con punto, no con guion: `verification.fixtures.ts`): una clase por tabla, `<X>Fixtures implements Fixture<XTable>` y `<X>Constants` con los ids de todas las filas. `<X>Constants` puede llevar otros valores (emails, fechas de corte), pero solo los que usan los tests.
 - Los UUID se generan en constantes **fuera** del objeto, nunca como getters.
+- Si un test depende del orden (`created_at desc, id`), las filas llevan `createdAt` fijo y, para probar el desempate, UUID fijos (`00000000-0000-0000-0000-000000000001`) en vez de `crypto.randomUUID()`.
 - Un solo `loadFixtures([...])` en el `beforeEach` raíz. Si un caso necesita filas nuevas, se agregan a la clase de fixtures existente; nada de clases ad-hoc cargadas en `beforeEach` anidados.
