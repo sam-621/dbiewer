@@ -1,9 +1,8 @@
 import type { Database, Transaction } from '@/persistence/database';
 import type { Repositories } from '@/persistence/repositories/build-repositories';
 import { buildRepositories } from '@/persistence/repositories/build-repositories';
-import type { RLSContext } from '@/persistence/rls';
-import type { RunWithoutRLS } from '@/persistence/rls';
-import { enableRLS } from '@/persistence/rls';
+import type { RLSContext, RunWithoutRLS } from '@/persistence/rls';
+import { enableRLS, runWithoutRLS } from '@/persistence/rls';
 import { createLogger } from '@/services/logger';
 
 export type UowContext = {
@@ -20,21 +19,17 @@ const logger = createLogger('unit-of-work');
 export class UnitOfWork {
   constructor(
     private readonly database: Database,
-    private readonly rlsContext?: RLSContext & { trx?: Transaction }
+    private readonly rlsContext: RLSContext = {}
   ) {}
 
   async execute<R>(work: Work<R>) {
-    const { trx: externalTrx, ...rlsContext } = this.rlsContext ?? {};
-
-    if (externalTrx) return this.run(externalTrx, rlsContext, work);
-
     let workFailed = false;
     let workError: unknown;
 
     try {
       return await this.database.transaction(async trx => {
         try {
-          return await this.run(trx, rlsContext, work);
+          return await this.run(trx, this.rlsContext, work);
         } catch (error) {
           workFailed = true;
           workError = error;
@@ -52,7 +47,8 @@ export class UnitOfWork {
   private async run<R>(trx: Transaction, rlsContext: RLSContext, work: Work<R>) {
     await enableRLS(trx, rlsContext);
 
-    const { repositories, rls } = buildRepositories(trx, rlsContext);
+    const rls = { context: rlsContext, runWithoutRLS: runWithoutRLS(trx, rlsContext) };
+    const repositories = buildRepositories(trx, rls);
 
     return work(repositories, {
       repositories,

@@ -48,6 +48,8 @@
 - (api) Limpieza de migraciones (no se había corrido ninguna): `0001`–`0009` quedan en `0001_create_auth_and_workspace` (generada) y `0002_auth_rls_and_privileges` (custom).
 - (api) Se borra `shared/utils/workspace-name.ts`: el nombre inicial y el sufijo del slug son métodos privados de `WorkspaceForUserCreator`. Utilidad `slugify(text)` en `shared/utils/slugify.ts` sobre la librería `slugify`.
 - (api) El slug es `slugify(nombre)`; solo si ya existe (`WorkspaceRepository.existsBySlug`, sin RLS) se le agrega el sufijo aleatorio.
+- (api) `buildRepositories(trx, rls)` solo construye los repositorios; el `RepositoryRLS` lo arma el `UnitOfWork`.
+- (api) `UnitOfWork` ya no acepta una transacción externa: siempre abre la suya.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).

@@ -118,13 +118,13 @@ El app context lleva, ya instanciados:
 
 Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persistence/unit-of-work/`), que lo aísla en una transacción con el RLS aplicado.
 
-- `new UnitOfWork(database, rlsContext?)`. `database` es la conexión `app`. `rlsContext` (`RLSContext = { tenantId }`) dice qué tenant aplicar; puede traer además una `trx` externa.
+- `new UnitOfWork(database, rlsContext?)`. `database` es la conexión `app`. `rlsContext` (`RLSContext = { tenantId }`) dice qué tenant aplicar. Siempre abre su propia transacción: no recibe una externa.
 - `execute(work)`:
-  1. Abre la transacción (o usa la externa).
+  1. Abre la transacción.
   2. Aplica el RLS con `enableRLS` (`app.bypass_rls = 'off'` y `app.current_tenant_id`).
-  3. Arma los repositorios sobre esa transacción con `buildRepositories(trx, rlsContext)`.
+  3. Crea el `RepositoryRLS` y arma los repositorios sobre esa transacción con `buildRepositories(trx, rls)`.
   4. Llama a `work(repositories, uowContext)`.
-  5. Si la transacción es suya, hace commit, o rollback si `work` lanza. El error original nunca se tapa con el del rollback. Con `trx` externa no hace commit ni rollback.
+  5. Hace commit, o rollback si `work` lanza. El error original nunca se tapa con el del rollback.
 - `UowContext = { repositories, trx, runWithoutRLS, rlsContext }`.
 - Quien llama (el resolver) instancia el `UnitOfWork` y, dentro del callback, instancia el use-case con el `UowContext`, lo ejecuta y devuelve el resultado:
 
@@ -144,7 +144,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 ### `build-repositories.ts`
 
-- `buildRepositories(trx, rlsContext)` crea `runWithoutRLS` una sola vez y arma todos los repositorios con la transacción y el RLS (`RepositoryRLS = { context, runWithoutRLS }`). El `UnitOfWork` reutiliza esa misma función en el `UowContext`.
+- `buildRepositories(trx, rls)` solo arma los repositorios con la transacción y el `RepositoryRLS` (`{ context, runWithoutRLS }`). El `RepositoryRLS` lo crea el `UnitOfWork`, que reutiliza ese mismo `runWithoutRLS` en el `UowContext`.
 - Un repositorio nuevo se agrega aquí.
 
 ## Config
