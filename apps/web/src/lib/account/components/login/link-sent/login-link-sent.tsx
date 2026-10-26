@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Button } from '@/shared/components/ui/button';
 
-import { useSignInMagicLink } from '../../hooks/use-sign-in-magic-link';
+import { useSignInMagicLink } from '../../../hooks/use-sign-in-magic-link';
 
 type Props = {
   email: string;
   onUseAnotherEmail: () => void;
 };
 
-export const LoginSent = ({ email, onUseAnotherEmail }: Props) => {
+export const LoginLinkSent = ({ email, onUseAnotherEmail }: Props) => {
   const { t } = useTranslation();
   const [resendError, setResendError] = useState<string | null>(null);
   const [isResent, setIsResent] = useState(false);

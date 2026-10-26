@@ -1,16 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'react-router';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { useSignInMagicLink } from '../../hooks/use-sign-in-magic-link';
 
-type Params = {
-  onSent: (email: string) => void;
-};
-
-export const useLoginForm = ({ onSent }: Params) => {
-  const [submitError, setSubmitError] = useState<string | null>(null);
+export const useLoginForm = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [hasLinkError, setHasLinkError] = useState(() => searchParams.has('error'));
   const { signInMagicLink, isLoading } = useSignInMagicLink();
 
   const form = useForm<FormValues>({
@@ -18,16 +16,30 @@ export const useLoginForm = ({ onSent }: Params) => {
     defaultValues: { email: '' }
   });
 
+  useEffect(() => {
+    if (!hasLinkError) return;
+
+    setSearchParams(
+      params => {
+        params.delete('error');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [hasLinkError, setSearchParams]);
+
   const onSubmit = async ({ email }: FormValues) => {
-    setSubmitError(null);
     const result = await signInMagicLink(email);
 
-    if (result.isSuccess) return onSent(email);
-
-    setSubmitError(result.error);
+    if (!result.isSuccess) form.setError('root', { message: result.error });
   };
 
-  return { form, isLoading, submitError, onSubmit: form.handleSubmit(onSubmit) };
+  const backToForm = () => {
+    setHasLinkError(false);
+    form.reset();
+  };
+
+  return { form, isLoading, hasLinkError, onSubmit: form.handleSubmit(onSubmit), backToForm };
 };
 
 const Schema = z.object({

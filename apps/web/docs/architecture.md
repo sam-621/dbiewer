@@ -181,7 +181,9 @@ Un formulario que no edita una entidad (login, búsqueda) tiene su hook en un ar
 ```
 components/<pieza>/
 ├── <pieza>-form.tsx          solo UI
-└── use-<pieza>-form.ts       use<Pieza>Form, schema y FormValues
+├── use-<pieza>-form.ts       use<Pieza>Form, schema y FormValues
+└── <sub-pieza>/              una carpeta por pieza que muestra el form (como link-sent/)
+    └── <sub-pieza>.tsx
 ```
 
 - `use<Pieza>Form(params)`: sigue la forma de los [hooks de formulario](#hooks-de-formulario), con `defaultValues` vacíos.
@@ -191,15 +193,16 @@ components/<pieza>/
 
 Todo hook de formulario (`<X>Details` u otro) vive en un solo archivo `use-<nombre>-form.ts`, sin carpeta, y tiene la misma forma:
 
-- El hook tiene adentro la mutation, el estado que necesite el submit (`submitError`) y el `onSubmit`, que se devuelve ya envuelto con `form.handleSubmit`.
+- El hook tiene adentro la mutation y el `onSubmit`, que se devuelve ya envuelto con `form.handleSubmit`.
+- Si el submit falla, el error va con `form.setError('root', { message: result.error })`: así `isSubmitSuccessful` queda en `false` y RHF limpia `errors.root` en el siguiente submit. No hay estado `submitError` aparte.
+- El componente lee el error de `form.formState.errors.root?.message` y el éxito de `form.formState.isSubmitSuccessful` (por ejemplo, para mostrar un estado "enviado" en lugar del form). `form.reset()` vuelve al form vacío.
 - Devuelve `{ form, isLoading, onSubmit, ... }`: `form` es el resultado de `useForm` sin spread, y al lado lo demás que use el componente.
 - El schema de zod y `type FormValues = z.infer<typeof Schema>` van en el mismo archivo, debajo del hook. No hay `form-schema.ts`.
-- Lo que llega de afuera (callbacks como `onSent`) entra por parámetro.
+- Lo que llega de afuera (callbacks) entra por parámetro.
 - El componente solo arma la UI: `<Form onSubmit={onSubmit}>` y lee `form.register`, `form.formState`, etc.
 
 ```ts
-export const useLoginForm = ({ onSent }: Params) => {
-  const [submitError, setSubmitError] = useState<string | null>(null);
+export const useLoginForm = () => {
   const { signInMagicLink, isLoading } = useSignInMagicLink();
 
   const form = useForm<FormValues>({
@@ -208,15 +211,12 @@ export const useLoginForm = ({ onSent }: Params) => {
   });
 
   const onSubmit = async ({ email }: FormValues) => {
-    setSubmitError(null);
     const result = await signInMagicLink(email);
 
-    if (result.isSuccess) return onSent(email);
-
-    setSubmitError(result.error);
+    if (!result.isSuccess) form.setError('root', { message: result.error });
   };
 
-  return { form, isLoading, submitError, onSubmit: form.handleSubmit(onSubmit) };
+  return { form, isLoading, onSubmit: form.handleSubmit(onSubmit) };
 };
 
 const Schema = z.object({
