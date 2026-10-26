@@ -33,7 +33,7 @@ Tablas de Better Auth, generadas con `npx @better-auth/cli generate` al schema d
 | `account` | `id`, `user_id`, `provider_id`, `account_id`, tokens del proveedor | no |
 | `verification` | `id`, `identifier`, `value`, `expires_at` | no |
 
-`account` se crea ahora aunque recién se use en `social-login`, porque Better Auth la necesita desde el principio.
+`account` se crea aunque hoy no se use (solo la necesitaría OAuth), porque Better Auth la necesita desde el principio.
 
 Tabla propia:
 
@@ -49,7 +49,7 @@ Tabla propia:
 
 ## Creación del workspace
 
-- El workspace no se crea al crear la cuenta: se crea con la mutation `createWorkspace`, con `WorkspaceForUserCreator`. El nombre lo manda el usuario.
+- El workspace no se crea al crear la cuenta: se crea con la mutation `createWorkspace`, con `WorkspaceForUserCreator`, al terminar el onboarding. El web siempre manda el nombre "My workspace".
 - Si el usuario ya tiene workspace, `WorkspaceForUserCreator` devuelve `WorkspaceAlreadyExistsError` (`WORKSPACE_ALREADY_EXISTS`).
 - Nunca se crea al leerlo. Si al resolver la sesión el usuario no tiene workspace, `session.workspace` queda en `null`.
 
@@ -104,13 +104,34 @@ enum WorkspaceErrorCode {
   WORKSPACE_ALREADY_EXISTS
 }
 
+input UpdateUserProfileInput {
+  name: String!
+}
+
+type UserResult {
+  apiErrors: [UserErrorResult!]!
+  user: User
+}
+
+type UserErrorResult {
+  code: UserErrorCode!
+  message: String!
+}
+
+enum UserErrorCode {
+  USER_NAME_REQUIRED
+  USER_NAME_TOO_LONG
+}
+
 type Mutation {
   createWorkspace(input: CreateWorkspaceInput!): WorkspaceResult!
+  updateUserProfile(input: UpdateUserProfileInput!): UserResult!
 }
 ```
 
 - `me` devuelve `null` si no hay sesión, en lugar de lanzar un error. El web lo usa para saber si hay sesión. `me.workspace` es `null` si el usuario todavía no creó su workspace.
 - `createWorkspace` requiere sesión. Sigue el patrón de `architecture.md` > Resolvers: `uow`, `result` y `apiResponse(result, 'workspace')`.
+- `updateUserProfile` requiere sesión. `UserProfileUpdater` recorta el nombre, lo valida (no vacío, 50 caracteres como máximo) y lo escribe con `auth.api.updateUser({ headers, body: { name } })`, porque la conexión del request no tiene permisos sobre `user`. No usa `uow`. Devuelve el usuario de la sesión con el nombre nuevo. Para eso el contexto del request suma `auth` y `headers`.
 - Login y logout no pasan por GraphQL: son endpoints de Better Auth en `/api/auth/*splat`.
 
 ### Capas
@@ -119,12 +140,12 @@ type Mutation {
 |------|---------|
 | Schema | `src/api/schema/account.gql` |
 | Resolvers | `src/api/resolvers/account-resolver.ts` |
-| Use-cases | `src/modules/workspace/use-cases/workspace-for-user-creator.ts` |
+| Use-cases | `src/modules/workspace/use-cases/workspace-for-user-creator.ts`, `src/modules/user/use-cases/user-profile-updater.ts` |
 | Respuesta | `src/api/utils/api-response.ts` |
 | Middlewares | `src/api/middlewares/require-session/` |
 | Services externos | `src/services/auth/` (Better Auth), `src/services/emails/` |
 | Repositorios | `src/persistence/repositories/workspace/` |
-| Errores | `src/modules/workspace/workspace-errors.ts`, `src/errors/account-errors.ts`, `src/errors/email-errors.ts` |
+| Errores | `src/modules/workspace/workspace-errors.ts`, `src/modules/user/user-errors.ts`, `src/errors/account-errors.ts`, `src/errors/email-errors.ts` |
 
 ### Errores
 
@@ -133,6 +154,8 @@ De negocio: los devuelve el use-case y llegan en `apiErrors` del payload.
 | `code` | Cuándo |
 |--------|--------|
 | `WORKSPACE_ALREADY_EXISTS` | `createWorkspace` con un usuario que ya tiene workspace. |
+| `USER_NAME_REQUIRED` | `updateUserProfile` con un nombre vacío después del trim. |
+| `USER_NAME_TOO_LONG` | `updateUserProfile` con un nombre de más de 50 caracteres. |
 
 De GraphQL: llegan en `errors[0].extensions.code`.
 
@@ -161,12 +184,14 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 - Paquete `better-auth` y cliente en `src/lib/api/auth-client.ts`, con `createAuthClient({ baseURL: VITE_API_URL, plugins: [magicLinkClient()] })`.
 - **Cookies:** la web llama directo a la api (`VITE_API_URL`) con credenciales, sin proxy. Web y api son del mismo sitio (`localhost` en desarrollo; `app.` y `api.` del mismo dominio en producción), así que la cookie `sameSite: 'lax'` viaja. La api habilita CORS con credenciales para `WEB_URL`.
 - `fetcher.ts` envía `credentials: 'include'`.
-- **Sesión:** `useGetMe` (query `me`) es la fuente de verdad de quién está logueado. Después del login o el logout se invalida `AccountCacheKeys.Me`.
-- **Guards:** `src/shared/guards/protect.tsx` redirige a `/login` si `me` es `null`, y `public.tsx` redirige a `/` si hay sesión. Las dos muestran un estado de carga mientras se resuelve `me`.
-- **Módulo:** `src/lib/account/` con `pages/`, `components/`, `hooks/` (`use-get-me`, `use-sign-in-magic-link`, `use-sign-out`) y `constants/cache-keys.ts`. La página de `/` vive en `src/lib/workspace/`.
-- **Errores:** `src/lib/api/errors/account.errors.ts` traduce los `code` de la tabla de errores.
+- **Sesión:** `useGetMe` (query `me`) es la fuente de verdad de quién está logueado. Después del login o el logout se invalida `AccountCacheKeys.Me`; después de `updateUserProfile` y `createWorkspace` se refresca con `refetchQueries`.
+- **Guards:** en `src/shared/guards/`. `protect.tsx` redirige a `/login` si `me` es `null` y a `/onboarding` si `me.workspace` es `null`. `onboarding.tsx` redirige a `/login` sin sesión y a `/` con workspace. `public.tsx` redirige a `/` si hay sesión. Todas muestran un estado de carga mientras se resuelve `me`.
+- **Módulo:** `src/lib/account/` con `pages/` (login y onboarding), `components/` (`login/`, `onboarding/`), `hooks/` (`use-get-me`, `use-sign-in-magic-link`, `use-sign-out`, `use-update-user-profile`) y `constants/cache-keys.ts`. La página de `/` y `use-create-workspace` viven en `src/lib/workspace/`.
+- **Errores:** `src/lib/api/errors/account.errors.ts` (429 del magic link), `user.errors.ts` y `workspace.errors.ts` traducen los `code` de la tabla de errores. Los de GraphQL llegan en `apiErrors`.
+- **Onboarding:** `useOnboardingForm` llama a `updateUserProfile({ name })` y después a `createWorkspace({ name: 'My workspace' })`. Un error de cualquiera de los dos queda en `errors.root` del form.
 - **Login:** `authClient.signIn.magicLink({ email, callbackURL, errorCallbackURL })`, con las dos URLs absolutas (`/` y `/login` del web). Los errores del redirect (link vencido o ya usado) llegan a `/login` como query param `error`. El 429 del rate limit se traduce por status en `account.errors.ts`.
-- **Tema:** la app arranca en modo oscuro.
+- **Tema e idioma:** `src/shared/utils/theme.utils.ts` y `useTheme` guardan el tema (`dark` por defecto, `light` o `system`) en `localStorage` y ponen o quitan `.dark` en el `<html>`; `main.tsx` lo aplica al arrancar. `src/shared/i18n/i18n.ts` guarda el idioma (`es` por defecto) en `localStorage` y actualiza `<html lang>`.
+- **Íconos:** amicons con `vite-plugin-svgr`, en `src/shared/components/icons/icons.tsx`. Banderas en `src/shared/i18n/components/flags.tsx`.
 - `/` pasa a ser el workspace, dentro de `protect`. Se borra el módulo `lib/system` (home de health check, su operation y su e2e).
 
 ## Impacto en código existente
@@ -174,14 +199,15 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 - `apps/api/src/app.ts`: monta Better Auth antes de Yoga, con CORS para `WEB_URL`, y el contexto resuelve la sesión.
 - `apps/api/src/context/`: el contexto del request, con `session`.
 - `apps/api/docs/architecture.md`: el apartado Multi-tenant pasa a decir que el tenant es el workspace y cómo llega al contexto. El cambio se propone al terminar el paso 3.
-- `apps/web/src/app/app.tsx`: rutas `/login` y `/`, con sus guards.
+- `apps/web/src/app/app.tsx`: rutas `/login`, `/onboarding` y `/`, con sus guards.
 - `apps/web/src/lib/api/fetcher.ts`: `credentials: 'include'`.
-- Locales `en.json` y `es.json`: textos de acceso, menú y estado vacío.
+- Locales `en.json` y `es.json`: textos de acceso y onboarding.
 
 ## Tests
 
 - **api, e2e** (`tests/account/me/`): `me` con sesión y sin sesión, y que no devuelve el workspace de otro usuario (`me` lo lee sin RLS, filtrando por dueño). La sesión se crea con el magic link leído de `verification`.
 - **api, e2e** (`tests/account/create-workspace/`): crea el workspace, `WORKSPACE_ALREADY_EXISTS` en `apiErrors`, aislamiento por tenant y `UNAUTHENTICATED`.
+- **api, e2e** (`tests/account/update-user-profile/`): guarda el nombre recortado y `me` lo devuelve, `USER_NAME_REQUIRED`, `USER_NAME_TOO_LONG`, no toca a otro usuario y `UNAUTHENTICATED`.
 - **api, unit:** `requireSession`; `sendMagicLink` (contenido del email, con el `EmailSender` mockeado) y la resolución del idioma.
 - **api, integración** (`*.integration.test.ts`): el repositorio `workspace` contra la DB, y los senders de email (`resend` con el SDK mockeado, `console`) y su factory. Better Auth, templates y logger no se testean.
-- **web, e2e** (`e2e/account/`): acceso con magic link, redirects de las guards y logout.
+- **web, unit:** pantallas de login y onboarding (`pages/*.test.tsx`) y las guards (`shared/guards/*.test.tsx`), con `auth-client` y el fetcher mockeados.

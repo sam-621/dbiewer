@@ -19,7 +19,7 @@ Modelo freemium:
 ## Fase 1: MVP usable (solo Postgres)
 
 - [ ] **1. Cuentas y workspace**: registro, login, sesión y un workspace por usuario. Todo lo demás cuelga de aquí: las conexiones y las credenciales cifradas son por workspace.
-  - [ ] `auth`: magic link, sesión, workspace como tenant, pantalla de acceso y logout.
+  - [x] `auth`: magic link, sesión, onboarding, workspace como tenant, pantalla de acceso y logout.
   - [ ] `social-login`: acceso con GitHub y Google, con vinculación por email.
   - [ ] `account-settings`: cambiar el nombre, borrar la cuenta y renombrar el workspace.
 - [ ] **2. Conexiones**: pegar la URI, probar la conexión, elegir los esquemas y guardar las credenciales cifradas. Listar, editar y borrar conexiones. Crear una conexión o editar sus credenciales pide una sesión reciente (último inicio de sesión hace menos de 24 horas), igual que borrar la cuenta.

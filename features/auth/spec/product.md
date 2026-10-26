@@ -1,5 +1,5 @@
 ---
-status: active
+status: done
 apps: [api, web]
 created: 2026-10-24
 ---
@@ -8,9 +8,9 @@ created: 2026-10-24
 
 ## Contexto
 
-dbiewer todavía no tiene usuarios: cualquiera que abre `apps/web` ve lo mismo y la api no sabe quién llama. Todo lo que sigue en el roadmap (conexiones, queries guardadas, historial, chats de IA, planes) pertenece a alguien y tiene que quedar aislado del resto. Esta feature agrega el acceso con magic link, la sesión y un workspace por usuario, que es el tenant del que cuelga todo lo demás.
+dbiewer todavía no tiene usuarios: cualquiera que abre `apps/web` ve lo mismo y la api no sabe quién llama. Todo lo que sigue en el roadmap (conexiones, queries guardadas, historial, chats de IA, planes) pertenece a alguien y tiene que quedar aislado del resto. Esta feature agrega el acceso con magic link, la sesión, un onboarding y un workspace por usuario, que es el tenant del que cuelga todo lo demás.
 
-Es la primera de las tres features del milestone 1 de `docs/roadmap.md`. Después vienen `social-login` (GitHub y Google) y `account-settings` (configuración de cuenta y workspace).
+Es la feature `auth` del milestone 1 de `docs/roadmap.md`.
 
 ## Historia de usuario
 
@@ -21,8 +21,8 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 1. El usuario llega a `apps/web` sin sesión y ve la pantalla de acceso.
 2. Escribe su correo y recibe un magic link. Al abrirlo, queda con la sesión iniciada.
 3. Si es la primera vez, se crea su cuenta. No hay un registro separado del login.
-4. Entra a la app y ve su workspace. Por ahora es un estado vacío que invita a conectar una base (milestone 2).
-5. Desde el menú de usuario puede cerrar sesión.
+4. Si todavía no tiene workspace, pasa por el onboarding: dice cómo quiere que lo llamemos y elige idioma y tema. Al continuar se guarda su nombre y se crea su workspace.
+5. Entra a la app y ve su workspace. Por ahora es una pantalla mínima con el nombre del workspace y el botón para cerrar sesión.
 6. Al volver otro día, la sesión sigue activa mientras no venza ni la cierre.
 
 ## Reglas de negocio
@@ -42,25 +42,36 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 - Cerrar sesión la invalida en el servidor, no solo en el navegador.
 - Sin sesión, la única pantalla accesible de la app es la de acceso. Con sesión, la pantalla de acceso redirige al workspace.
 
+### Onboarding
+
+- Lo ve todo usuario con sesión que todavía no tiene workspace. Mientras no lo termine, no puede entrar al resto de la app.
+- Pide cómo quiere que lo llamemos (se guarda como el nombre del usuario): obligatorio, sin espacios a los lados y de 50 caracteres como máximo.
+- Pide idioma (español o inglés) y tema (sistema, claro u oscuro). Los dos se guardan solo en el navegador y se aplican al elegirlos.
+- Con workspace, el onboarding ya no es accesible.
+
 ### Workspace
 
-- Cada usuario tiene exactamente un workspace. No se crea junto con la cuenta: se crea aparte.
-- El nombre del workspace lo elige el usuario al crearlo.
+- Cada usuario tiene exactamente un workspace. No se crea junto con la cuenta: se crea al terminar el onboarding.
+- El workspace se llama siempre "My workspace". El usuario no lo elige en el onboarding.
 - El workspace es el tenant: todo dato que se agregue después (conexiones, queries, historial) le pertenece y solo lo ve su dueño.
 
 ## Decisiones
 
-- **Sin contraseñas**: el acceso es con magic link y, en `social-login`, con GitHub y Google. Se descarta email + contraseña. Por eso no hay recuperación de contraseña ni un paso de verificación de email.
+- **Sin contraseñas**: el acceso es con magic link. Se descarta email + contraseña. Por eso no hay recuperación de contraseña ni un paso de verificación de email.
 - **Better Auth**: resuelve sesiones, magic link, OAuth y vinculación de cuentas con adaptador de Drizzle. Se descarta escribir la autenticación a mano.
 - **Sesión larga en la base de datos, sin refresh tokens**: la sesión vive en Postgres y viaja en una cookie `httpOnly`, así que se revoca al instante al cerrar sesión o borrar la cuenta. Los refresh tokens resuelven el problema de los JWT sin estado, que aquí no existe. La sesión dura 30 días sin uso para no obligar a iniciar sesión seguido. Las acciones delicadas (borrar la cuenta, tocar credenciales de conexiones, cambiar el plan) piden una sesión reciente.
 - **Un workspace por usuario, sin miembros**: alcanza para el producto solo. Los workspaces compartidos llegan con el milestone de Team (16).
 - **Workspace = tenant**: el `tenant_id` del RLS es el id del workspace. Cuando llegue Team, se agrega membresía sin cambiar el aislamiento de los datos.
-- **El milestone 1 se parte en tres features** (`auth`, `social-login`, `account-settings`) para que cada una sea chica y deje algo usable. Esta es la base de las otras dos.
+- **Onboarding con un solo envío**: el nombre se guarda con `updateUserProfile` y el workspace se crea después con `createWorkspace`. Si falla el segundo paso, reintentar repite los dos sin problema.
+- **Nombre del usuario como `name`**: se queda el campo de Better Auth en vez de renombrarlo a `nickname`, porque su API, la sesión y los perfiles de OAuth usan `name`.
+- **Tema e idioma en el cliente**: no se guardan en la api.
 
 ## Fuera de alcance
 
-- GitHub y Google (feature `social-login`).
-- Cambiar el nombre, borrar la cuenta y renombrar el workspace (feature `account-settings`).
+- GitHub y Google.
+- Cambiar el nombre después del onboarding, borrar la cuenta y renombrar el workspace.
+- Layout de la app con menú de usuario y estado vacío del workspace.
+- Tests e2e del web.
 - Contraseñas, recuperación de contraseña y 2FA.
 - Ver y cerrar sesiones activas en otros dispositivos.
 - Varios workspaces por usuario, invitaciones y roles.
@@ -71,8 +82,9 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 
 1. [x] api: Better Auth montado en Express con Drizzle, tablas de auth y `workspace` con su migración y RLS.
 2. [x] api: magic link con envío de email y límite de pedidos.
-3. [x] api: creación del workspace al crear la cuenta y contexto del request con usuario, workspace y `app.current_tenant_id`.
+3. [x] api: mutation `createWorkspace` y contexto del request con usuario, workspace y `app.current_tenant_id`.
 4. [x] api: query `me` y sus tests e2e, incluido el aislamiento por RLS.
 5. [x] web: cliente de Better Auth, proxy de Vite, guards `protect` y `public`, y pantalla de acceso con magic link.
-6. [ ] web: layout de la app con menú de usuario, logout y estado vacío del workspace.
-7. [ ] web: e2e del acceso con magic link, las guards y el logout.
+6. [x] web: logout desde la pantalla del workspace.
+7. [x] api: mutation `updateUserProfile` para guardar el nombre, con sus tests e2e.
+8. [x] web: onboarding con nombre, idioma y tema, guard `onboarding` y creación de "My workspace".
