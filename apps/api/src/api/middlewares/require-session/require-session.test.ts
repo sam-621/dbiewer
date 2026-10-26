@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vitest';
+import type { GraphQLResolveInfo } from 'graphql';
+import { describe, expect, test, vi } from 'vitest';
 
 import type { RequestContext, Session } from '@/context';
 import { UnauthenticatedError } from '@/errors/account-errors';
@@ -10,16 +11,27 @@ const session = {
   workspace: { id: crypto.randomUUID(), name: "Ada's workspace" }
 } as unknown as Session;
 
-describe('requireSession - Middleware', () => {
-  test('returns the session of the context', () => {
-    const context = { session } as unknown as RequestContext;
+const info = {} as GraphQLResolveInfo;
+const args = { input: { name: 'Acme' } };
 
-    expect(requireSession(context)).toBe(session);
+describe('requireSession - Middleware', () => {
+  test('calls the resolver when the context has a session', async () => {
+    const context = { session } as unknown as RequestContext;
+    const resolver = vi.fn().mockResolvedValue('result');
+
+    const result = await requireSession(resolver)({}, args, context, info);
+
+    expect(result).toBe('result');
+    expect(resolver).toHaveBeenCalledWith({}, { input: { name: 'Acme' } }, { session }, {});
   });
 
-  test('throws UnauthenticatedError when the context has no session', () => {
+  test('throws UnauthenticatedError and does not call the resolver when the context has no session', async () => {
     const context = { session: null } as unknown as RequestContext;
+    const resolver = vi.fn();
 
-    expect(() => requireSession(context)).toThrow(UnauthenticatedError);
+    await expect(requireSession(resolver)({}, args, context, info)).rejects.toThrow(
+      UnauthenticatedError
+    );
+    expect(resolver).not.toHaveBeenCalled();
   });
 });

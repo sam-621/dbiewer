@@ -95,6 +95,8 @@ export const SavedQueryResolver: Resolvers = {
 };
 ```
 
+Si requiere sesión, el resolver va como función con nombre y se envuelve con `requireSession` (ver `architecture.md` > Resolvers).
+
 ## Errores
 
 De negocio (lo devuelve un use-case y llega al cliente en `apiErrors`), con su `code` tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` y pasado como primer argumento:

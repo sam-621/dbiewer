@@ -57,7 +57,7 @@ Tabla propia:
 - El `context` de Yoga (o un middleware en `src/shared/middlewares/auth.middleware.ts`) llama a `auth.api.getSession({ headers })`.
 - Con sesión: busca el workspace del usuario (puede no tener), abre la conexión del request con `set_config('app.current_tenant_id', workspace.id, true)` dentro de una transacción y arma el contexto.
 - Hoy Yoga corre sin `context`. El contexto del request se crea en este paso con `session: { user, workspace: Workspace | null } | null` y lo que haga falta para instanciar los use-cases de los resolvers (ver `architecture.md` > App context).
-- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga el middleware `requireSession(context)` en `src/api/middlewares/require-session/`, no cada resolver por su cuenta.
+- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga el middleware `requireSession(resolver)` en `src/api/middlewares/require-session/`: envuelve al resolver, lanza `UnauthenticatedError` si no hay sesión y le pasa un `SessionContext` con `session` no nula.
 
 ## API GraphQL
 

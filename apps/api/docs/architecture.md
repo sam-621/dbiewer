@@ -58,20 +58,31 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 - Una mutation que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
 
   ```ts
-  createWorkspace: async (_parent, args, ctx) => {
-    const session = requireSession(ctx);
-
+  async function createWorkspace(
+    _parent: unknown,
+    args: MutationCreateWorkspaceArgs,
+    ctx: SessionContext
+  ) {
     const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
 
     const result = await uow.execute(async (_repositories, uowCtx) => {
       const workspaceForUserCreator = new WorkspaceForUserCreator(uowCtx);
 
-      return workspaceForUserCreator.execute({ ownerUserId: session.user.id, name: args.input.name });
+      return workspaceForUserCreator.execute({ ownerUserId: ctx.session.user.id, name: args.input.name });
     });
 
     return apiResponse(result, 'workspace');
   }
+
+  export const AccountResolver: Resolvers = {
+    Mutation: {
+      createWorkspace: requireSession(createWorkspace)
+    }
+  };
   ```
+
+- Un resolver que requiere sesión se declara como función con nombre arriba del archivo, y el objeto de resolvers solo lo mapea envuelto en el middleware: `createWorkspace: requireSession(createWorkspace)`. El resolver no llama a `requireSession` por dentro.
+- Los middlewares de GraphQL (`src/api/middlewares/<nombre>/`) son high-order functions: reciben el resolver y devuelven otro con la misma firma que valida primero y después lo llama. No devuelven nada propio. `requireSession` lanza `UnauthenticatedError` si no hay sesión y le pasa al resolver el ctx como `SessionContext` (exportado desde `@/api/middlewares/require-session`), con `session` no nula.
 
 - `apiResponse` devuelve `{ apiErrors: [{ code, message }], <key>: null }` si `result` es un `BusinessError`, y `{ apiErrors: [], <key>: result }` si no. Es la forma de la respuesta de red: no lleva más tipos que esos.
 - Su `.gql` devuelve `<Recurso>Result!` con `apiErrors: [<Recurso>ErrorResult!]!` y el recurso nullable; `<Recurso>ErrorResult` tiene `code: <Recurso>ErrorCode!` y `message: String!`, y el enum `<Recurso>ErrorCode` lista los `code` de los errores de negocio que puede devolver:
@@ -211,7 +222,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 - Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`) y vive en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
 - Hay dos tipos:
   - **Errores de negocio**: los que devuelve un use-case por una regla (`WorkspaceAlreadyExistsError`). Extienden `BusinessError` (`src/shared/errors/business-error.ts`) y llevan su `code` en SCREAMING_SNAKE_CASE (`WORKSPACE_ALREADY_EXISTS`), tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` (`BusinessError<WorkspaceErrorCode>`). Sin mapper: el error ya trae lo que necesita la API.
-  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza `requireSession`) y services (`EmailSendFailedError`). Extienden `DbiewerError` directo y se lanzan.
+  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`). Extienden `DbiewerError` directo y se lanzan.
 - Los use-cases **devuelven** el error de negocio, no lo lanzan: es parte de su tipo de retorno (`Promise<Workspace | WorkspaceAlreadyExistsError>`). El resolver lo pasa a `apiResponse` (ver "Resolvers") y llega al cliente en `apiErrors` del payload con su `code` y `message`.
 - Como el error se devuelve, el `UnitOfWork` hace commit: el use-case verifica sus reglas y devuelve el error antes de escribir.
 - Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles.

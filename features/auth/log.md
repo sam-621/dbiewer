@@ -61,6 +61,8 @@
 - (api) Regla nueva en `testing.md` > Reglas generales: el valor esperado de un `expect` va escrito tal cual, no en una constante o variable.
 - (api) Docs de errores de API: `architecture.md` (Resolvers con `uow` → `result` → `apiResponse(result, key)`; Errores: los de negocio se devuelven, `code` tipado con `<Recurso>ErrorCode` del codegen, se valida antes de escribir porque el `UnitOfWork` hace commit), ejemplos de `code-style.md` (use-case `SavedQueryRenamer` que devuelve errores, resolver y error) y `UNAUTHENTICATED` en el cierre de `testing.md`.
 - (api) Spec al día: `technical.md` con `createWorkspace` y sus tipos, `Me.workspace` nullable, errores de negocio vs de GraphQL, capas y tests actuales, sin `WORKSPACE_NOT_FOUND`; `product.md`: el nombre del workspace lo elige el usuario.
+- (api) `requireSession` pasa a ser un middleware high-order que envuelve al resolver (como los guards de vendyx): lanza `UnauthenticatedError` sin sesión y le pasa al resolver un `SessionContext` con `session` no nula. `createWorkspace` es una función con nombre y se mapea como `requireSession(createWorkspace)`. Unit actualizado; `yarn build`, unit y e2e pasan.
+- (api) Docs de `requireSession` como middleware high-order: `architecture.md` > Resolvers (ejemplo con función con nombre y `requireSession(createWorkspace)`, forma de los middlewares, `SessionContext`) y Errores, `code-style.md` > Resolver y `technical.md` > Contexto del request.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -97,6 +99,7 @@
 - No se cubren casos de concurrencia muy raros (pedidos simultáneos del mismo usuario): si pasan, un 500 está bien.
 - `createWorkspace` confía en el input tipado por el codegen: sin schema de zod ni trim. Documentado en `architecture.md` > Resolvers, en el ejemplo de `code-style.md` y en el `CLAUDE.md` de la api.
 - Los errores de negocio (de los use-cases) extienden `BusinessError`, traen su `code` y `message` sin mapper, y llegan al cliente en `apiErrors` del payload, devueltos por el use-case como en vendyx (no lanzados), y el resolver los pasa a `apiResponse(result, key)`. Los de infraestructura (`UNAUTHENTICATED`) y los de services (`EmailSendFailedError`) siguen como errores de GraphQL.
+- Los middlewares de GraphQL son high-order functions que envuelven al resolver (como los guards de vendyx); el resolver con sesión es una función con nombre y recibe `SessionContext`.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
