@@ -45,7 +45,7 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 ### Workspace
 
 - Cada usuario tiene exactamente un workspace. No se crea junto con la cuenta: se crea aparte.
-- El nombre inicial es `<nombre del usuario>'s workspace`, o `My workspace` si no hay nombre.
+- El nombre del workspace lo elige el usuario al crearlo.
 - El workspace es el tenant: todo dato que se agregue después (conexiones, queries, historial) le pertenece y solo lo ve su dueño.
 
 ## Decisiones

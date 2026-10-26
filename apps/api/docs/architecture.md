@@ -30,6 +30,7 @@ src/
 ├── api/                               todo lo de GraphQL
 │   ├── schema/<recurso>.gql
 │   ├── resolvers/<recurso>-resolver.ts
+│   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
 ├── use-cases/<caso-de-uso>/          una carpeta por caso de uso: <caso-de-uso>.ts, su test e index.ts
 ├── persistence/
@@ -54,6 +55,46 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 - Usan `args.input` tal como llega, con el tipo del codegen. No lo validan con zod ni lo transforman.
 - Llaman a un solo método del use-case y responden. Sin `if` de negocio. De dónde sale el use-case se define con el contexto del request.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
+- Una mutation que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
+
+  ```ts
+  createWorkspace: async (_parent, args, ctx) => {
+    const session = requireSession(ctx);
+
+    const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+    const result = await uow.execute(async (_repositories, uowCtx) => {
+      const workspaceForUserCreator = new WorkspaceForUserCreator(uowCtx);
+
+      return workspaceForUserCreator.execute({ ownerUserId: session.user.id, name: args.input.name });
+    });
+
+    return apiResponse(result, 'workspace');
+  }
+  ```
+
+- `apiResponse` devuelve `{ apiErrors: [{ code, message }], <key>: null }` si `result` es un `BusinessError`, y `{ apiErrors: [], <key>: result }` si no. Es la forma de la respuesta de red: no lleva más tipos que esos.
+- Su `.gql` devuelve `<Recurso>Result!` con `apiErrors: [<Recurso>ErrorResult!]!` y el recurso nullable; `<Recurso>ErrorResult` tiene `code: <Recurso>ErrorCode!` y `message: String!`, y el enum `<Recurso>ErrorCode` lista los `code` de los errores de negocio que puede devolver:
+
+  ```graphql
+  type Mutation {
+    createWorkspace(input: CreateWorkspaceInput!): WorkspaceResult!
+  }
+
+  type WorkspaceResult {
+    apiErrors: [WorkspaceErrorResult!]!
+    workspace: Workspace
+  }
+
+  type WorkspaceErrorResult {
+    code: WorkspaceErrorCode!
+    message: String!
+  }
+
+  enum WorkspaceErrorCode {
+    WORKSPACE_ALREADY_EXISTS
+  }
+  ```
 
 ## Use-cases
 
@@ -167,9 +208,14 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 ## Errores
 
-- Todo error de negocio extiende `DbiewerError` y vive en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
-- Los use-cases **lanzan** el error. Un handler de errores de Yoga (`src/shared/errors/error-handler.ts`) mapea `DbiewerError` a un error de GraphQL con `extensions: { code }` y su mensaje. Lo demás responde un error genérico sin detalles.
-- Un error nuevo se registra en el mapper del handler con su `code`.
+- Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`) y vive en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
+- Hay dos tipos:
+  - **Errores de negocio**: los que devuelve un use-case por una regla (`WorkspaceAlreadyExistsError`). Extienden `BusinessError` (`src/shared/errors/business-error.ts`) y llevan su `code` en SCREAMING_SNAKE_CASE (`WORKSPACE_ALREADY_EXISTS`), tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` (`BusinessError<WorkspaceErrorCode>`). Sin mapper: el error ya trae lo que necesita la API.
+  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza `requireSession`) y services (`EmailSendFailedError`). Extienden `DbiewerError` directo y se lanzan.
+- Los use-cases **devuelven** el error de negocio, no lo lanzan: es parte de su tipo de retorno (`Promise<Workspace | WorkspaceAlreadyExistsError>`). El resolver lo pasa a `apiResponse` (ver "Resolvers") y llega al cliente en `apiErrors` del payload con su `code` y `message`.
+- Como el error se devuelve, el `UnitOfWork` hace commit: el use-case verifica sus reglas y devuelve el error antes de escribir.
+- Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles.
+- Un error de negocio nuevo no se registra en el handler: su `code` se agrega primero al enum `<Recurso>ErrorCode` del `.gql`, se corre `yarn gen:types` y después se crea la clase.
 
 ## Multi-tenant
 

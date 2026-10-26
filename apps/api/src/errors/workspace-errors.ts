@@ -1,7 +1,8 @@
-import { DbiewerError } from '@/shared/errors/dbiewer-error';
+import type { WorkspaceErrorCode } from '@/api/codegen';
+import { BusinessError } from '@/shared/errors/business-error';
 
-export class WorkspaceAlreadyExistsError extends DbiewerError {
+export class WorkspaceAlreadyExistsError extends BusinessError<WorkspaceErrorCode> {
   constructor(ownerUserId: string) {
-    super(`Workspace already exists for user ${ownerUserId}`);
+    super('WORKSPACE_ALREADY_EXISTS', `Workspace already exists for user ${ownerUserId}`);
   }
 }

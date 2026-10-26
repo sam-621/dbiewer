@@ -57,18 +57,20 @@ Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int
 ## Use-case
 
 ```ts
-export class SavedQueryUseCase {
-  constructor(private readonly savedQueryRepository: SavedQueryRepository) {}
+export class SavedQueryRenamer {
+  constructor(private readonly ctx: UowContext) {}
 
-  async rename(input: RenameSavedQueryInput) {
-    const savedQuery = await this.savedQueryRepository.findById(input.savedQueryId);
+  async execute(
+    input: RenameSavedQueryInput
+  ): Promise<SavedQuery | SavedQueryNotFoundError | SavedQueryNameAlreadyTakenError> {
+    const savedQuery = await this.ctx.repositories.savedQuery.findById(input.savedQueryId);
 
-    if (!savedQuery) throw new SavedQueryNotFoundError(input.savedQueryId);
-    if (await this.savedQueryRepository.existsByName(input.name)) {
-      throw new SavedQueryNameAlreadyTakenError(input.name);
+    if (!savedQuery) return new SavedQueryNotFoundError(input.savedQueryId);
+    if (await this.ctx.repositories.savedQuery.existsByName(input.name)) {
+      return new SavedQueryNameAlreadyTakenError(input.name);
     }
 
-    return this.savedQueryRepository.update(savedQuery.id, { name: input.name });
+    return this.ctx.repositories.savedQuery.update(savedQuery.id, { name: input.name });
   }
 }
 ```
@@ -78,21 +80,41 @@ export class SavedQueryUseCase {
 ```ts
 export const SavedQueryResolver: Resolvers = {
   Mutation: {
-    renameSavedQuery: async (_parent, args) => {
-      return savedQueryUseCase.rename(args.input);
+    renameSavedQuery: async (_parent, args, ctx) => {
+      const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+      const result = await uow.execute(async (_repositories, uowCtx) => {
+        const savedQueryRenamer = new SavedQueryRenamer(uowCtx);
+
+        return savedQueryRenamer.execute(args.input);
+      });
+
+      return apiResponse(result, 'savedQuery');
     }
   }
 };
 ```
 
-De dónde sale `savedQueryUseCase` se define con el contexto del request.
-
 ## Errores
 
+De negocio (lo devuelve un use-case y llega al cliente en `apiErrors`), con su `code` tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` y pasado como primer argumento:
+
 ```ts
-export class SavedQueryNotFoundError extends DbiewerError {
+import type { SavedQueryErrorCode } from '@/api/codegen';
+
+export class SavedQueryNotFoundError extends BusinessError<SavedQueryErrorCode> {
   constructor(id: string) {
-    super(`Saved query not found with id ${id}`);
+    super('SAVED_QUERY_NOT_FOUND', `Saved query not found with id ${id}`);
+  }
+}
+```
+
+De infraestructura (sesión, services), extiende `DbiewerError` directo:
+
+```ts
+export class EmailSendFailedError extends DbiewerError {
+  constructor(to: string, reason: string) {
+    super(`Failed to send email to ${to}: ${reason}`);
   }
 }
 ```

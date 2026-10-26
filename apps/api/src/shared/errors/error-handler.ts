@@ -3,16 +3,12 @@ import { maskError as maskUnknownError } from 'graphql-yoga';
 import { ZodError } from 'zod';
 
 import { UnauthenticatedError } from '@/errors/account-errors';
-import { WorkspaceAlreadyExistsError } from '@/errors/workspace-errors';
 
 import { DbiewerError } from './dbiewer-error';
 
 type DbiewerErrorClass = abstract new (...args: never[]) => DbiewerError;
 
-const ERROR_CODES: Array<[DbiewerErrorClass, string]> = [
-  [UnauthenticatedError, 'UNAUTHENTICATED'],
-  [WorkspaceAlreadyExistsError, 'WORKSPACE_ALREADY_EXISTS']
-];
+const ERROR_CODES: Array<[DbiewerErrorClass, string]> = [[UnauthenticatedError, 'UNAUTHENTICATED']];
 
 const isGraphQLError = (error: unknown): error is GraphQLError =>
   error instanceof Error && error.name === 'GraphQLError';

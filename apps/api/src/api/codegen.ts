@@ -18,7 +18,7 @@ export type CreateWorkspaceInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createWorkspace: Workspace;
+  createWorkspace: WorkspaceResult;
 };
 
 export type MutationCreateWorkspaceArgs = {
@@ -34,6 +34,20 @@ export type Workspace = {
   __typename?: 'Workspace';
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+};
+
+export type WorkspaceErrorCode = 'WORKSPACE_ALREADY_EXISTS';
+
+export type WorkspaceErrorResult = {
+  __typename?: 'WorkspaceErrorResult';
+  code: WorkspaceErrorCode;
+  message: Scalars['String']['output'];
+};
+
+export type WorkspaceResult = {
+  __typename?: 'WorkspaceResult';
+  apiErrors: Array<WorkspaceErrorResult>;
+  workspace?: Maybe<Workspace>;
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -140,6 +154,9 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Workspace: ResolverTypeWrapper<Workspace>;
+  WorkspaceErrorCode: WorkspaceErrorCode;
+  WorkspaceErrorResult: ResolverTypeWrapper<WorkspaceErrorResult>;
+  WorkspaceResult: ResolverTypeWrapper<WorkspaceResult>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -151,6 +168,8 @@ export type ResolversParentTypes = {
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
   Workspace: Workspace;
+  WorkspaceErrorResult: WorkspaceErrorResult;
+  WorkspaceResult: WorkspaceResult;
 };
 
 export type MutationResolvers<
@@ -158,7 +177,7 @@ export type MutationResolvers<
   ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
 > = {
   createWorkspace?: Resolver<
-    ResolversTypes['Workspace'],
+    ResolversTypes['WorkspaceResult'],
     ParentType,
     ContextType,
     RequireFields<MutationCreateWorkspaceArgs, 'input'>
@@ -180,8 +199,28 @@ export type WorkspaceResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type WorkspaceErrorResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['WorkspaceErrorResult'] =
+    ResolversParentTypes['WorkspaceErrorResult']
+> = {
+  code?: Resolver<ResolversTypes['WorkspaceErrorCode'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type WorkspaceResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['WorkspaceResult'] =
+    ResolversParentTypes['WorkspaceResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['WorkspaceErrorResult']>, ParentType, ContextType>;
+  workspace?: Resolver<Maybe<ResolversTypes['Workspace']>, ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = RequestContext> = {
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Workspace?: WorkspaceResolvers<ContextType>;
+  WorkspaceErrorResult?: WorkspaceErrorResultResolvers<ContextType>;
+  WorkspaceResult?: WorkspaceResultResolvers<ContextType>;
 };

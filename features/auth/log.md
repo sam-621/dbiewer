@@ -55,6 +55,12 @@
 - (api) `Repository`: `updateById` pasa a `update(where, values)`, con el mismo `where` que los `find`, y devuelve las filas actualizadas.
 - (api) `Repository`: `deleteById` pasa a `remove(where)` y devuelve las filas borradas.
 - (api) Mutation `createWorkspace(input: { name })` en `account.gql` y `account-resolver.ts`, con `requireSession`, conectada a `WorkspaceForUserCreator`. El use-case recibe `{ ownerUserId, name }` (sin nombre inicial) y lanza `WORKSPACE_ALREADY_EXISTS` si el usuario ya tiene workspace (búsqueda previa por dueño). `Session.workspace` puede ser `null` y se borra `WorkspaceNotFoundError`. El input usa el tipo del codegen, sin zod. `maskError` ya no usa `instanceof GraphQLError` (dos instancias de `graphql` en los tests). Helper `TestServer.signIn(email)` y e2e en `tests/account/create-workspace/`. `yarn build` pasa.
+- (api) Errores de negocio como `apiErrors`: `BusinessError` (`shared/errors/`) con `code` y `message`; `WorkspaceAlreadyExistsError` lo extiende. Los use-cases lanzan y el resolver atrapa con `apiResponse(key, work)` (`src/api/utils/api-response.ts`), que devuelve `{ apiErrors, <recurso> }` y relanza lo demás. `createWorkspace` devuelve `WorkspaceResult` (`WorkspaceErrorResult`, `WorkspaceErrorCode`). En `ERROR_CODES` queda solo `UNAUTHENTICATED`. e2e y docs (`architecture.md`, `code-style.md`, `testing.md`) actualizados. `yarn build` pasa.
+- (api) `WorkspaceAlreadyExistsError` tipa su `code` con `WorkspaceErrorCode` de `@/api/codegen` en vez de un literal a mano.
+- (api) Los use-cases **devuelven** el error de negocio en vez de lanzarlo (`WorkspaceForUserCreator` → `Workspace | WorkspaceAlreadyExistsError`). `apiResponse(result, key)` pasa a ser una función síncrona sobre el resultado, y el resolver queda en pasos: `uow`, `result = await uow.execute(...)`, `return apiResponse(result, 'workspace')`. `yarn build`, unit y e2e pasan.
+- (api) Regla nueva en `testing.md` > Reglas generales: el valor esperado de un `expect` va escrito tal cual, no en una constante o variable.
+- (api) Docs de errores de API: `architecture.md` (Resolvers con `uow` → `result` → `apiResponse(result, key)`; Errores: los de negocio se devuelven, `code` tipado con `<Recurso>ErrorCode` del codegen, se valida antes de escribir porque el `UnitOfWork` hace commit), ejemplos de `code-style.md` (use-case `SavedQueryRenamer` que devuelve errores, resolver y error) y `UNAUTHENTICATED` en el cierre de `testing.md`.
+- (api) Spec al día: `technical.md` con `createWorkspace` y sus tipos, `Me.workspace` nullable, errores de negocio vs de GraphQL, capas y tests actuales, sin `WORKSPACE_NOT_FOUND`; `product.md`: el nombre del workspace lo elige el usuario.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -90,8 +96,8 @@
 - Un usuario con sesión puede no tener workspace: el contexto del request lo deja en `null` en vez de lanzar error.
 - No se cubren casos de concurrencia muy raros (pedidos simultáneos del mismo usuario): si pasan, un 500 está bien.
 - `createWorkspace` confía en el input tipado por el codegen: sin schema de zod ni trim. Documentado en `architecture.md` > Resolvers, en el ejemplo de `code-style.md` y en el `CLAUDE.md` de la api.
+- Los errores de negocio (de los use-cases) extienden `BusinessError`, traen su `code` y `message` sin mapper, y llegan al cliente en `apiErrors` del payload, devueltos por el use-case como en vendyx (no lanzados), y el resolver los pasa a `apiResponse(result, key)`. Los de infraestructura (`UNAUTHENTICATED`) y los de services (`EmailSendFailedError`) siguen como errores de GraphQL.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
-- Confirmar los cambios a `technical.md` y a los docs de la api por el paso 3 (`UnitOfWork`, use-cases como clase por caso con `UowContext`, `RequestContext`, `app.bypass_rls` en la policy, `UNAUTHENTICATED` en `testing.md`).
 - Decidir si `app.bypass_rls` va en la policy de todas las tablas con tenant (el OR puede impedir usar el índice sobre `tenant_id`, ver `database.md` > RLS e índices).

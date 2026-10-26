@@ -48,15 +48,16 @@ Tabla propia:
 
 ## Creación del workspace
 
-- El workspace no se crea al crear la cuenta: se crea con una mutation, con `WorkspaceForUserCreator` (nombre inicial de `product.md`).
-- Nunca se crea al leerlo. Si al resolver la sesión el usuario no tiene workspace, es un error (`WORKSPACE_NOT_FOUND`).
+- El workspace no se crea al crear la cuenta: se crea con la mutation `createWorkspace`, con `WorkspaceForUserCreator`. El nombre lo manda el usuario.
+- Si el usuario ya tiene workspace, `WorkspaceForUserCreator` devuelve `WorkspaceAlreadyExistsError` (`WORKSPACE_ALREADY_EXISTS`).
+- Nunca se crea al leerlo. Si al resolver la sesión el usuario no tiene workspace, `session.workspace` queda en `null`.
 
 ## Contexto del request
 
 - El `context` de Yoga (o un middleware en `src/shared/middlewares/auth.middleware.ts`) llama a `auth.api.getSession({ headers })`.
-- Con sesión: busca el workspace del usuario, abre la conexión del request con `set_config('app.current_tenant_id', workspace.id, true)` dentro de una transacción y arma el contexto.
-- Hoy Yoga corre sin `context`. El contexto del request se crea en este paso con `session: { user, workspace } | null` y lo que haga falta para instanciar los use-cases de los resolvers (ver `architecture.md` > App context).
-- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga un helper `requireSession(context)` en `src/services/auth/`, no cada resolver por su cuenta.
+- Con sesión: busca el workspace del usuario (puede no tener), abre la conexión del request con `set_config('app.current_tenant_id', workspace.id, true)` dentro de una transacción y arma el contexto.
+- Hoy Yoga corre sin `context`. El contexto del request se crea en este paso con `session: { user, workspace: Workspace | null } | null` y lo que haga falta para instanciar los use-cases de los resolvers (ver `architecture.md` > App context).
+- Las operaciones que requieren sesión lanzan `UNAUTHENTICATED` si `session` es `null`. De eso se encarga el middleware `requireSession(context)` en `src/api/middlewares/require-session/`, no cada resolver por su cuenta.
 
 ## API GraphQL
 
@@ -77,15 +78,38 @@ type Workspace {
 
 type Me {
   user: User!
-  workspace: Workspace!
+  workspace: Workspace
 }
 
 type Query {
   me: Me
 }
+
+input CreateWorkspaceInput {
+  name: String!
+}
+
+type WorkspaceResult {
+  apiErrors: [WorkspaceErrorResult!]!
+  workspace: Workspace
+}
+
+type WorkspaceErrorResult {
+  code: WorkspaceErrorCode!
+  message: String!
+}
+
+enum WorkspaceErrorCode {
+  WORKSPACE_ALREADY_EXISTS
+}
+
+type Mutation {
+  createWorkspace(input: CreateWorkspaceInput!): WorkspaceResult!
+}
 ```
 
-- `me` devuelve `null` si no hay sesión, en lugar de lanzar un error. El web lo usa para saber si hay sesión.
+- `me` devuelve `null` si no hay sesión, en lugar de lanzar un error. El web lo usa para saber si hay sesión. `me.workspace` es `null` si el usuario todavía no creó su workspace.
+- `createWorkspace` requiere sesión. Sigue el patrón de `architecture.md` > Resolvers: `uow`, `result` y `apiResponse(result, 'workspace')`.
 - Login y logout no pasan por GraphQL: son endpoints de Better Auth en `/api/auth/*splat`.
 
 ### Capas
@@ -94,18 +118,28 @@ type Query {
 |------|---------|
 | Schema | `src/api/schema/account.gql` |
 | Resolvers | `src/api/resolvers/account-resolver.ts` |
-| Use-cases | `src/use-cases/account-use-case.ts`, `src/use-cases/workspace-use-case.ts` |
+| Use-cases | `src/use-cases/workspace-for-user-creator/` |
+| Respuesta | `src/api/utils/api-response.ts` |
+| Middlewares | `src/api/middlewares/require-session/` |
 | Services externos | `src/services/auth/` (Better Auth), `src/services/emails/` |
 | Repositorios | `src/persistence/repositories/workspace/` |
-| Errores | `src/errors/account-errors.ts`, `src/errors/email-errors.ts` |
+| Errores | `src/errors/account-errors.ts`, `src/errors/email-errors.ts`, `src/errors/workspace-errors.ts` |
 
 ### Errores
+
+De negocio: los devuelve el use-case y llegan en `apiErrors` del payload.
+
+| `code` | Cuándo |
+|--------|--------|
+| `WORKSPACE_ALREADY_EXISTS` | `createWorkspace` con un usuario que ya tiene workspace. |
+
+De GraphQL: llegan en `errors[0].extensions.code`.
 
 | `code` | Cuándo |
 |--------|--------|
 | `UNAUTHENTICATED` | Una operación que requiere sesión se llama sin sesión. |
 
-`UNAUTHENTICATED` se registra en el mapper de `src/shared/errors/error-handler.ts`.
+`UNAUTHENTICATED` se registra en `ERROR_CODES` de `src/shared/errors/error-handler.ts`. Los de negocio extienden `BusinessError` y no se registran ahí.
 
 ## Config (api)
 
@@ -113,7 +147,7 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 
 | Variable | En `config` | Uso |
 |----------|-------------|-----|
-| `ADMIN_DATABASE_URL` | `database.adminUrl` | Conexión que se salta RLS, para Better Auth y la creación del workspace. |
+| `ADMIN_DATABASE_URL` | `database.adminUrl` | Conexión que se salta RLS, para Better Auth. |
 | `BETTER_AUTH_SECRET` | `auth.secret` | Firma de cookies y tokens. |
 | `BETTER_AUTH_URL` | `auth.url` | URL pública de la api. |
 | `WEB_URL` | `webUrl` | Origen del web, para `trustedOrigins` y los redirects. |
@@ -146,6 +180,7 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 ## Tests
 
 - **api, e2e** (`tests/account/me/`): `me` con sesión y sin sesión, y que el RLS no deja leer el workspace de otro usuario. La sesión se crea con el magic link leído de `verification`.
-- **api, unit:** el nombre inicial del workspace; `sendMagicLink` (contenido del email, con el `EmailSender` mockeado) y la resolución del idioma.
+- **api, e2e** (`tests/account/create-workspace/`): crea el workspace, `WORKSPACE_ALREADY_EXISTS` en `apiErrors`, aislamiento por tenant y `UNAUTHENTICATED`.
+- **api, unit:** `requireSession`; `sendMagicLink` (contenido del email, con el `EmailSender` mockeado) y la resolución del idioma.
 - **api, integración** (`*.integration.test.ts`): el repositorio `workspace` contra la DB, y los senders de email (`resend` con el SDK mockeado, `console`) y su factory. Better Auth, templates y logger no se testean.
 - **web, e2e** (`e2e/account/`): acceso con magic link, redirects de las guards y logout.

@@ -1,4 +1,4 @@
 {
-  "cSpell.words": ["dbiewer"],
+  "cSpell.words": ["codegen", "dbiewer"],
   "cSpell.ignorePaths": ["features/**", ".claude/**", "**/CLAUDE.md"]
 }

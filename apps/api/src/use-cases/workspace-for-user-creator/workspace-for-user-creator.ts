@@ -1,4 +1,5 @@
 import { WorkspaceAlreadyExistsError } from '@/errors/workspace-errors';
+import type { Workspace } from '@/persistence/repositories/workspace';
 import type { UowContext } from '@/persistence/unit-of-work';
 import { slugify } from '@/shared/utils/slugify';
 
@@ -12,10 +13,12 @@ const SLUG_SUFFIX_LENGTH = 6;
 export class WorkspaceForUserCreator {
   constructor(private readonly ctx: UowContext) {}
 
-  async execute(input: CreateWorkspaceForUserInput) {
+  async execute(
+    input: CreateWorkspaceForUserInput
+  ): Promise<Workspace | WorkspaceAlreadyExistsError> {
     const existing = await this.ctx.repositories.workspace.findByOwnerUserId(input.ownerUserId);
 
-    if (existing) throw new WorkspaceAlreadyExistsError(input.ownerUserId);
+    if (existing) return new WorkspaceAlreadyExistsError(input.ownerUserId);
 
     const slug = await this.getAvailableSlug(input.name);
 

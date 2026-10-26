@@ -11,14 +11,23 @@ import { WorkspaceConstants, WorkspaceFixtures } from './fixtures/workspace.fixt
 const CREATE_WORKSPACE_MUTATION = /* GraphQL */ `
   mutation CreateWorkspace($input: CreateWorkspaceInput!) {
     createWorkspace(input: $input) {
-      id
-      name
+      apiErrors {
+        code
+        message
+      }
+      workspace {
+        id
+        name
+      }
     }
   }
 `;
 
 type CreateWorkspaceResponse = {
-  createWorkspace: { id: string; name: string };
+  createWorkspace: {
+    apiErrors: Array<{ code: string; message: string }>;
+    workspace: { id: string; name: string } | null;
+  };
 };
 
 const findWorkspacesOf = (ownerUserId: string) =>
@@ -50,13 +59,14 @@ describe('createWorkspace', () => {
     );
 
     expect(response.errors).toBeUndefined();
-    expect(response.data?.createWorkspace.name).toBe("José & Ñandú's team");
+    expect(response.data?.createWorkspace.apiErrors).toEqual([]);
+    expect(response.data?.createWorkspace.workspace?.name).toBe("José & Ñandú's team");
 
     const workspaces = await findWorkspacesOf(UserConstants.UserWithoutWorkspaceId);
 
     expect(workspaces).toHaveLength(1);
     expect(workspaces[0]).toMatchObject({
-      id: response.data?.createWorkspace.id,
+      id: response.data?.createWorkspace.workspace?.id,
       name: "José & Ñandú's team",
       slug: 'jose-and-nandus-team'
     });
@@ -71,7 +81,16 @@ describe('createWorkspace', () => {
       headers
     );
 
-    expect(response.errors?.[0]?.extensions?.code).toBe('WORKSPACE_ALREADY_EXISTS');
+    expect(response.errors).toBeUndefined();
+    expect(response.data?.createWorkspace).toEqual({
+      apiErrors: [
+        {
+          code: 'WORKSPACE_ALREADY_EXISTS',
+          message: `Workspace already exists for user ${UserConstants.OwnerUserId}`
+        }
+      ],
+      workspace: null
+    });
 
     const workspaces = await findWorkspacesOf(UserConstants.OwnerUserId);
 
@@ -89,6 +108,7 @@ describe('createWorkspace', () => {
     );
 
     expect(response.errors).toBeUndefined();
+    expect(response.data?.createWorkspace.apiErrors).toEqual([]);
 
     const [created] = await findWorkspacesOf(UserConstants.UserWithoutWorkspaceId);
     const [other] = await findWorkspacesOf(UserConstants.OtherOwnerUserId);

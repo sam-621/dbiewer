@@ -7,6 +7,20 @@ input CreateWorkspaceInput {
   name: String!
 }
 
+type WorkspaceResult {
+  apiErrors: [WorkspaceErrorResult!]!
+  workspace: Workspace
+}
+
+type WorkspaceErrorResult {
+  code: WorkspaceErrorCode!
+  message: String!
+}
+
+enum WorkspaceErrorCode {
+  WORKSPACE_ALREADY_EXISTS
+}
+
 type Mutation {
-  createWorkspace(input: CreateWorkspaceInput!): Workspace!
+  createWorkspace(input: CreateWorkspaceInput!): WorkspaceResult!
 }
