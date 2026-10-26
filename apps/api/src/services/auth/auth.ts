@@ -7,14 +7,12 @@ import { config } from '@/config';
 import type { AppContext } from '@/context';
 import { MagicLinkLimitExceededError } from '@/errors/magic-link-errors';
 import * as schema from '@/persistence/schema';
-import { UnitOfWork } from '@/persistence/unit-of-work';
 import { resolveLocale } from '@/shared/utils/locale';
 import {
   MAGIC_LINK_LIMIT,
   MAGIC_LINK_LIMIT_WINDOW_IN_MINUTES,
   MagicLinkUseCase
 } from '@/use-cases/magic-link-use-case';
-import { WorkspaceForUserCreator } from '@/use-cases/workspace-for-user-creator';
 
 const MAGIC_LINK_EXPIRES_IN_SECONDS = 15 * 60;
 const EMAIL_FROM_NAME = 'dbiewer';
@@ -25,19 +23,6 @@ export const createAuth = (appContext: AppContext) =>
     secret: config.auth.secret,
     trustedOrigins: [config.webUrl],
     database: drizzleAdapter(appContext.databases.admin, { provider: 'pg', schema }),
-    databaseHooks: {
-      user: {
-        create: {
-          after: async user => {
-            const uow = new UnitOfWork(appContext.databases.app);
-
-            await uow.execute(async (_repositories, ctx) =>
-              new WorkspaceForUserCreator(ctx).execute(user)
-            );
-          }
-        }
-      }
-    },
     session: {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24

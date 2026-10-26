@@ -33,6 +33,7 @@
 - (api) `findOrCreate` sale del repositorio: `WorkspaceForUserEnsurer` busca, crea con `createIfOwnerHasNone` (insert que ignora el conflicto en `owner_user_id`) y relee si chocó.
 - (api) Se borra `WorkspaceForUserEnsurer`: el workspace solo lo crea el hook (que ya no atrapa el error) y el contexto del request lo busca con `WorkspaceForUserFinder`, que lanza `WorkspaceNotFoundError` (`WORKSPACE_NOT_FOUND`) si no existe.
 - (api) Se borra `WorkspaceForUserFinder`: `resolveSession` usa directo `repositories.workspace.findByOwnerUserId` del unit of work y lanza `WorkspaceNotFoundError` si no hay.
+- (api) Se quita el hook `databaseHooks.user.create.after`: el workspace se va a crear con una mutation. `WorkspaceForUserCreator` queda para esa mutation.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -60,9 +61,9 @@
 - El repositorio solo habla con la base de datos: decisiones como buscar o crear van en el use-case.
 - El workspace solo se crea al crear la cuenta; nunca al leerlo. Si falta, es un error (`WORKSPACE_NOT_FOUND`).
 - No se crea un use-case para una lectura de infraestructura (resolver la sesión): se usa el repositorio del unit of work directo.
+- El workspace no se crea al crear la cuenta: se crea con una mutation.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
 - Confirmar los cambios a `technical.md` y a los docs de la api por el paso 3 (`UnitOfWork`, use-cases como clase por caso con `UowContext`, `RequestContext`, `app.bypass_rls` en la policy, `UNAUTHENTICATED` en `testing.md`).
 - Decidir si `app.bypass_rls` va en la policy de todas las tablas con tenant (el OR puede impedir usar el índice sobre `tenant_id`, ver `database.md` > RLS e índices).
-- Riesgo: el hook `after` de Better Auth corre después de commitear el `user`; si falla, la cuenta queda sin workspace para siempre. Decidir si se crea en la misma transacción.
