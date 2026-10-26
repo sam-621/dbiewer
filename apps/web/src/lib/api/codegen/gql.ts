@@ -22,6 +22,7 @@ type Documents = {
     "\n  query GetConnections {\n    connections {\n      items {\n        ...CommonConnection\n      }\n    }\n  }\n": typeof types.GetConnectionsDocument,
     "\n  mutation CreateConnection($input: CreateConnectionInput!) {\n    createConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      connection {\n        ...CommonConnection\n      }\n    }\n  }\n": typeof types.CreateConnectionDocument,
     "\n  mutation RemoveConnection($connectionId: ID!) {\n    removeConnection(id: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": typeof types.RemoveConnectionDocument,
+    "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": typeof types.TestConnectionDocument,
 };
 const documents: Documents = {
     "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": types.GetMeDocument,
@@ -31,6 +32,7 @@ const documents: Documents = {
     "\n  query GetConnections {\n    connections {\n      items {\n        ...CommonConnection\n      }\n    }\n  }\n": types.GetConnectionsDocument,
     "\n  mutation CreateConnection($input: CreateConnectionInput!) {\n    createConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      connection {\n        ...CommonConnection\n      }\n    }\n  }\n": types.CreateConnectionDocument,
     "\n  mutation RemoveConnection($connectionId: ID!) {\n    removeConnection(id: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": types.RemoveConnectionDocument,
+    "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": types.TestConnectionDocument,
 };
 
 /**
@@ -61,6 +63,10 @@ export function graphql(source: "\n  mutation CreateConnection($input: CreateCon
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RemoveConnection($connectionId: ID!) {\n    removeConnection(id: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n"): typeof import('./graphql').RemoveConnectionDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n"): typeof import('./graphql').TestConnectionDocument;
 
 
 export function graphql(source: string) {

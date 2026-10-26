@@ -28,6 +28,15 @@ export type CreateWorkspaceInput = {
   name: string;
 };
 
+export type TestConnectionInput = {
+  database?: string | null | undefined;
+  host?: string | null | undefined;
+  password?: string | null | undefined;
+  port?: number | null | undefined;
+  sslMode?: ConnectionSslMode | null | undefined;
+  username?: string | null | undefined;
+};
+
 export type UpdateUserProfileInput = {
   name: string;
 };
@@ -78,6 +87,13 @@ export type RemoveConnectionMutationVariables = Exact<{
 
 
 export type RemoveConnectionMutation = { removeConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
+
+export type TestConnectionMutationVariables = Exact<{
+  input: TestConnectionInput;
+}>;
+
+
+export type TestConnectionMutation = { testConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -204,3 +220,14 @@ export const RemoveConnectionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<RemoveConnectionMutation, RemoveConnectionMutationVariables>;
+export const TestConnectionDocument = new TypedDocumentString(`
+    mutation TestConnection($input: TestConnectionInput!) {
+  testConnection(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    success
+  }
+}
+    `) as unknown as TypedDocumentString<TestConnectionMutation, TestConnectionMutationVariables>;

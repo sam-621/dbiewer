@@ -48,3 +48,15 @@ export const REMOVE_CONNECTION_MUTATION = graphql(`
     }
   }
 `);
+
+export const TEST_CONNECTION_MUTATION = graphql(`
+  mutation TestConnection($input: TestConnectionInput!) {
+    testConnection(input: $input) {
+      apiErrors {
+        code
+        message
+      }
+      success
+    }
+  }
+`);

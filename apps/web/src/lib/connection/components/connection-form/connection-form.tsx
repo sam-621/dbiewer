@@ -18,6 +18,7 @@ import {
   SelectValue
 } from '@/shared/components/ui/select';
 
+import { TestConnectionButton } from './test-connection-button/test-connection-button';
 import { useConnectionForm } from './use-connection-form';
 
 type Props = { onSuccess: () => void };
@@ -167,9 +168,10 @@ export const ConnectionForm = ({ onSuccess }: Props) => {
         </Field>
       </DialogPanel>
       <DialogFooter>
+        <TestConnectionButton form={form} />
         <DialogClose render={<Button variant="outline" />}>{t('Cancel')}</DialogClose>
         <Button type="submit" loading={isLoading}>
-          {t('Save connection')}
+          {t('Save')}
         </Button>
       </DialogFooter>
     </Form>

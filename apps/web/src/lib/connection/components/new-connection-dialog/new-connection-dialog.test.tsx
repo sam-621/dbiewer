@@ -27,11 +27,19 @@ const CONNECTION = {
   sslMode: 'REQUIRE'
 };
 
-const mockApi = (createConnection: unknown = { apiErrors: [], connection: CONNECTION }) => {
+const mockApi = (
+  createConnection: unknown = { apiErrors: [], connection: CONNECTION },
+  testConnection: unknown = { apiErrors: [], success: true }
+) => {
   let connections: (typeof CONNECTION)[] = [];
 
   vi.mocked(gqlFetcher).mockImplementation(async document => {
     const query = document.toString();
+
+    if (query.includes('mutation TestConnection')) {
+      if (testConnection instanceof Error) throw testConnection;
+      return { testConnection };
+    }
 
     if (query.includes('mutation CreateConnection')) {
       if (createConnection instanceof Error) throw createConnection;
@@ -82,7 +90,10 @@ const fillForm = async () => {
 };
 
 const save = (user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement) =>
-  user.click(within(dialog).getByRole('button', { name: 'Guardar conexión' }));
+  user.click(within(dialog).getByRole('button', { name: 'Guardar' }));
+
+const testButton = (dialog: HTMLElement, name = 'Probar conexión') =>
+  within(dialog).getByRole('button', { name });
 
 const createConnectionCalls = () =>
   vi
@@ -317,5 +328,89 @@ describe('NewConnectionDialog', () => {
       screen.getByRole('heading', { name: 'Conecta tu primera base de datos' })
     ).toBeInTheDocument();
     expect(createConnectionCalls()).toHaveLength(0);
+  });
+
+  test('does not allow testing until host, port, database and user are filled', async () => {
+    mockApi();
+
+    renderPage();
+    const { user, dialog } = await openDialog();
+    expect(testButton(dialog)).toBeDisabled();
+
+    await user.type(within(dialog).getByLabelText('Host'), 'db.acme.dev');
+    await user.type(within(dialog).getByLabelText('Base de datos'), 'acme_prod');
+    expect(testButton(dialog)).toBeDisabled();
+
+    await user.type(within(dialog).getByLabelText('Usuario'), 'ana');
+    expect(testButton(dialog)).toBeEnabled();
+
+    await user.clear(within(dialog).getByLabelText('Puerto'));
+    expect(testButton(dialog)).toBeDisabled();
+  });
+
+  test('tests the connection and shows it connected for a moment', async () => {
+    mockApi();
+
+    renderPage();
+    const { user, dialog } = await fillForm();
+    await user.type(within(dialog).getByLabelText('Contraseña'), 'secret');
+    await user.click(testButton(dialog));
+
+    expect(await within(dialog).findByRole('button', { name: 'Conectado' })).toBeInTheDocument();
+    expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
+      input: {
+        host: 'db.acme.dev',
+        port: 5432,
+        database: 'acme_prod',
+        username: 'ana',
+        password: 'secret',
+        sslMode: 'REQUIRE'
+      }
+    });
+
+    await waitFor(() => expect(testButton(dialog)).toBeInTheDocument(), { timeout: 3000 });
+    expect(within(dialog).queryByRole('button', { name: 'Conectado' })).not.toBeInTheDocument();
+  });
+
+  test('shows the connection failed for a moment when it does not connect', async () => {
+    mockApi(undefined, { apiErrors: [], success: false });
+
+    renderPage();
+    const { user, dialog } = await fillForm();
+    await user.click(testButton(dialog));
+
+    expect(
+      await within(dialog).findByRole('button', { name: 'Falló la conexión' })
+    ).toBeInTheDocument();
+    expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
+      input: expect.objectContaining({ password: null })
+    });
+
+    await waitFor(() => expect(testButton(dialog)).toBeInTheDocument(), { timeout: 3000 });
+  });
+
+  test('shows the connection failed when testing throws', async () => {
+    mockApi(undefined, new Error('Network error'));
+
+    renderPage();
+    const { user, dialog } = await fillForm();
+    await user.click(testButton(dialog));
+
+    expect(
+      await within(dialog).findByRole('button', { name: 'Falló la conexión' })
+    ).toBeInTheDocument();
+  });
+
+  test('saves the connection after a failed test', async () => {
+    mockApi(undefined, { apiErrors: [], success: false });
+
+    renderPage();
+    const { user, dialog } = await fillForm();
+    await user.click(testButton(dialog));
+    await within(dialog).findByRole('button', { name: 'Falló la conexión' });
+    await save(user, dialog);
+
+    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
+    expect(createConnectionCalls()).toHaveLength(1);
   });
 });

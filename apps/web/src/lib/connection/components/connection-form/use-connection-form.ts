@@ -89,4 +89,4 @@ const Schema = z.object({
   sslMode: z.enum(['DISABLE', 'REQUIRE', 'VERIFY_FULL'])
 });
 
-type FormValues = z.infer<typeof Schema>;
+export type FormValues = z.infer<typeof Schema>;
