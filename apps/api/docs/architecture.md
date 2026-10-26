@@ -52,6 +52,15 @@ src/
 
 Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-case.ts`, `connection-repository.ts`). Si un archivo crece demasiado, se parte por acción dentro de una carpeta del recurso.
 
+## HTTP
+
+`createApp(appContext)` (`src/app.ts`) arma Express y monta las rutas en este orden:
+
+- `/api/auth/*splat`: `cors({ origin: config.webUrl, credentials: true })` y después `toNodeHandler(auth)`, sin `express.json()` delante. Con `app.all`, así el preflight `OPTIONS` pasa por `cors`.
+- `/graphql`: Yoga, con su opción `cors: { origin: config.webUrl, credentials: true }`. No se usa el paquete `cors` ahí.
+
+La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WEB_URL`. Un middleware HTTP nuevo se monta en `createApp`, delante de la ruta que lo necesita.
+
 ## Resolvers
 
 - Usan `args.input` tal como llega, con el tipo del codegen. No lo validan con zod ni lo transforman.

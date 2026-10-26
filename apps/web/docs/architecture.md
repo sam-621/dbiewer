@@ -10,7 +10,7 @@ SPA en React + Vite + Tailwind v4 que consume `apps/api`.
 src/
 ├── app/          app.tsx (rutas), app.css (tema de Tailwind v4), providers y error boundary
 ├── lib/
-│   ├── api/      fetchers, operations, errors y tipos (compartido por todos los módulos)
+│   ├── api/      fetchers, auth client, operations, errors y tipos (compartido por todos los módulos)
 │   └── <módulo>/ una carpeta por dominio: connection, query, schema, history...
 └── shared/       componentes, hooks, contexts, guards, i18n y utils compartidos
 ```

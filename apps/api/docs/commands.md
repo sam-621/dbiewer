@@ -16,6 +16,7 @@ Todos se corren dentro de `apps/api`. Esta tabla es el contrato de los scripts d
 | `yarn lint:fix` | Arregla lint, formato y orden de imports. |
 | `yarn gen:types` | Regenera los tipos de GraphQL a partir de los `.gql`. Correr cuando cambia un `.gql`. |
 | `yarn migrate:make <nombre>` | Crea el archivo de una migración nueva. No toca ninguna DB. |
+| `yarn build` | Typecheck y build de producción. |
 
 - No correr `tsc --noEmit` para verificar ediciones; el diagnóstico del IDE basta. El typecheck real es `yarn build`.
 - Tests: solo los de la feature, nunca la suite completa (ver `testing.md`). Nunca `yarn test:integration` y `yarn test:e2e` en paralelo.
@@ -27,7 +28,6 @@ Todo lo que toca una DB real, levanta el server o pega a una API viva. Si hace f
 | Comando | Para qué |
 |---------|----------|
 | `yarn dev` | Levanta la app en local. |
-| `yarn build` | Typecheck y build de producción. |
 | `yarn start` | Corre la build. |
 | `yarn migrate <config>` | Aplica las migraciones pendientes. `<config>` es el archivo env con `ADMIN_DATABASE_URL` (p. ej. `.env.migration`). |
 | `yarn seed` | Siembra datos base. Por definir: se agrega cuando exista el primer schema. |
@@ -46,7 +46,7 @@ Todas son obligatorias y ninguna tiene default, salvo las credenciales de un ada
 | `ADMIN_DATABASE_URL` | Conexión como superusuario. Se salta RLS. La usan los tests, los scripts y, en runtime, Better Auth y la creación del workspace. |
 | `BETTER_AUTH_SECRET` | Firma de cookies y tokens de Better Auth. Mínimo 32 caracteres (`openssl rand -base64 32`). |
 | `BETTER_AUTH_URL` | URL pública de la api. |
-| `WEB_URL` | Origen del web, para `trustedOrigins` y los redirects. |
+| `WEB_URL` | Origen del web, para `trustedOrigins`, CORS y los redirects. |
 | `EMAIL_SENDER` | Adapter de emails: `resend`, `console` (escribe el email en el log) o `dummy` (no hace nada; lo usan los e2e). Cada ambiente elige la suya. |
 | `RESEND_API_KEY` | API key de Resend. Obligatoria si `EMAIL_SENDER=resend`. |
 | `EMAIL_FROM` | Dirección remitente de los emails. Obligatoria. |

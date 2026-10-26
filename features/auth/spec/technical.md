@@ -14,6 +14,7 @@ Reglas de negocio y decisiones en `product.md`.
   - `advanced.database.generateId: () => crypto.randomUUID()`, para cumplir con `id uuid` de `docs/database.md`.
   - `trustedOrigins: [config.webUrl]`.
   - Cookies `httpOnly` (default de Better Auth), `sameSite: 'lax'` y `useSecureCookies` fuera de desarrollo.
+- CORS con `credentials: true` y `origin: config.webUrl` en `/api/auth/*splat` (con el paquete `cors`) y en `/graphql` (opción `cors` de Yoga).
 
 ## Email
 
@@ -157,8 +158,8 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 
 ## Web
 
-- Paquete `better-auth` y cliente en `src/lib/api/auth-client.ts`, con `createAuthClient({ plugins: [magicLinkClient()] })`.
-- **Cookies en desarrollo:** el proxy de Vite manda `/api/auth` y `/graphql` a la api, así web y api comparten origen y la cookie es first-party. En producción, web y api van en el mismo dominio (`app.` y `api.` del mismo sitio).
+- Paquete `better-auth` y cliente en `src/lib/api/auth-client.ts`, con `createAuthClient({ baseURL: VITE_API_URL, plugins: [magicLinkClient()] })`.
+- **Cookies:** la web llama directo a la api (`VITE_API_URL`) con credenciales, sin proxy. Web y api son del mismo sitio (`localhost` en desarrollo; `app.` y `api.` del mismo dominio en producción), así que la cookie `sameSite: 'lax'` viaja. La api habilita CORS con credenciales para `WEB_URL`.
 - `fetcher.ts` envía `credentials: 'include'`.
 - **Sesión:** `useGetMe` (query `me`) es la fuente de verdad de quién está logueado. Después del login o el logout se invalida `AccountCacheKeys.Me`.
 - **Guards:** `src/shared/guards/protect.tsx` redirige a `/login` si `me` es `null`, y `public.tsx` redirige a `/` si hay sesión. Las dos muestran un estado de carga mientras se resuelve `me`.
@@ -169,11 +170,10 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 
 ## Impacto en código existente
 
-- `apps/api/src/app.ts`: monta Better Auth antes de Yoga, y el contexto resuelve la sesión.
+- `apps/api/src/app.ts`: monta Better Auth antes de Yoga, con CORS para `WEB_URL`, y el contexto resuelve la sesión.
 - `apps/api/src/context/`: el contexto del request, con `session`.
 - `apps/api/docs/architecture.md`: el apartado Multi-tenant pasa a decir que el tenant es el workspace y cómo llega al contexto. El cambio se propone al terminar el paso 3.
 - `apps/web/src/app/app.tsx`: rutas `/login` y `/`, con sus guards.
-- `apps/web/vite.config.ts`: proxy a la api.
 - `apps/web/src/lib/api/fetcher.ts`: `credentials: 'include'`.
 - Locales `en.json` y `es.json`: textos de acceso, menú y estado vacío.
 

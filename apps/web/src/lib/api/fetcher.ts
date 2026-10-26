@@ -14,6 +14,7 @@ export const gqlFetcher = async <TResult, TVariables>(
 ): Promise<TResult> => {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/graphql-response+json'

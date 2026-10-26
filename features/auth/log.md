@@ -67,7 +67,10 @@
 - (api) Docs de módulos: `architecture.md` (capas, estructura, errores), `code-style.md` (naming de use-cases, barrels), `CLAUDE.md` de la api y `technical.md` > Capas.
 - (api) Paso 4: query `me` (`User`, `Me`) en `account.gql` y `account-resolver.ts`; devuelve la sesión del contexto, o `null` sin sesión. e2e en `tests/account/me/` (con workspace, sin workspace aunque exista el de otro usuario, sin sesión). `yarn build` y e2e pasan.
 - (api) Docs: resolvers que devuelven algo del contexto sin use-case (`architecture.md` > Resolvers), un `TestServer` por `describe` con `signIn(email)` en cada test (`testing.md` > Tests e2e) e ids UUID de fixtures comparados con su constante (`testing.md` > Reglas generales). `technical.md` > Tests: `me` no devuelve el workspace de otro usuario, sin hablar de RLS.
-- (web) Cliente de Better Auth: paquete `better-auth` (`^1.7.12`, como la api) y `src/lib/api/auth-client.ts` con `createAuthClient` de `better-auth/react` y `magicLinkClient()`, sin `baseURL` (mismo origen vía el proxy de Vite). `yarn build` pasa.
+- (web) Cliente de Better Auth: paquete `better-auth` (`^1.7.12`, como la api) y `src/lib/api/auth-client.ts` con `createAuthClient` de `better-auth/react`, `magicLinkClient()` y `baseURL: VITE_API_URL`. `fetcher.ts` envía `credentials: 'include'`. Sin proxy de Vite: la web llama directo a la api. Lint, tests y `yarn build` pasan.
+- (api) CORS con `cors` (`origin: config.webUrl`, `credentials: true`) en `/api/auth/*splat`, y la opción `cors` de Yoga limitada a lo mismo en `/graphql`. `yarn build` y e2e de `me` pasan.
+- Spec (`technical.md`): sin proxy de Vite; `baseURL` del auth client y CORS de la api.
+- Docs: api `commands.md` (`WEB_URL` también para CORS; `yarn build` lo puede correr el agente) y `architecture.md` > HTTP (CORS en `/api/auth` y en Yoga); web `architecture.md` > Estructura (auth client en `src/lib/api/`).
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -106,6 +109,7 @@
 - Los errores de negocio (de los use-cases) extienden `BusinessError`, traen su `code` y `message` sin mapper, y llegan al cliente en `apiErrors` del payload, devueltos por el use-case como en vendyx (no lanzados), y el resolver los pasa a `apiResponse(result, key)`. Los de infraestructura (`UNAUTHENTICATED`) y los de services (`EmailSendFailedError`) siguen como errores de GraphQL.
 - Los middlewares de GraphQL son high-order functions que envuelven al resolver (como los guards de vendyx); el resolver con sesión es una función con nombre y recibe `SessionContext`.
 - El código de negocio se organiza en `src/modules/<modulo>/`: `use-cases/` (archivo suelto; carpeta propia solo si tiene test) y `<modulo>-errors.ts`. `src/errors/` queda para los errores que no son de un módulo.
+- Sin proxy de Vite: web y api son del mismo sitio (`localhost`; `app.`/`api.` en producción), así que la web llama directo a `VITE_API_URL` con credenciales y la api habilita CORS para `WEB_URL`.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
