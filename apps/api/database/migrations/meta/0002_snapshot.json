@@ -1,6 +1,6 @@
 {
-  "id": "8482d957-2ca0-4b25-b88c-970cfd9b0ecc",
-  "prevId": "7188a719-b517-4572-86fa-a923a7bffbcf",
+  "id": "3a3277a0-6bf6-49ae-8ff4-e451172f3f40",
+  "prevId": "e4855954-8337-4df4-8eac-c8368a75e1c3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -384,6 +384,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -423,6 +429,13 @@
             "owner_user_id"
           ],
           "nullsNotDistinct": false
+        },
+        "workspace_slug_unique": {
+          "name": "workspace_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {
@@ -433,8 +446,8 @@
           "to": [
             "public"
           ],
-          "using": "\"workspace\".\"id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid",
-          "withCheck": "\"workspace\".\"id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid"
+          "using": "current_setting('app.bypass_rls', true) = 'on' or \"workspace\".\"id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid",
+          "withCheck": "current_setting('app.bypass_rls', true) = 'on' or \"workspace\".\"id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid"
         }
       },
       "checkConstraints": {},

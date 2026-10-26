@@ -1,1 +1,0 @@
-DROP TABLE "magic_link_request" CASCADE;

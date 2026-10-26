@@ -73,7 +73,8 @@ describe('WorkspaceRepository', () => {
         repository =>
           repository.create({
             ownerUserId: UserConstants.UserWithoutWorkspaceId,
-            name: 'My workspace'
+            name: 'My workspace',
+            slug: 'my-workspace-c3d4e5'
           }),
         rlsContext
       );
@@ -86,12 +87,38 @@ describe('WorkspaceRepository', () => {
     });
   });
 
+  describe('existsBySlug', () => {
+    test('returns true for a slug already taken', async () => {
+      const exists = await withRepository(repository =>
+        repository.existsBySlug(WorkspaceConstants.OwnerWorkspaceSlug)
+      );
+
+      expect(exists).toBe(true);
+    });
+
+    test('returns true for a slug taken in another tenant', async () => {
+      const exists = await withRepository(
+        repository => repository.existsBySlug(WorkspaceConstants.OwnerWorkspaceSlug),
+        { tenantId: WorkspaceConstants.OtherOwnerWorkspaceId }
+      );
+
+      expect(exists).toBe(true);
+    });
+
+    test('returns false for a free slug', async () => {
+      const exists = await withRepository(repository => repository.existsBySlug('free-workspace'));
+
+      expect(exists).toBe(false);
+    });
+  });
+
   describe('create', () => {
     test('adds the workspace of the owner', async () => {
       const created = await withRepository(repository =>
         repository.create({
           ownerUserId: UserConstants.UserWithoutWorkspaceId,
-          name: 'My workspace'
+          name: 'My workspace',
+          slug: 'my-workspace-c3d4e5'
         })
       );
 
@@ -107,7 +134,11 @@ describe('WorkspaceRepository', () => {
     test('does not add a second workspace for the same owner', async () => {
       await expect(
         withRepository(repository =>
-          repository.create({ ownerUserId: UserConstants.OwnerUserId, name: 'Another workspace' })
+          repository.create({
+            ownerUserId: UserConstants.OwnerUserId,
+            name: 'Another workspace',
+            slug: 'another-workspace-d4e5f6'
+          })
         )
       ).rejects.toThrow();
 
@@ -117,6 +148,25 @@ describe('WorkspaceRepository', () => {
         .where(eq(workspace.ownerUserId, UserConstants.OwnerUserId));
 
       expect(rows.map(row => row.id)).toEqual([WorkspaceConstants.OwnerWorkspaceId]);
+    });
+
+    test('does not add a workspace with a slug already taken', async () => {
+      await expect(
+        withRepository(repository =>
+          repository.create({
+            ownerUserId: UserConstants.UserWithoutWorkspaceId,
+            name: "Ada's workspace",
+            slug: WorkspaceConstants.OwnerWorkspaceSlug
+          })
+        )
+      ).rejects.toThrow();
+
+      const rows = await testDatabase
+        .select()
+        .from(workspace)
+        .where(eq(workspace.ownerUserId, UserConstants.UserWithoutWorkspaceId));
+
+      expect(rows).toHaveLength(0);
     });
   });
 });

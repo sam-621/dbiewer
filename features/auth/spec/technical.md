@@ -44,7 +44,7 @@ Tabla propia:
 - Las tablas de auth no tienen RLS: solo las toca Better Auth, con la conexión de admin. La migración les hace `REVOKE ALL ... FROM app_user`, así la conexión de los requests no puede leer sesiones ni tokens.
 - Fechas `timestamp with time zone`.
 - Las tablas futuras con `tenant_id` llevan FK a `workspace(id)` con `ON DELETE CASCADE`.
-- Migraciones: `0001_create_auth_and_workspace` (generada), `0002_auth_rls_and_privileges` (custom, con el `FORCE` de `workspace` y el `REVOKE` de las tablas de auth), `0003_create_magic_link_request` y `0004_magic_link_request_privileges` (la tabla del límite por email, que ya no existe) y `0006_drop_magic_link_request`, que la borra. Aplicarlas le toca al usuario.
+- Migraciones: `0001_create_auth_and_workspace` (generada: tablas de auth y `workspace` con su policy) y `0002_auth_rls_and_privileges` (custom: `FORCE` de `workspace` y `REVOKE` de las tablas de auth).
 
 ## Creación del workspace
 

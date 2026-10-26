@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 
 import type { Transaction } from '@/persistence/database';
 import type { RepositoryRLS } from '@/persistence/rls';
@@ -9,6 +9,7 @@ export type Workspace = typeof workspace.$inferSelect;
 export type CreateWorkspaceValues = {
   ownerUserId: string;
   name: string;
+  slug: string;
 };
 
 export class WorkspaceRepository {
@@ -19,6 +20,17 @@ export class WorkspaceRepository {
 
   async findByOwnerUserId(ownerUserId: string) {
     return this.rls.runWithoutRLS(() => this.selectByOwnerUserId(ownerUserId));
+  }
+
+  async existsBySlug(slug: string) {
+    return this.rls.runWithoutRLS(async () => {
+      const [row] = await this.trx
+        .select({ total: count() })
+        .from(workspace)
+        .where(eq(workspace.slug, slug));
+
+      return (row?.total ?? 0) > 0;
+    });
   }
 
   async create(values: CreateWorkspaceValues) {

@@ -12,43 +12,15 @@
     {
       "idx": 1,
       "version": "7",
-      "when": 1792904018535,
+      "when": 1792981530308,
       "tag": "0001_create_auth_and_workspace",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1792950645732,
+      "when": 1792981530792,
       "tag": "0002_auth_rls_and_privileges",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1792955907836,
-      "tag": "0003_create_magic_link_request",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1792955911289,
-      "tag": "0004_magic_link_request_privileges",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1792969530109,
-      "tag": "0005_workspace_policy_bypass_rls",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1792980314920,
-      "tag": "0006_drop_magic_link_request",
       "breakpoints": true
     }
   ]

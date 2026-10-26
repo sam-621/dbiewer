@@ -50,9 +50,11 @@ CREATE TABLE "workspace" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"owner_user_id" uuid NOT NULL,
 	"name" text NOT NULL,
+	"slug" text NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "workspace_owner_user_id_unique" UNIQUE("owner_user_id")
+	CONSTRAINT "workspace_owner_user_id_unique" UNIQUE("owner_user_id"),
+	CONSTRAINT "workspace_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 ALTER TABLE "workspace" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
@@ -62,4 +64,4 @@ ALTER TABLE "workspace" ADD CONSTRAINT "workspace_owner_user_id_user_id_fk" FORE
 CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_user_id_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
-CREATE POLICY "workspace_tenant_isolation" ON "workspace" AS PERMISSIVE FOR ALL TO public USING ("workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid) WITH CHECK ("workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid);
+CREATE POLICY "workspace_tenant_isolation" ON "workspace" AS PERMISSIVE FOR ALL TO public USING (current_setting('app.bypass_rls', true) = 'on' or "workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid) WITH CHECK (current_setting('app.bypass_rls', true) = 'on' or "workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid);

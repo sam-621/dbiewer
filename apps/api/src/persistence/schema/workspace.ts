@@ -15,6 +15,7 @@ export const workspace = pgTable(
       .unique()
       .references(() => user.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()

@@ -44,6 +44,10 @@
 - (api) `SendMagicLinkInput` sin `export`. Regla nueva en `code-style.md` > General: `export` solo si se importa en otro archivo.
 - (api) `sendMagicLink` pasa a `plugins/magic-link/send-magic-link/` con `index.ts` y un unit que mockea el `EmailSender` (y `@/config`) y valida remitente, destinatario, asunto y link en es/en.
 - (api) Docs: naming de los use-cases (`code-style.md`); `UnitOfWork`, `rls.ts` y `build-repositories` (`architecture.md`); cómo se testean, el `UnitOfWork` en los tests de repositorio y `<nombre> - Middleware` en el `describe` (`testing.md`). Spec: sin límite por email y el workspace ya no se crea con la cuenta (`technical.md`, `product.md`).
+- (api) `workspace.slug` (`not null`, único). `WorkspaceForUserCreator` lo genera del nombre en kebab-case con un sufijo hex de 6 caracteres (`toWorkspaceSlug` en `shared/utils/workspace-name.ts`). Migraciones `0007`–`0009` (columna, relleno de filas existentes, `NOT NULL` y `UNIQUE`).
+- (api) Limpieza de migraciones (no se había corrido ninguna): `0001`–`0009` quedan en `0001_create_auth_and_workspace` (generada) y `0002_auth_rls_and_privileges` (custom).
+- (api) Se borra `shared/utils/workspace-name.ts`: el nombre inicial y el sufijo del slug son métodos privados de `WorkspaceForUserCreator`. Utilidad `slugify(text)` en `shared/utils/slugify.ts` sobre la librería `slugify`.
+- (api) El slug es `slugify(nombre)`; solo si ya existe (`WorkspaceRepository.existsBySlug`, sin RLS) se le agrega el sufijo aleatorio.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).

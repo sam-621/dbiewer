@@ -9,18 +9,25 @@ const OTHER_OWNER_WORKSPACE_ID = crypto.randomUUID();
 
 export const WorkspaceConstants = {
   OwnerWorkspaceId: OWNER_WORKSPACE_ID,
-  OtherOwnerWorkspaceId: OTHER_OWNER_WORKSPACE_ID
+  OtherOwnerWorkspaceId: OTHER_OWNER_WORKSPACE_ID,
+  OwnerWorkspaceSlug: 'adas-workspace-a1b2c3'
 };
 
 export class WorkspaceFixtures implements Fixture<typeof workspace> {
   table = workspace;
 
   rows: (typeof workspace)['$inferInsert'][] = [
-    { id: OWNER_WORKSPACE_ID, ownerUserId: UserConstants.OwnerUserId, name: "Ada's workspace" },
+    {
+      id: OWNER_WORKSPACE_ID,
+      ownerUserId: UserConstants.OwnerUserId,
+      name: "Ada's workspace",
+      slug: WorkspaceConstants.OwnerWorkspaceSlug
+    },
     {
       id: OTHER_OWNER_WORKSPACE_ID,
       ownerUserId: UserConstants.OtherOwnerUserId,
-      name: "Grace's workspace"
+      name: "Grace's workspace",
+      slug: 'graces-workspace-b2c3d4'
     }
   ];
 }
