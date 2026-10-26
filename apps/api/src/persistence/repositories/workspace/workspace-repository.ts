@@ -1,6 +1,7 @@
 import { count, eq } from 'drizzle-orm';
 
 import type { Transaction } from '@/persistence/database';
+import { Repository } from '@/persistence/repositories/repository';
 import type { RepositoryRLS } from '@/persistence/rls';
 import { workspace } from '@/persistence/schema';
 
@@ -12,14 +13,16 @@ export type CreateWorkspaceValues = {
   slug: string;
 };
 
-export class WorkspaceRepository {
+export class WorkspaceRepository extends Repository<typeof workspace> {
   constructor(
-    private readonly trx: Transaction,
+    trx: Transaction,
     private readonly rls: RepositoryRLS
-  ) {}
+  ) {
+    super(trx, workspace);
+  }
 
   async findByOwnerUserId(ownerUserId: string) {
-    return this.rls.runWithoutRLS(() => this.selectByOwnerUserId(ownerUserId));
+    return this.rls.runWithoutRLS(() => this.findOne({ ownerUserId }));
   }
 
   async existsBySlug(slug: string) {
@@ -34,21 +37,6 @@ export class WorkspaceRepository {
   }
 
   async create(values: CreateWorkspaceValues) {
-    return this.rls.runWithoutRLS(async () => {
-      const [row] = await this.trx.insert(workspace).values(values).returning();
-
-      if (!row) throw new Error(`Failed to create workspace for user ${values.ownerUserId}`);
-
-      return row;
-    });
-  }
-
-  private async selectByOwnerUserId(ownerUserId: string) {
-    const [row] = await this.trx
-      .select()
-      .from(workspace)
-      .where(eq(workspace.ownerUserId, ownerUserId));
-
-    return row ?? null;
+    return this.rls.runWithoutRLS(() => this.insert(values));
   }
 }

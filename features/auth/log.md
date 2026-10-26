@@ -50,6 +50,10 @@
 - (api) El slug es `slugify(nombre)`; solo si ya existe (`WorkspaceRepository.existsBySlug`, sin RLS) se le agrega el sufijo aleatorio.
 - (api) `buildRepositories(trx, rls)` solo construye los repositorios; el `RepositoryRLS` lo arma el `UnitOfWork`.
 - (api) `UnitOfWork` ya no acepta una transacción externa: siempre abre la suya.
+- (api) Clase base abstracta `Repository<TTable>` en `src/persistence/repositories/repository/repository.ts`: recibe `(trx, table)` y trae el CRUD por id como métodos `protected` (`findAll`, `findById`, `insert`, `updateById`, `deleteById`). `WorkspaceRepository` hereda de ella y `create` usa `insert`. `yarn build` pasa.
+- (api) `Repository`: `findAll` y `findById` pasan a `findMany(where?)` y `findOne(where)`, con `where` tipado de la tabla (`Partial<$inferSelect>`, columna → valor, `null` como `IS NULL`). `findByOwnerUserId` usa `findOne`.
+- (api) `Repository`: `updateById` pasa a `update(where, values)`, con el mismo `where` que los `find`, y devuelve las filas actualizadas.
+- (api) `Repository`: `deleteById` pasa a `remove(where)` y devuelve las filas borradas.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
