@@ -36,6 +36,13 @@
 - (api) Se quita el hook `databaseHooks.user.create.after`: el workspace se va a crear con una mutation. `WorkspaceForUserCreator` queda para esa mutation.
 - (api) `requireSession` pasa a `src/api/middlewares/require-session/`, con su `index.ts` y un unit con el context mockeado.
 - (api) El `describe` del test de `requireSession` pasa a `requireSession - Middleware`.
+- (api) El plugin de magic link sale de `auth.ts` a `src/services/auth/plugins/magic-link/auth-magic-link-plugin.ts` (`authMagicLinkPlugin(appContext)`).
+- (api) El callback del plugin pasa a `plugins/magic-link/send-magic-link.ts` (`sendMagicLink(appContext)`, tipado con `MagicLinkOptions['sendMagicLink']`), con barrel `index.ts` en la carpeta.
+- (api) Se quita el límite de magic links por email: se borran `MagicLinkLimitExceededError`, `MagicLinkRequestRepository`, `VerificationRepository` y la tabla `magic_link_request` (migración `0006`, falta aplicarla). Queda solo el `rateLimit` de Better Auth (3 cada 10 minutos por IP). `MagicLinkUseCase` pasa a `MagicLinkEmailSender` (`src/use-cases/magic-link-email-sender/`), que solo manda el email.
+- (api) Se borra `MagicLinkEmailSender`: `send-magic-link.ts` arma y manda el email directo.
+- (api) `sendMagicLink(emailSender, { email, url, locale })` pasa a ser una función normal con sus parámetros; el plugin resuelve el idioma y la llama.
+- (api) `SendMagicLinkInput` sin `export`. Regla nueva en `code-style.md` > General: `export` solo si se importa en otro archivo.
+- (api) `sendMagicLink` pasa a `plugins/magic-link/send-magic-link/` con `index.ts` y un unit que mockea el `EmailSender` (y `@/config`) y valida remitente, destinatario, asunto y link en es/en.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -65,6 +72,8 @@
 - No se crea un use-case para una lectura de infraestructura (resolver la sesión): se usa el repositorio del unit of work directo.
 - El workspace no se crea al crear la cuenta: se crea con una mutation.
 - Los middlewares de GraphQL (como `requireSession`) van en `src/api/middlewares/<nombre>/` con su test, que mockea el context.
+- Por ahora no hay límite de magic links por email: solo el `rateLimit` de Better Auth por IP. Contradice la regla de `product.md`.
+- Mandar el magic link no es un use-case: el código va directo en el callback `sendMagicLink` del plugin.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.

@@ -43,6 +43,13 @@
       "when": 1792969530109,
       "tag": "0005_workspace_policy_bypass_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792980314920,
+      "tag": "0006_drop_magic_link_request",
+      "breakpoints": true
     }
   ]
 }

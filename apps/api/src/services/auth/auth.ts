@@ -1,21 +1,14 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { APIError } from 'better-auth/api';
-import { magicLink } from 'better-auth/plugins/magic-link';
 
 import { config } from '@/config';
 import type { AppContext } from '@/context';
-import { MagicLinkLimitExceededError } from '@/errors/magic-link-errors';
 import * as schema from '@/persistence/schema';
-import { resolveLocale } from '@/shared/utils/locale';
-import {
-  MAGIC_LINK_LIMIT,
-  MAGIC_LINK_LIMIT_WINDOW_IN_MINUTES,
-  MagicLinkUseCase
-} from '@/use-cases/magic-link-use-case';
 
-const MAGIC_LINK_EXPIRES_IN_SECONDS = 15 * 60;
-const EMAIL_FROM_NAME = 'dbiewer';
+import { authMagicLinkPlugin } from './plugins/magic-link';
+
+const MAGIC_LINK_RATE_LIMIT_MAX = 3;
+const MAGIC_LINK_RATE_LIMIT_WINDOW_IN_SECONDS = 10 * 60;
 
 export const createAuth = (appContext: AppContext) =>
   betterAuth({
@@ -31,42 +24,12 @@ export const createAuth = (appContext: AppContext) =>
       enabled: config.env !== 'test',
       customRules: {
         '/sign-in/magic-link': {
-          window: MAGIC_LINK_LIMIT_WINDOW_IN_MINUTES * 60,
-          max: MAGIC_LINK_LIMIT
+          window: MAGIC_LINK_RATE_LIMIT_WINDOW_IN_SECONDS,
+          max: MAGIC_LINK_RATE_LIMIT_MAX
         }
       }
     },
-    plugins: [
-      magicLink({
-        expiresIn: MAGIC_LINK_EXPIRES_IN_SECONDS,
-        sendMagicLink: async ({ email, url, token }, ctx) => {
-          const magicLinkUseCase = new MagicLinkUseCase(
-            appContext.repositories.magicLinkRequest,
-            appContext.repositories.verification,
-            appContext.services.emailSender,
-            { email: config.emailSender.from, name: EMAIL_FROM_NAME }
-          );
-
-          try {
-            await magicLinkUseCase.send({
-              email,
-              url,
-              token,
-              locale: resolveLocale(ctx?.headers?.get('accept-language') ?? null)
-            });
-          } catch (error) {
-            if (error instanceof MagicLinkLimitExceededError) {
-              throw new APIError('TOO_MANY_REQUESTS', {
-                code: 'MAGIC_LINK_LIMIT_EXCEEDED',
-                message: 'Too many magic links requested. Please try again later.'
-              });
-            }
-
-            throw error;
-          }
-        }
-      })
-    ],
+    plugins: [authMagicLinkPlugin(appContext)],
     advanced: {
       database: { generateId: () => crypto.randomUUID() },
       useSecureCookies: config.env !== 'development',

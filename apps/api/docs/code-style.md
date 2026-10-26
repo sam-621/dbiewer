@@ -12,6 +12,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 - **Sin non-null assertion (`!`)**. Si algo puede ser `null`, se maneja o se usa un helper que lance.
 - **Dinero en centavos** (enteros). Porcentajes como fracción (`0.2`).
 - **Sin parámetros con default solo para que los tests escriban menos.** Si producción siempre pasa el argumento, es requerido.
+- **`export` solo si se importa en otro archivo.** No se exporta "por si después se usa".
 
 ## Formato e imports
 
