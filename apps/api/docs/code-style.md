@@ -79,9 +79,7 @@ export class SavedQueryUseCase {
 export const SavedQueryResolver: Resolvers = {
   Mutation: {
     renameSavedQuery: async (_parent, args) => {
-      const input = RenameSavedQuerySchema.parse(args.input);
-
-      return savedQueryUseCase.rename(input);
+      return savedQueryUseCase.rename(args.input);
     }
   }
 };

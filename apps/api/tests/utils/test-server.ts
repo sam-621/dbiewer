@@ -1,9 +1,12 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+import { like } from 'drizzle-orm';
+
 import { createApp } from '@/app';
 import { createAppContext } from '@/context';
 import { createDatabase } from '@/persistence/database';
+import { verification } from '@/persistence/schema';
 
 type TestServerOptions = {
   headers?: Record<string, string>;
@@ -13,6 +16,8 @@ type GraphQLResponse<T> = {
   data?: T;
   errors?: Array<{ message: string; extensions?: { code?: string } }>;
 };
+
+const MAGIC_LINK_IDENTIFIER_PREFIX = 'magic-link:';
 
 const getEnv = (name: 'DATABASE_URL' | 'ADMIN_DATABASE_URL') => {
   const url = process.env[name];
@@ -35,20 +40,47 @@ export class TestServer {
     ).listen(0);
   }
 
+  async signIn(email: string) {
+    await fetch(`${this.url}/api/auth/sign-in/magic-link`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const [row] = await this.adminDatabase.db
+      .select({ identifier: verification.identifier })
+      .from(verification)
+      .where(like(verification.value, `%"email":"${email}"%`));
+
+    if (!row) throw new Error(`No magic link found for ${email}`);
+
+    const token = row.identifier.slice(MAGIC_LINK_IDENTIFIER_PREFIX.length);
+    const response = await fetch(`${this.url}/api/auth/magic-link/verify?token=${token}`);
+    const cookies = response.headers.getSetCookie().map(cookie => cookie.split(';')[0]);
+
+    if (!cookies.length) throw new Error(`Failed to sign in ${email}`);
+
+    return { cookie: cookies.join('; ') };
+  }
+
   async query<T>(
     query: string,
     variables?: Record<string, unknown>,
     headers?: Record<string, string>
   ) {
-    const { port } = this.server.address() as AddressInfo;
-
-    const response = await fetch(`http://localhost:${port}/graphql`, {
+    const response = await fetch(`${this.url}/graphql`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...this.headers, ...headers },
       body: JSON.stringify({ query, variables })
     });
 
     return (await response.json()) as GraphQLResponse<T>;
+  }
+
+  private get url() {
+    const { port } = this.server.address() as AddressInfo;
+
+    return `http://localhost:${port}`;
   }
 
   async teardown() {

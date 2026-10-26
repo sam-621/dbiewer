@@ -42,7 +42,6 @@ src/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
 │   └── repositories/build-repositories.ts   arma todos los repositorios sobre una transacción
 ├── services/<servicio>/               servicios externos (ver "Services (externos)")
-├── schemas/<recurso>-schemas.ts       schemas de zod del input
 ├── errors/<recurso>-errors.ts
 ├── config/                            config.ts: valida las variables de entorno y las mapea a un objeto (ver "Config"); index.ts lo reexporta (@/config)
 └── shared/
@@ -52,7 +51,7 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 
 ## Resolvers
 
-- Validan el input con el schema de `schemas/` (`CreateConnectionSchema.parse(args.input)`); si falla, el error se responde con los issues.
+- Usan `args.input` tal como llega, con el tipo del codegen. No lo validan con zod ni lo transforman.
 - Llaman a un solo método del use-case y responden. Sin `if` de negocio. De dónde sale el use-case se define con el contexto del request.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
 

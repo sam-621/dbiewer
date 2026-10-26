@@ -1,0 +1,12 @@
+type Workspace {
+  id: ID!
+  name: String!
+}
+
+input CreateWorkspaceInput {
+  name: String!
+}
+
+type Mutation {
+  createWorkspace(input: CreateWorkspaceInput!): Workspace!
+}

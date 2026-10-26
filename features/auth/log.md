@@ -54,6 +54,7 @@
 - (api) `Repository`: `findAll` y `findById` pasan a `findMany(where?)` y `findOne(where)`, con `where` tipado de la tabla (`Partial<$inferSelect>`, columna → valor, `null` como `IS NULL`). `findByOwnerUserId` usa `findOne`.
 - (api) `Repository`: `updateById` pasa a `update(where, values)`, con el mismo `where` que los `find`, y devuelve las filas actualizadas.
 - (api) `Repository`: `deleteById` pasa a `remove(where)` y devuelve las filas borradas.
+- (api) Mutation `createWorkspace(input: { name })` en `account.gql` y `account-resolver.ts`, con `requireSession`, conectada a `WorkspaceForUserCreator`. El use-case recibe `{ ownerUserId, name }` (sin nombre inicial) y lanza `WORKSPACE_ALREADY_EXISTS` si el usuario ya tiene workspace (búsqueda previa por dueño). `Session.workspace` puede ser `null` y se borra `WorkspaceNotFoundError`. El input usa el tipo del codegen, sin zod. `maskError` ya no usa `instanceof GraphQLError` (dos instancias de `graphql` en los tests). Helper `TestServer.signIn(email)` y e2e en `tests/account/create-workspace/`. `yarn build` pasa.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -85,6 +86,10 @@
 - Los middlewares de GraphQL (como `requireSession`) van en `src/api/middlewares/<nombre>/` con su test, que mockea el context.
 - Por ahora no hay límite de magic links por email: solo el `rateLimit` de Better Auth por IP. Contradice la regla de `product.md`.
 - Mandar el magic link no es un use-case: el código va directo en el callback `sendMagicLink` del plugin.
+- El nombre del workspace lo elige el usuario en `createWorkspace`; no hay nombre inicial calculado.
+- Un usuario con sesión puede no tener workspace: el contexto del request lo deja en `null` en vez de lanzar error.
+- No se cubren casos de concurrencia muy raros (pedidos simultáneos del mismo usuario): si pasan, un 500 está bien.
+- `createWorkspace` confía en el input tipado por el codegen: sin schema de zod ni trim. Documentado en `architecture.md` > Resolvers, en el ejemplo de `code-style.md` y en el `CLAUDE.md` de la api.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.

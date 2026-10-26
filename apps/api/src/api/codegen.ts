@@ -2,6 +2,7 @@ import type { GraphQLResolveInfo } from 'graphql';
 import type { RequestContext } from '@/context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -11,9 +12,28 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
+export type CreateWorkspaceInput = {
+  name: Scalars['String']['input'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createWorkspace: Workspace;
+};
+
+export type MutationCreateWorkspaceArgs = {
+  input: CreateWorkspaceInput;
+};
+
 export type Query = {
   __typename?: 'Query';
   health: Scalars['Boolean']['output'];
+};
+
+export type Workspace = {
+  __typename?: 'Workspace';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -114,15 +134,35 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  CreateWorkspaceInput: CreateWorkspaceInput;
+  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  Workspace: ResolverTypeWrapper<Workspace>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  CreateWorkspaceInput: CreateWorkspaceInput;
+  ID: Scalars['ID']['output'];
+  Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
+  Workspace: Workspace;
+};
+
+export type MutationResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
+> = {
+  createWorkspace?: Resolver<
+    ResolversTypes['Workspace'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateWorkspaceArgs, 'input'>
+  >;
 };
 
 export type QueryResolvers<
@@ -132,6 +172,16 @@ export type QueryResolvers<
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 };
 
+export type WorkspaceResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['Workspace'] = ResolversParentTypes['Workspace']
+> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = RequestContext> = {
+  Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Workspace?: WorkspaceResolvers<ContextType>;
 };

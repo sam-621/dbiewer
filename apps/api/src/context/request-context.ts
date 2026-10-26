@@ -1,6 +1,5 @@
 import type { YogaInitialContext } from 'graphql-yoga';
 
-import { WorkspaceNotFoundError } from '@/errors/workspace-errors';
 import type { Database } from '@/persistence/database';
 import type { Workspace } from '@/persistence/repositories/workspace';
 import type { RLSContext } from '@/persistence/rls';
@@ -13,7 +12,7 @@ export type SessionUser = Auth['$Infer']['Session']['user'];
 
 export type Session = {
   user: SessionUser;
-  workspace: Workspace;
+  workspace: Workspace | null;
 };
 
 export type RequestContext = {
@@ -36,8 +35,6 @@ const resolveSession = async (
     repositories.workspace.findByOwnerUserId(authSession.user.id)
   );
 
-  if (!workspace) throw new WorkspaceNotFoundError(authSession.user.id);
-
   return { user: authSession.user, workspace };
 };
 
@@ -48,7 +45,7 @@ export const createRequestContext =
 
     return {
       database: appContext.databases.app,
-      rlsContext: { tenantId: session?.workspace.id ?? null },
+      rlsContext: { tenantId: session?.workspace?.id ?? null },
       services: appContext.services,
       session
     };
