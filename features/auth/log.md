@@ -34,6 +34,8 @@
 - (api) Se borra `WorkspaceForUserEnsurer`: el workspace solo lo crea el hook (que ya no atrapa el error) y el contexto del request lo busca con `WorkspaceForUserFinder`, que lanza `WorkspaceNotFoundError` (`WORKSPACE_NOT_FOUND`) si no existe.
 - (api) Se borra `WorkspaceForUserFinder`: `resolveSession` usa directo `repositories.workspace.findByOwnerUserId` del unit of work y lanza `WorkspaceNotFoundError` si no hay.
 - (api) Se quita el hook `databaseHooks.user.create.after`: el workspace se va a crear con una mutation. `WorkspaceForUserCreator` queda para esa mutation.
+- (api) `requireSession` pasa a `src/api/middlewares/require-session/`, con su `index.ts` y un unit con el context mockeado.
+- (api) El `describe` del test de `requireSession` pasa a `requireSession - Middleware`.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
@@ -62,6 +64,7 @@
 - El workspace solo se crea al crear la cuenta; nunca al leerlo. Si falta, es un error (`WORKSPACE_NOT_FOUND`).
 - No se crea un use-case para una lectura de infraestructura (resolver la sesión): se usa el repositorio del unit of work directo.
 - El workspace no se crea al crear la cuenta: se crea con una mutation.
+- Los middlewares de GraphQL (como `requireSession`) van en `src/api/middlewares/<nombre>/` con su test, que mockea el context.
 
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
