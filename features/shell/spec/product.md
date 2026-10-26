@@ -36,7 +36,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ### Esquema
 
 - El esquema no se guarda en dbiewer: se lee de la base del usuario cada vez que hace falta. El usuario puede recargarlo a mano.
-- Se muestran todos los esquemas de la base, menos los del sistema (`pg_catalog`, `information_schema`, `pg_toast` y los temporales).
+- Se muestran los esquemas de la base que tienen objetos, menos los del sistema (`pg_catalog`, `information_schema`, `pg_toast` y los temporales).
 - Si la base tiene un solo esquema con objetos, el explorador no muestra ese nivel.
 - En el explorador, el número de filas de una tabla es un estimado. Si Postgres no tiene estimado (la tabla nunca se analizó), no se muestra ningún número.
 - Dentro de la tabla, el número de filas es exacto y respeta los filtros aplicados.
@@ -111,7 +111,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 ## Plan de trabajo recomendado
 
-1. [ ] api: pool de conexiones en `PostgresService` e introspección con la query `connectionSchema`, con sus tests e2e.
+1. [x] api: pool de conexiones en `PostgresService` e introspección con la query `connectionSchema`, con sus tests e2e.
 2. [ ] web: shell con header y selector de conexión, sidebar con Explorer y buscador; reemplaza el listado temporal.
 3. [ ] api: queries `tableStructure` y `tableRows` con filtros, orden y paginación, con sus tests e2e.
 4. [ ] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.

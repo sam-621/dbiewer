@@ -1,0 +1,55 @@
+type DbSchema {
+  name: String!
+  tables: [DbTable!]!
+  views: [DbView!]!
+  functions: [DbFunction!]!
+}
+
+type DbTable {
+  name: String!
+  estimatedRows: Int
+  columns: [DbColumn!]!
+}
+
+type DbView {
+  name: String!
+  columns: [DbColumn!]!
+}
+
+type DbColumn {
+  name: String!
+  type: String!
+  isPrimaryKey: Boolean!
+  isForeignKey: Boolean!
+}
+
+type DbFunction {
+  name: String!
+  arguments: String!
+  kind: DbFunctionKind!
+}
+
+enum DbFunctionKind {
+  FUNCTION
+  PROCEDURE
+}
+
+type ConnectionSchemaResult {
+  apiErrors: [ShellErrorResult!]!
+  schemas: [DbSchema!]
+}
+
+type ShellErrorResult {
+  code: ShellErrorCode!
+  message: String!
+}
+
+enum ShellErrorCode {
+  INVALID_INPUT
+  CONNECTION_NOT_FOUND
+  CONNECTION_FAILED
+}
+
+type Query {
+  connectionSchema(connectionId: ID!): ConnectionSchemaResult!
+}

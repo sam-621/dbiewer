@@ -8,6 +8,8 @@
 - (api) Los tests de integración pasan a `*.int.test.ts`; la config es `vitest.int.config.ts` y el comando `yarn test:int`. Docs actualizados.
 - (api) Se quitan los `vi.spyOn` de los e2e de update y remove connection, y las constantes de `PostgresService` pasan a la clase. Reglas nuevas en `testing.md` y `code-style.md`.
 - (api) `PostgresConnectionFailedError` recibe las `PostgresCredentials` y se instancia donde se lanza.
+- (api) Query `connectionSchema`: una sola consulta a `pg_catalog` arma el árbol de esquemas, tablas, vistas, funciones y columnas. Con e2e e integración. Cierra el paso 1.
+- (api) Los e2e de operaciones que usan `PostgresService` lo mockean en vez de preparar la DB de test. `apiResponse` vale también para queries. Reglas en `testing.md` y `architecture.md`.
 
 **Decisiones:**
 - El esquema se lee en vivo de la base del usuario y no se guarda. El árbol completo llega en una sola consulta; lo pesado se pide al abrir la tabla.
@@ -16,3 +18,4 @@
 - Pestaña provisional al explorar; índices, FKs y DDL en Structure, no en el árbol.
 - El diagrama queda para el milestone 6: sin pestaña fija por ahora.
 - El historial es de la conexión, no de la pestaña.
+- El explorador no muestra esquemas sin objetos. Las vistas materializadas van como vistas y las tablas particionadas como tablas.

@@ -32,7 +32,7 @@ src/
 │   ├── resolvers/<recurso>-resolver.ts
 │   ├── middlewares/<nombre>/          middlewares de GraphQL que envuelven al resolver (requireSession)
 │   ├── plugins/<nombre>.ts            plugins de Yoga (useErrorLogger)
-│   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations
+│   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations y queries
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
 ├── modules/<modulo>/                 un módulo por dominio (workspace, connection...): use-cases/, <modulo>-schemas.ts y <modulo>-errors.ts
 │   ├── use-cases/<caso-de-uso>.ts    un archivo por caso de uso; si tiene test, va en use-cases/<caso-de-uso>/ con su test e index.ts
@@ -71,7 +71,7 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 - Excepción: una query que solo lee, sin reglas de negocio, no lleva use-case. El resolver abre el `UnitOfWork` y llama directo al repositorio (`uow.execute(repositories => repositories.connection.findAll())`). Si la lectura necesita una regla, va a un use-case.
 - Un enum de GraphQL cuyos valores se guardan distinto en la DB (`VERIFY_FULL` y `verify-full`) se traduce con un enum resolver en el `Resolvers` del recurso (`ConnectionSslMode: { VERIFY_FULL: 'verify-full', ... }`) y los mismos valores en `enumValues` de `codegen.ts`, así el tipo generado usa los de la DB. Nunca se traduce a mano en el resolver.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
-- Una mutation que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
+- Una mutation o query que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
 
   ```ts
   async function createWorkspace(

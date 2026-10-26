@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { destroyDatabase, testDatabase } from '@tests/utils/database';
+import { sql } from 'drizzle-orm';
+import { afterAll, afterEach, describe, expect, test } from 'vitest';
 
 import { PostgresConnectionFailedError, PostgresQueryFailedError } from './postgres-errors';
 import { PostgresService } from './postgres-service';
@@ -28,6 +30,10 @@ describe('PostgresService', () => {
 
   afterEach(async () => {
     await postgresService.closePools();
+  });
+
+  afterAll(async () => {
+    await destroyDatabase();
   });
 
   test('returns the rows of a parameterized query', async () => {
@@ -89,6 +95,72 @@ describe('PostgresService', () => {
     );
 
     expect(second.rows[0]?.pid).not.toBe(first.rows[0]?.pid);
+  });
+
+  test('returns the tables, views and functions of a schema', async () => {
+    await testDatabase.execute(
+      sql.raw(`
+        create schema library;
+        create table library.authors (id integer primary key, name text not null);
+        create table library.books (
+          id integer primary key,
+          author_id integer references library.authors (id),
+          title varchar(200) not null
+        );
+        create view library.book_titles as select id, title from library.books;
+        create function library.book_count(author integer) returns bigint
+          language sql as 'select count(*) from library.books where author_id = author';
+      `)
+    );
+
+    try {
+      const schemas = await postgresService.readSchemas(getTestConnection());
+
+      expect(schemas.find(schema => schema.name === 'library')).toEqual({
+        name: 'library',
+        tables: [
+          {
+            name: 'authors',
+            estimatedRows: null,
+            columns: [
+              { name: 'id', type: 'integer', isPrimaryKey: true, isForeignKey: false },
+              { name: 'name', type: 'text', isPrimaryKey: false, isForeignKey: false }
+            ]
+          },
+          {
+            name: 'books',
+            estimatedRows: null,
+            columns: [
+              { name: 'id', type: 'integer', isPrimaryKey: true, isForeignKey: false },
+              { name: 'author_id', type: 'integer', isPrimaryKey: false, isForeignKey: true },
+              {
+                name: 'title',
+                type: 'character varying(200)',
+                isPrimaryKey: false,
+                isForeignKey: false
+              }
+            ]
+          }
+        ],
+        views: [
+          {
+            name: 'book_titles',
+            columns: [
+              { name: 'id', type: 'integer', isPrimaryKey: false, isForeignKey: false },
+              {
+                name: 'title',
+                type: 'character varying(200)',
+                isPrimaryKey: false,
+                isForeignKey: false
+              }
+            ]
+          }
+        ],
+        functions: [{ name: 'book_count', arguments: 'author integer', kind: 'function' }]
+      });
+    } finally {
+      await testDatabase.execute(sql.raw('drop schema library cascade'));
+    }
   });
 
   test('throws PostgresConnectionFailedError when it cannot connect', async () => {

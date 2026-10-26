@@ -57,7 +57,7 @@ No se testean:
 - Antes de inventar un setup, copiar el del test más parecido que ya exista.
 - El `describe` raíz lleva el nombre de la pieza y, si no es obvio por el nombre, qué tipo de pieza es: `requireSession - Middleware`.
 - El valor esperado de un `expect` va escrito tal cual (`toBe('Acme')`, `{ code: 'WORKSPACE_ALREADY_EXISTS', message: '...' }`), nunca en una constante o variable del test, para leerlo sin ir a buscarlo. Las constantes (`<X>Constants`) sirven para armar el input o buscar filas, no como valor esperado. Excepciones: los ids de los fixtures, que son UUID aleatorios y se comparan con su constante (`UserConstants.OwnerUserId`), y los valores que genera el sistema y no se conocen de antemano (el pid de Postgres), que se comparan contra la variable donde se leyeron.
-- Los e2e verifican solo lo que devuelve el resolver y el efecto en DB, nunca que se llamó a un service (`vi.spyOn`).
+- Los e2e verifican solo lo que devuelve el resolver y el efecto en DB, nunca que se llamó a un service (`toHaveBeenCalled`).
 
 ## Tests e2e
 
@@ -67,6 +67,7 @@ No se testean:
 - Un solo happy path, y un test por cada `code` de error distinto que pueda devolver. Si varios inputs inválidos dan el mismo `code`, basta con uno.
 - Los errores de negocio se verifican en el payload: `apiErrors` con `code` y `message`, y el recurso en `null`. El happy path verifica `apiErrors: []`. Los de infraestructura (`UNAUTHENTICATED`) se verifican en `response.errors[0].extensions.code`.
 - Además de la respuesta, verificar el efecto en DB (o que no lo hubo).
+- Una operación que usa `PostgresService` (la base del usuario) mockea el service en vez de preparar la DB de test: `vi.spyOn(PostgresService.prototype, '<método>')` con `mockResolvedValue(...)` para devolver lo que pide el test, o `mockRejectedValue(new PostgresConnectionFailedError(...))` para el error. `vi.restoreAllMocks()` en `afterEach`. La consulta real se prueba en la integración del service.
 - Cierre obligatorio de toda mutation, al final del archivo y en este orden:
   1. **Tenant:** un tenant no ve ni modifica datos de otro.
   2. **unauthorized:** sin sesión → `UNAUTHENTICATED`.

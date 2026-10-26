@@ -14,6 +14,10 @@ const config: CodegenConfig = {
             DISABLE: 'disable',
             REQUIRE: 'require',
             VERIFY_FULL: 'verify-full'
+          },
+          DbFunctionKind: {
+            FUNCTION: 'function',
+            PROCEDURE: 'procedure'
           }
         }
       }

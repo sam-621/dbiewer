@@ -19,11 +19,110 @@ export type PostgresCredentials = {
 
 type PostgresConnection = PostgresCredentials & { id: string };
 
+type PostgresColumn = {
+  name: string;
+  type: string;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+};
+
+type PostgresFunctionKind = 'function' | 'procedure';
+
+export type PostgresSchema = {
+  name: string;
+  tables: Array<{ name: string; estimatedRows: number | null; columns: PostgresColumn[] }>;
+  views: Array<{ name: string; columns: PostgresColumn[] }>;
+  functions: Array<{ name: string; arguments: string; kind: PostgresFunctionKind }>;
+};
+
 export class PostgresService {
   private static readonly CONNECTION_TIMEOUT_MS = 10_000;
   private static readonly STATEMENT_TIMEOUT_MS = 30_000;
   private static readonly POOL_MAX_CLIENTS = 3;
   private static readonly POOL_IDLE_TIMEOUT_MS = 5 * 60_000;
+  private static readonly SCHEMAS_SQL = `
+    with namespaces as (
+      select n.oid, n.nspname
+      from pg_catalog.pg_namespace n
+      where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+        and n.nspname not like 'pg\\_temp\\_%'
+        and n.nspname not like 'pg\\_toast\\_temp\\_%'
+    ),
+    relations as (
+      select c.oid, c.relnamespace, c.relname, c.relkind, c.reltuples
+      from pg_catalog.pg_class c
+      join namespaces n on n.oid = c.relnamespace
+      where c.relkind in ('r', 'p', 'v', 'm')
+    ),
+    relation_columns as (
+      select
+        a.attrelid,
+        json_agg(
+          json_build_object(
+            'name', a.attname,
+            'type', pg_catalog.format_type(a.atttypid, a.atttypmod),
+            'isPrimaryKey', exists (
+              select 1 from pg_catalog.pg_constraint k
+              where k.conrelid = a.attrelid and k.contype = 'p' and a.attnum = any (k.conkey)
+            ),
+            'isForeignKey', exists (
+              select 1 from pg_catalog.pg_constraint k
+              where k.conrelid = a.attrelid and k.contype = 'f' and a.attnum = any (k.conkey)
+            )
+          )
+          order by a.attnum
+        ) as columns
+      from pg_catalog.pg_attribute a
+      join relations r on r.oid = a.attrelid
+      where a.attnum > 0 and not a.attisdropped
+      group by a.attrelid
+    ),
+    schema_relations as (
+      select
+        r.relnamespace,
+        json_agg(
+          json_build_object(
+            'name', r.relname,
+            'estimatedRows', case when r.reltuples < 0 then null else r.reltuples::bigint end,
+            'columns', coalesce(rc.columns, '[]'::json)
+          )
+          order by r.relname
+        ) filter (where r.relkind in ('r', 'p')) as tables,
+        json_agg(
+          json_build_object('name', r.relname, 'columns', coalesce(rc.columns, '[]'::json))
+          order by r.relname
+        ) filter (where r.relkind in ('v', 'm')) as views
+      from relations r
+      left join relation_columns rc on rc.attrelid = r.oid
+      group by r.relnamespace
+    ),
+    schema_functions as (
+      select
+        p.pronamespace,
+        json_agg(
+          json_build_object(
+            'name', p.proname,
+            'arguments', pg_catalog.pg_get_function_identity_arguments(p.oid),
+            'kind', case p.prokind when 'p' then 'procedure' else 'function' end
+          )
+          order by p.proname, pg_catalog.pg_get_function_identity_arguments(p.oid)
+        ) as functions
+      from pg_catalog.pg_proc p
+      join namespaces n on n.oid = p.pronamespace
+      where p.prokind in ('f', 'p')
+      group by p.pronamespace
+    )
+    select
+      n.nspname as name,
+      coalesce(sr.tables, '[]'::json) as tables,
+      coalesce(sr.views, '[]'::json) as views,
+      coalesce(sf.functions, '[]'::json) as functions
+    from namespaces n
+    left join schema_relations sr on sr.relnamespace = n.oid
+    left join schema_functions sf on sf.pronamespace = n.oid
+    where sr.relnamespace is not null or sf.pronamespace is not null
+    order by n.nspname
+  `;
 
   private readonly pools = new Map<string, Pool>();
   private readonly sslByMode: Record<PostgresSslMode, ClientConfig['ssl']>;
@@ -71,6 +170,12 @@ export class PostgresService {
     } finally {
       client.release();
     }
+  }
+
+  async readSchemas(connection: PostgresConnection) {
+    const result = await this.query<PostgresSchema>(connection, PostgresService.SCHEMAS_SQL);
+
+    return result.rows;
   }
 
   async discardPool(connectionId: string) {

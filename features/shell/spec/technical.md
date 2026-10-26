@@ -84,7 +84,8 @@ type Query {
 }
 ```
 
-- Una sola consulta a `pg_catalog` (`pg_namespace`, `pg_class`, `pg_attribute`, `pg_constraint`, `pg_proc`) para todo el árbol. Excluye `pg_catalog`, `information_schema`, `pg_toast` y `pg_temp_*`.
+- Una sola consulta a `pg_catalog` (`pg_namespace`, `pg_class`, `pg_attribute`, `pg_constraint`, `pg_proc`) para todo el árbol. Excluye `pg_catalog`, `information_schema`, `pg_toast`, `pg_temp_*` y los esquemas sin objetos.
+- Tablas: `relkind` `r` y `p` (particionadas). Vistas: `v` y `m` (materializadas). Funciones: `prokind` `f` y `p`, con `arguments` de `pg_get_function_identity_arguments`.
 - `type` con `format_type(atttypid, atttypmod)`. `estimatedRows` es `reltuples`, o `null` si es `-1`.
 - Orden alfabético en esquemas, objetos y por posición en columnas.
 
