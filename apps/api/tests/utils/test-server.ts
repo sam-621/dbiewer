@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { like } from 'drizzle-orm';
 
 import { createApp } from '@/app';
+import type { AppContext } from '@/context';
 import { createAppContext } from '@/context';
 import { createDatabase } from '@/persistence/database';
 import { verification } from '@/persistence/schema';
@@ -32,12 +33,12 @@ export class TestServer {
   private readonly database = createDatabase(getEnv('DATABASE_URL'));
   private readonly adminDatabase = createDatabase(getEnv('ADMIN_DATABASE_URL'));
   private readonly server: Server;
+  readonly appContext: AppContext;
 
   constructor(options: TestServerOptions = {}) {
     this.headers = options.headers ?? {};
-    this.server = createApp(
-      createAppContext({ app: this.database.db, admin: this.adminDatabase.db })
-    ).listen(0);
+    this.appContext = createAppContext({ app: this.database.db, admin: this.adminDatabase.db });
+    this.server = createApp(this.appContext).listen(0);
   }
 
   async signIn(email: string) {
@@ -89,5 +90,6 @@ export class TestServer {
     );
     await this.database.pool.end();
     await this.adminDatabase.pool.end();
+    await this.appContext.services.postgresService.closePools();
   }
 }

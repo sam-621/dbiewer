@@ -8,12 +8,14 @@ import { UpdateConnectionSchema } from '@/modules/connection/connection-schemas'
 import type { Connection } from '@/persistence/repositories/connection';
 import type { UowContext } from '@/persistence/unit-of-work';
 import type { EncryptionService } from '@/services/encryption';
+import type { PostgresService } from '@/services/postgres';
 import { UseCase } from '@/shared/use-case';
 
 export class ConnectionUpdater extends UseCase<typeof UpdateConnectionSchema> {
   constructor(
     private readonly ctx: UowContext,
-    private readonly encryptionService: EncryptionService
+    private readonly encryptionService: EncryptionService,
+    private readonly postgresService: PostgresService
   ) {
     super(UpdateConnectionSchema);
   }
@@ -36,6 +38,10 @@ export class ConnectionUpdater extends UseCase<typeof UpdateConnectionSchema> {
         : values
     );
 
-    return updated ?? new ConnectionNotFoundError(id);
+    if (!updated) return new ConnectionNotFoundError(id);
+
+    await this.postgresService.discardPool(id);
+
+    return updated;
   }
 }

@@ -5,3 +5,9 @@ export class PostgresConnectionFailedError extends DbiewerError {
     super(`Failed to connect to ${host}:${port}/${database}: ${reason}`);
   }
 }
+
+export class PostgresQueryFailedError extends DbiewerError {
+  constructor(reason: string) {
+    super(reason);
+  }
+}

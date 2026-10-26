@@ -71,7 +71,11 @@ async function updateConnection(
   const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
 
   const result = await uow.execute(async (_repositories, uowCtx) => {
-    const connectionUpdater = new ConnectionUpdater(uowCtx, ctx.services.encryptionService);
+    const connectionUpdater = new ConnectionUpdater(
+      uowCtx,
+      ctx.services.encryptionService,
+      ctx.services.postgresService
+    );
 
     return connectionUpdater.execute(args.input);
   });
@@ -87,7 +91,7 @@ async function removeConnection(
   const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
 
   const result = await uow.execute(async (_repositories, uowCtx) => {
-    const connectionRemover = new ConnectionRemover(uowCtx);
+    const connectionRemover = new ConnectionRemover(uowCtx, ctx.services.postgresService);
 
     return connectionRemover.execute(args.id);
   });

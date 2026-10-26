@@ -16,7 +16,11 @@ const server = createApp(appContext).listen(config.port, () => {
 
 const shutdown = () => {
   server.close(async () => {
-    await Promise.all([database.pool.end(), adminDatabase.pool.end()]);
+    await Promise.all([
+      database.pool.end(),
+      adminDatabase.pool.end(),
+      appContext.services.postgresService.closePools()
+    ]);
     process.exit(0);
   });
 };

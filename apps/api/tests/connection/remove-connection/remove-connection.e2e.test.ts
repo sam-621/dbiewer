@@ -1,7 +1,7 @@
 import { destroyDatabase, loadFixtures, resetDatabase, testDatabase } from '@tests/utils/database';
 import { TestServer } from '@tests/utils/test-server';
 import { eq } from 'drizzle-orm';
-import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { connection } from '@/persistence/schema';
 
@@ -42,6 +42,7 @@ describe('removeConnection', () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await resetDatabase();
   });
 
@@ -51,6 +52,7 @@ describe('removeConnection', () => {
   });
 
   test('removes the connection', async () => {
+    const discardPool = vi.spyOn(testServer.appContext.services.postgresService, 'discardPool');
     const headers = await testServer.signIn(UserConstants.OwnerEmail);
 
     const response = await testServer.query<RemoveConnectionResponse>(
@@ -62,6 +64,7 @@ describe('removeConnection', () => {
     expect(response.errors).toBeUndefined();
     expect(response.data?.removeConnection).toEqual({ apiErrors: [], success: true });
     expect(await findConnection(ConnectionConstants.ProductionConnectionId)).toBeUndefined();
+    expect(discardPool).toHaveBeenCalledWith(ConnectionConstants.ProductionConnectionId);
   });
 
   test('returns CONNECTION_NOT_FOUND when the connection does not exist', async () => {
@@ -87,6 +90,7 @@ describe('removeConnection', () => {
   });
 
   test('returns CONNECTION_NOT_FOUND for a connection of another workspace', async () => {
+    const discardPool = vi.spyOn(testServer.appContext.services.postgresService, 'discardPool');
     const headers = await testServer.signIn(UserConstants.OwnerEmail);
 
     const response = await testServer.query<RemoveConnectionResponse>(
@@ -106,6 +110,7 @@ describe('removeConnection', () => {
       success: null
     });
     expect(await findConnection(ConnectionConstants.OtherWorkspaceConnectionId)).toBeDefined();
+    expect(discardPool).not.toHaveBeenCalled();
   });
 
   test('returns UNAUTHENTICATED when there is no session', async () => {
