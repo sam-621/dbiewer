@@ -9,7 +9,7 @@ Todos se corren dentro de `apps/api`. Esta tabla es el contrato de los scripts d
 | Comando | Para qué |
 |---------|----------|
 | `yarn test [ruta]` | Tests unitarios (`*.test.ts`). Sin Docker. |
-| `yarn test:integration [ruta]` | Tests de integración (`*.integration.test.ts`). Levanta Postgres en Docker, migra, corre y lo baja. |
+| `yarn test:int [ruta]` | Tests de integración (`*.int.test.ts`). Levanta Postgres en Docker, migra, corre y lo baja. |
 | `yarn test:e2e [ruta]` | Tests e2e (`*.e2e.test.ts`). Levanta Postgres en Docker, migra, corre y lo baja. |
 | `yarn emails` | Preview server de React Email con los templates de `src/services/emails/templates`. Se baja con Ctrl+C. `react-email` y `@react-email/preview-server` van fijados en la misma versión exacta (sin `^`): si no coinciden, el preview no arranca. |
 | `yarn lint:check` | Revisa ESLint + Prettier. |
@@ -19,7 +19,7 @@ Todos se corren dentro de `apps/api`. Esta tabla es el contrato de los scripts d
 | `yarn build` | Typecheck y build de producción. |
 
 - No correr `tsc --noEmit` para verificar ediciones; el diagnóstico del IDE basta. El typecheck real es `yarn build`.
-- Tests: solo los de la feature, nunca la suite completa (ver `testing.md`). Nunca `yarn test:integration` y `yarn test:e2e` en paralelo.
+- Tests: solo los de la feature, nunca la suite completa (ver `testing.md`). Nunca `yarn test:int` y `yarn test:e2e` en paralelo.
 
 ## Solo los corre el usuario
 
@@ -50,4 +50,4 @@ Todas son obligatorias y ninguna tiene default, salvo las credenciales de un ada
 | `EMAIL_SENDER` | Adapter de emails: `resend`, `console` (escribe el email en el log) o `dummy` (no hace nada; lo usan los e2e). Cada ambiente elige la suya. |
 | `RESEND_API_KEY` | API key de Resend. Obligatoria si `EMAIL_SENDER=resend`. |
 | `EMAIL_FROM` | Dirección remitente de los emails. Obligatoria. |
-| `CONNECTIONS_ENCRYPTION_KEY` | Llave para cifrar las contraseñas de las conexiones: 32 bytes en base64 (`openssl rand -base64 32`). Los tests usan una fija, en el bloque `env` de `vitest.integration.config.ts` y `vitest.e2e.config.ts`. |
+| `CONNECTIONS_ENCRYPTION_KEY` | Llave para cifrar las contraseñas de las conexiones: 32 bytes en base64 (`openssl rand -base64 32`). Los tests usan una fija, en el bloque `env` de `vitest.int.config.ts` y `vitest.e2e.config.ts`. |

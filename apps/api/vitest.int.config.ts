@@ -10,7 +10,7 @@ export default defineConfig({
     }
   },
   test: {
-    include: ['src/**/*.integration.test.{ts,tsx}', 'tests/**/*.integration.test.{ts,tsx}'],
+    include: ['src/**/*.int.test.{ts,tsx}', 'tests/**/*.int.test.{ts,tsx}'],
     fileParallelism: false,
     env: {
       NODE_ENV: 'test',

@@ -11,7 +11,7 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'],
-    exclude: ['**/*.e2e.test.{ts,tsx}', '**/*.integration.test.{ts,tsx}', 'node_modules', 'dist'],
+    exclude: ['**/*.e2e.test.{ts,tsx}', '**/*.int.test.{ts,tsx}', 'node_modules', 'dist'],
     passWithNoTests: true
   }
 });

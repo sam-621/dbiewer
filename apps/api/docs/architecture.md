@@ -43,7 +43,7 @@ src/
 │   ├── rls.ts                         RLSContext, enableRLS, disableRLS, runWithoutRLS
 │   └── repositories/<recurso>/        una carpeta por repositorio
 │       ├── <recurso>-repository.ts
-│       ├── __tests__/                 <recurso>-repository.integration.test.ts y fixtures/
+│       ├── __tests__/                 <recurso>-repository.int.test.ts y fixtures/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
 │   └── repositories/build-repositories.ts   arma todos los repositorios sobre una transacción
 ├── services/<servicio>/               servicios externos (ver "Services (externos)"); sus errores en <servicio>-errors.ts

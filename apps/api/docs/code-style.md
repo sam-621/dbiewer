@@ -36,7 +36,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
 | Error | describe el caso + `Error` | `ConnectionNotFoundError` |
 
-Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.integration.test.ts`, `.e2e.test.ts`, `.gql`, `*.config.ts`) y los fixtures de los tests (`<recurso>.fixtures.ts`, p. ej. `verification.fixtures.ts`).
+Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int.test.ts`, `.e2e.test.ts`, `.gql`, `*.config.ts`) y los fixtures de los tests (`<recurso>.fixtures.ts`, p. ej. `verification.fixtures.ts`).
 
 ## Carpetas e `index.ts`
 

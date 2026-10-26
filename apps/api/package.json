@@ -9,7 +9,7 @@
     "start": "node --env-file=.env dist/index.js",
     "test": "vitest run",
     "test:e2e": "scripts/test-database.sh vitest.e2e.config.ts",
-    "test:integration": "scripts/test-database.sh vitest.integration.config.ts",
+    "test:int": "scripts/test-database.sh vitest.int.config.ts",
     "lint:check": "eslint . && prettier --check .",
     "lint:fix": "eslint . --fix && prettier --write .",
     "gen:types": "graphql-codegen --config codegen.ts",

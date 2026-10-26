@@ -9,11 +9,11 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 | Suite | Sufijo | Comando | Docker | Cuándo |
 |-------|--------|---------|--------|--------|
 | unit | `*.test.ts(x)` | `yarn test` | no | No toca DB ni HTTP |
-| integración | `*.integration.test.ts` | `yarn test:integration` | sí | Prueba una pieza contra la DB o contra un proveedor externo mockeado, sin pasar por HTTP |
+| integración | `*.int.test.ts` | `yarn test:int` | sí | Prueba una pieza contra la DB o contra un proveedor externo mockeado, sin pasar por HTTP |
 | e2e | `*.e2e.test.ts` | `yarn test:e2e` | sí | Pega por HTTP al server |
 
-- Para correr solo una parte: `yarn test:integration <ruta>`, `yarn test:e2e <ruta>`, `-t "<nombre>"`.
-- `yarn test:integration` y `yarn test:e2e` usan el mismo script (`scripts/test-database.sh <config de vitest>`): levantan Postgres en Docker (`docker-compose.test.yml`), migran, corren su config (`vitest.integration.config.ts`, `vitest.e2e.config.ts`) y bajan el contenedor. `yarn test` excluye las dos suites.
+- Para correr solo una parte: `yarn test:int <ruta>`, `yarn test:e2e <ruta>`, `-t "<nombre>"`.
+- `yarn test:int` y `yarn test:e2e` usan el mismo script (`scripts/test-database.sh <config de vitest>`): levantan Postgres en Docker (`docker-compose.test.yml`), migran, corren su config (`vitest.int.config.ts`, `vitest.e2e.config.ts`) y bajan el contenedor. `yarn test` excluye las dos suites.
 - **Siempre solo los tests de la feature**, nunca la suite completa.
 - **Nunca dos suites de DB a la vez**: integración y e2e corren siempre en procesos separados, una después de la otra. Comparten el mismo docker compose; si la DB de tests ya está levantada, `scripts/test-database.sh` corta con un error en vez de pisarla.
 - Los tests con DB se pueden correr sin pedir permiso: usan un Postgres efímero en Docker, no una DB real.
@@ -76,7 +76,7 @@ No se testean:
 - Setup: `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` en `afterAll`.
 - Corren sin paralelismo entre archivos (comparten la DB).
 - Los de senders y factories de un service también son de integración aunque no toquen la DB: van en esta suite, sin `loadFixtures`/`resetDatabase`/`destroyDatabase`.
-- **SDK de un proveedor mockeado** con `vi.hoisted` + `vi.mock('<paquete>')`, así el mock existe antes de que el adapter importe el SDK. Setup a copiar (`resend-sender.integration.test.ts`):
+- **SDK de un proveedor mockeado** con `vi.hoisted` + `vi.mock('<paquete>')`, así el mock existe antes de que el adapter importe el SDK. Setup a copiar (`resend-sender.int.test.ts`):
 
   ```ts
   const { Resend, send } = vi.hoisted(() => {
