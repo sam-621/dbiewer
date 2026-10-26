@@ -65,6 +65,8 @@
 - (api) Docs de `requireSession` como middleware high-order: `architecture.md` > Resolvers (ejemplo con función con nombre y `requireSession(createWorkspace)`, forma de los middlewares, `SessionContext`) y Errores, `code-style.md` > Resolver y `technical.md` > Contexto del request.
 - (api) Primer módulo: `src/modules/workspace/` con `use-cases/workspace-for-user-creator.ts` (sin carpeta ni `index.ts`) y `workspace-errors.ts`. Se borra `src/use-cases/`. `yarn build` y e2e de `create-workspace` pasan.
 - (api) Docs de módulos: `architecture.md` (capas, estructura, errores), `code-style.md` (naming de use-cases, barrels), `CLAUDE.md` de la api y `technical.md` > Capas.
+- (api) Paso 4: query `me` (`User`, `Me`) en `account.gql` y `account-resolver.ts`; devuelve la sesión del contexto, o `null` sin sesión. e2e en `tests/account/me/` (con workspace, sin workspace aunque exista el de otro usuario, sin sesión). `yarn build` y e2e pasan.
+- (api) Docs: resolvers que devuelven algo del contexto sin use-case (`architecture.md` > Resolvers), un `TestServer` por `describe` con `signIn(email)` en cada test (`testing.md` > Tests e2e) e ids UUID de fixtures comparados con su constante (`testing.md` > Reglas generales). `technical.md` > Tests: `me` no devuelve el workspace de otro usuario, sin hablar de RLS.
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).

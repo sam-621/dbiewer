@@ -53,12 +53,13 @@ No se testean:
 - El objeto bajo prueba sale de la DB con datos de fixtures, nunca de factories in-memory. Excepción: tests unitarios, que construyen el objeto directo.
 - Antes de inventar un setup, copiar el del test más parecido que ya exista.
 - El `describe` raíz lleva el nombre de la pieza y, si no es obvio por el nombre, qué tipo de pieza es: `requireSession - Middleware`.
-- El valor esperado de un `expect` va escrito tal cual (`toBe('Acme')`, `{ code: 'WORKSPACE_ALREADY_EXISTS', message: '...' }`), nunca en una constante o variable del test, para leerlo sin ir a buscarlo. Las constantes (`<X>Constants`) sirven para armar el input o buscar filas, no como valor esperado.
+- El valor esperado de un `expect` va escrito tal cual (`toBe('Acme')`, `{ code: 'WORKSPACE_ALREADY_EXISTS', message: '...' }`), nunca en una constante o variable del test, para leerlo sin ir a buscarlo. Las constantes (`<X>Constants`) sirven para armar el input o buscar filas, no como valor esperado. Excepción: los ids de los fixtures, que son UUID aleatorios y se comparan con su constante (`UserConstants.OwnerUserId`).
 
 ## Tests e2e
 
 - Siempre con `TestServer` (`tests/utils/test-server.ts`), que levanta la app y expone el cliente de GraphQL.
-- Setup: `new TestServer({ headers })` y `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` + `testServer.teardown()` en `afterAll`.
+- Setup: un solo `new TestServer()` por `describe`; `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` + `testServer.teardown()` en `afterAll`.
+- La sesión se crea en cada test con `const headers = await testServer.signIn(email)`, y esos `headers` se pasan a `testServer.query(query, variables, headers)`. Sin `headers`, la query va sin sesión.
 - Un solo happy path, y un test por cada `code` de error distinto que pueda devolver. Si varios inputs inválidos dan el mismo `code`, basta con uno.
 - Los errores de negocio se verifican en el payload: `apiErrors` con `code` y `message`, y el recurso en `null`. El happy path verifica `apiErrors: []`. Los de infraestructura (`UNAUTHENTICATED`) se verifican en `response.errors[0].extensions.code`.
 - Además de la respuesta, verificar el efecto en DB (o que no lo hubo).

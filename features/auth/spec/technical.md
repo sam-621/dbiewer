@@ -179,7 +179,7 @@ Variables nuevas, validadas y mapeadas en `src/config/config.ts`:
 
 ## Tests
 
-- **api, e2e** (`tests/account/me/`): `me` con sesión y sin sesión, y que el RLS no deja leer el workspace de otro usuario. La sesión se crea con el magic link leído de `verification`.
+- **api, e2e** (`tests/account/me/`): `me` con sesión y sin sesión, y que no devuelve el workspace de otro usuario (`me` lo lee sin RLS, filtrando por dueño). La sesión se crea con el magic link leído de `verification`.
 - **api, e2e** (`tests/account/create-workspace/`): crea el workspace, `WORKSPACE_ALREADY_EXISTS` en `apiErrors`, aislamiento por tenant y `UNAUTHENTICATED`.
 - **api, unit:** `requireSession`; `sendMagicLink` (contenido del email, con el `EmailSender` mockeado) y la resolución del idioma.
 - **api, integración** (`*.integration.test.ts`): el repositorio `workspace` contra la DB, y los senders de email (`resend` con el SDK mockeado, `console`) y su factory. Better Auth, templates y logger no se testean.

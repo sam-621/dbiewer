@@ -1,6 +1,22 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  image: String
+}
+
 type Workspace {
   id: ID!
   name: String!
+}
+
+type Me {
+  user: User!
+  workspace: Workspace
+}
+
+type Query {
+  me: Me
 }
 
 input CreateWorkspaceInput {

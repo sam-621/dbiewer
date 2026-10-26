@@ -2,8 +2,13 @@ import type { MutationCreateWorkspaceArgs, Resolvers } from '@/api/codegen';
 import type { SessionContext } from '@/api/middlewares/require-session';
 import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
+import type { RequestContext } from '@/context';
 import { WorkspaceForUserCreator } from '@/modules/workspace/use-cases/workspace-for-user-creator';
 import { UnitOfWork } from '@/persistence/unit-of-work';
+
+function me(_parent: unknown, _args: unknown, ctx: RequestContext) {
+  return ctx.session;
+}
 
 async function createWorkspace(
   _parent: unknown,
@@ -25,6 +30,9 @@ async function createWorkspace(
 }
 
 export const AccountResolver: Resolvers = {
+  Query: {
+    me
+  },
   Mutation: {
     createWorkspace: requireSession(createWorkspace)
   }

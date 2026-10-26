@@ -56,6 +56,7 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 
 - Usan `args.input` tal como llega, con el tipo del codegen. No lo validan con zod ni lo transforman.
 - Llaman a un solo método del use-case y responden. Sin `if` de negocio. De dónde sale el use-case se define con el contexto del request.
+- Excepción: si lo que se devuelve ya está en el contexto del request (como la sesión), el resolver lo devuelve directo, sin use-case ni `UnitOfWork`. Por ejemplo, `me` devuelve `ctx.session`, o `null` si no hay sesión, y por eso no va envuelto en `requireSession`.
 - Los tipos de args y resultados salen de `src/api/codegen.ts`, que `yarn gen:types` genera a partir de los `.gql`.
 - Una mutation que puede fallar por una regla de negocio sigue estos pasos, cada uno con su variable: instancia el `UnitOfWork`, guarda en `result` lo que devuelve el use-case dentro del work y responde con `apiResponse(result, '<key>')` (`src/api/utils/api-response.ts`), donde `<key>` es el campo del recurso en el `<Recurso>Result`:
 

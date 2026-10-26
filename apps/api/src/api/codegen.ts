@@ -16,6 +16,12 @@ export type CreateWorkspaceInput = {
   name: Scalars['String']['input'];
 };
 
+export type Me = {
+  __typename?: 'Me';
+  user: User;
+  workspace?: Maybe<Workspace>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createWorkspace: WorkspaceResult;
@@ -28,6 +34,15 @@ export type MutationCreateWorkspaceArgs = {
 export type Query = {
   __typename?: 'Query';
   health: Scalars['Boolean']['output'];
+  me?: Maybe<Me>;
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
 };
 
 export type Workspace = {
@@ -150,9 +165,11 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Me: ResolverTypeWrapper<Me>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  User: ResolverTypeWrapper<User>;
   Workspace: ResolverTypeWrapper<Workspace>;
   WorkspaceErrorCode: WorkspaceErrorCode;
   WorkspaceErrorResult: ResolverTypeWrapper<WorkspaceErrorResult>;
@@ -164,12 +181,22 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   CreateWorkspaceInput: CreateWorkspaceInput;
   ID: Scalars['ID']['output'];
+  Me: Me;
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
+  User: User;
   Workspace: Workspace;
   WorkspaceErrorResult: WorkspaceErrorResult;
   WorkspaceResult: WorkspaceResult;
+};
+
+export type MeResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['Me'] = ResolversParentTypes['Me']
+> = {
+  user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  workspace?: Resolver<Maybe<ResolversTypes['Workspace']>, ParentType, ContextType>;
 };
 
 export type MutationResolvers<
@@ -189,6 +216,17 @@ export type QueryResolvers<
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
+};
+
+export type UserResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
+> = {
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type WorkspaceResolvers<
@@ -218,8 +256,10 @@ export type WorkspaceResultResolvers<
 };
 
 export type Resolvers<ContextType = RequestContext> = {
+  Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  User?: UserResolvers<ContextType>;
   Workspace?: WorkspaceResolvers<ContextType>;
   WorkspaceErrorResult?: WorkspaceErrorResultResolvers<ContextType>;
   WorkspaceResult?: WorkspaceResultResolvers<ContextType>;
