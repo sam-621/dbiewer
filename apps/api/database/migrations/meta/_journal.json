@@ -22,6 +22,20 @@
       "when": 1792981530792,
       "tag": "0002_auth_rls_and_privileges",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793036816706,
+      "tag": "0003_create_connection",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793036817159,
+      "tag": "0004_connection_rls",
+      "breakpoints": true
     }
   ]
 }

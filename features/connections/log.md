@@ -6,8 +6,14 @@
 - (api, web) Se crea la feature `connections`: spec de producto, técnico y de UI, y plan de trabajo.
 - (api) Service de cifrado `EncryptionService` (AES-256-GCM, formato `v1`), `CONNECTIONS_ENCRYPTION_KEY` en la config, `services.encryptionService` en el app context y sus unit tests (paso 1).
 - (api) `email-errors.ts` pasa a `src/services/emails/`. Docs de la api y `technical.md` actualizados con el cifrado, el service sin proveedor externo y los errores dentro de su service.
+- (api) Tabla `connection` con RLS (migraciones `0003_create_connection` y `0004_connection_rls`), `ConnectionRepository` y sus tests de integración (paso 2).
+- (api) Los métodos del `Repository` base (`findMany`, `findOne`, `insert`, `update`, `remove`) pasan a públicos. `ConnectionRepository` deja solo `findAll` y `existsByName`.
+- (api) Los tests de repositorio corren como `app_user` (`testAppDatabase`), con RLS. `testing.md` actualizado.
+- (api) `code-style.md` y `architecture.md` > Repositorios: se usan directo los métodos públicos del base, sin envolverlos.
 
 **Decisiones:**
+- Un repositorio no envuelve los métodos del base: se usan directo. Solo agrega lo que el base no resuelve (orden, `lower()`, `runWithoutRLS`).
+- El código que se prueba corre siempre como `app_user`; el superusuario solo prepara y lee datos.
 - El cifrado es una clase `EncryptionService`, sin interface ni adapters.
 - Los errores de un service viven en su carpeta (`services/<servicio>/<servicio>-errors.ts`); `errors/` queda para los que no son de un módulo ni de un service.
 - La api guarda y recibe cada campo por separado. La URL solo completa el formulario del web.

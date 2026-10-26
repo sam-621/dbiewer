@@ -13,14 +13,14 @@ export abstract class Repository<TTable extends TableWithId> {
     protected readonly table: TTable
   ) {}
 
-  protected async findMany(where: Where<TTable> = {}): Promise<TTable['$inferSelect'][]> {
+  async findMany(where: Where<TTable> = {}): Promise<TTable['$inferSelect'][]> {
     return this.trx
       .select()
       .from(this.table as PgTable)
       .where(this.buildWhere(where));
   }
 
-  protected async findOne(where: Where<TTable>): Promise<TTable['$inferSelect'] | null> {
+  async findOne(where: Where<TTable>): Promise<TTable['$inferSelect'] | null> {
     const condition = this.buildWhere(where);
 
     if (!condition) throw new Error(`findOne on ${getTableName(this.table)} requires a where`);
@@ -34,7 +34,7 @@ export abstract class Repository<TTable extends TableWithId> {
     return row ?? null;
   }
 
-  protected async insert(values: TTable['$inferInsert']): Promise<TTable['$inferSelect']> {
+  async insert(values: TTable['$inferInsert']): Promise<TTable['$inferSelect']> {
     const [row] = await this.trx.insert(this.table).values(values).returning();
 
     if (!row) throw new Error(`Failed to insert row into ${getTableName(this.table)}`);
@@ -42,7 +42,7 @@ export abstract class Repository<TTable extends TableWithId> {
     return row;
   }
 
-  protected async update(
+  async update(
     where: Where<TTable>,
     values: Partial<TTable['$inferInsert']>
   ): Promise<TTable['$inferSelect'][]> {
@@ -53,7 +53,7 @@ export abstract class Repository<TTable extends TableWithId> {
       .returning();
   }
 
-  protected async remove(where: Where<TTable>): Promise<TTable['$inferSelect'][]> {
+  async remove(where: Where<TTable>): Promise<TTable['$inferSelect'][]> {
     return this.trx.delete(this.table).where(this.buildWhere(where)).returning();
   }
 

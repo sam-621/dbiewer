@@ -5,17 +5,19 @@ import { createDatabase } from '@/persistence/database';
 
 import type { Fixture } from './fixture';
 
-const getAdminUrl = () => {
-  const url = process.env.ADMIN_DATABASE_URL;
+const getEnv = (name: 'DATABASE_URL' | 'ADMIN_DATABASE_URL') => {
+  const url = process.env[name];
 
-  if (!url) throw new Error('ADMIN_DATABASE_URL is required for tests with database');
+  if (!url) throw new Error(`${name} is required for tests with database`);
 
   return url;
 };
 
-const { db: adminDb, pool: adminPool } = createDatabase(getAdminUrl());
+const { db: adminDb, pool: adminPool } = createDatabase(getEnv('ADMIN_DATABASE_URL'));
+const { db: appDb, pool: appPool } = createDatabase(getEnv('DATABASE_URL'));
 
 export const testDatabase = adminDb;
+export const testAppDatabase = appDb;
 
 export const loadFixtures = async (fixtures: Fixture<PgTable>[]) => {
   for (const fixture of fixtures) {
@@ -36,5 +38,5 @@ export const resetDatabase = async () => {
 };
 
 export const destroyDatabase = async () => {
-  await adminPool.end();
+  await Promise.all([adminPool.end(), appPool.end()]);
 };

@@ -1,4 +1,10 @@
-import { destroyDatabase, loadFixtures, resetDatabase, testDatabase } from '@tests/utils/database';
+import {
+  destroyDatabase,
+  loadFixtures,
+  resetDatabase,
+  testAppDatabase,
+  testDatabase
+} from '@tests/utils/database';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -15,7 +21,9 @@ describe('WorkspaceRepository', () => {
     run: (repository: WorkspaceRepository) => Promise<T>,
     rlsContext: RLSContext = {}
   ) =>
-    new UnitOfWork(testDatabase, rlsContext).execute(repositories => run(repositories.workspace));
+    new UnitOfWork(testAppDatabase, rlsContext).execute(repositories =>
+      run(repositories.workspace)
+    );
 
   beforeEach(async () => {
     await loadFixtures([new UserFixtures(), new WorkspaceFixtures()]);

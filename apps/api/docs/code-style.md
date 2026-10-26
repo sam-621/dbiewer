@@ -64,14 +64,19 @@ export class SavedQueryRenamer {
   async execute(
     input: RenameSavedQueryInput
   ): Promise<SavedQuery | SavedQueryNotFoundError | SavedQueryNameAlreadyTakenError> {
-    const savedQuery = await this.ctx.repositories.savedQuery.findById(input.savedQueryId);
+    const savedQuery = await this.ctx.repositories.savedQuery.findOne({ id: input.savedQueryId });
 
     if (!savedQuery) return new SavedQueryNotFoundError(input.savedQueryId);
     if (await this.ctx.repositories.savedQuery.existsByName(input.name)) {
       return new SavedQueryNameAlreadyTakenError(input.name);
     }
 
-    return this.ctx.repositories.savedQuery.update(savedQuery.id, { name: input.name });
+    const [renamed] = await this.ctx.repositories.savedQuery.update(
+      { id: savedQuery.id },
+      { name: input.name }
+    );
+
+    return renamed;
   }
 }
 ```

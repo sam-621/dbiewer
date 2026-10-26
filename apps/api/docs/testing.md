@@ -71,7 +71,7 @@ No se testean:
 
 ## Tests de integración
 
-- Los de repositorio usan `testDatabase` de `tests/utils/database.ts` (conexión de admin). Como los repositorios reciben una transacción, cada caso corre dentro de un `UnitOfWork` sobre `testDatabase` y usa el repositorio del callback (`new UnitOfWork(testDatabase, rlsContext).execute(repositories => ...)`).
+- Los de repositorio corren cada caso dentro de un `UnitOfWork` sobre `testAppDatabase` de `tests/utils/database.ts` (conexión como `app_user`, con RLS) y usan el repositorio del callback (`new UnitOfWork(testAppDatabase, rlsContext).execute(repositories => ...)`). Para leer lo que quedó en la tabla se usa `testDatabase` (admin).
 - Setup: `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` en `afterAll`.
 - Corren sin paralelismo entre archivos (comparten la DB).
 - Los de senders y factories de un service también son de integración aunque no toquen la DB: van en esta suite, sin `loadFixtures`/`resetDatabase`/`destroyDatabase`.
@@ -98,8 +98,8 @@ No se testean:
 
 ## RLS en tests
 
-- Las utilidades de test conectan con `ADMIN_DATABASE_URL` (superusuario) y **se saltan RLS**.
-- El aislamiento por tenant solo se prueba por HTTP con `TestServer`, que conecta como `app_user`.
+- `testDatabase`, `loadFixtures` y `resetDatabase` conectan con `ADMIN_DATABASE_URL` (superusuario) y **se saltan RLS**: sirven para preparar y leer datos, nunca para correr el código que se prueba.
+- El código que se prueba corre siempre como `app_user`, con RLS: los repositorios sobre `testAppDatabase` y los e2e con `TestServer`. Así el aislamiento por tenant también se prueba en los tests de repositorio.
 
 ## Fixtures
 

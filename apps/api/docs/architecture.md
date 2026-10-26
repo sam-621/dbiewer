@@ -225,6 +225,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 - Reciben siempre la transacción y el `RepositoryRLS` (`constructor(trx, rls)`), nunca la conexión.
 - Si una consulta tiene que correr sin tenant, el repositorio la envuelve en `this.rls.runWithoutRLS`. El use-case no sabe de RLS.
 - Devuelven tipos planos de la tabla.
+- Extienden `Repository` (`src/persistence/repositories/repository/`), cuyos métodos son públicos (`findMany`, `findOne`, `insert`, `update`, `remove`) y se usan directo desde el use-case. El repositorio no los envuelve (nada de `findById` o `create` que solo los llamen): agrega solo lo que el base no resuelve, como orden, `lower()` o `runWithoutRLS`.
 
 ## Bases de datos del usuario
 
