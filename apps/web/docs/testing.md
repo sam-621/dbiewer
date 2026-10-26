@@ -17,7 +17,7 @@
 - Setup en `tests/setup.ts`; render con `tests/render.tsx`, que envuelve con los providers de la app.
 - El test va junto al archivo (`sql.utils.ts` → `sql.utils.test.ts`).
 - Se prueba lo que el usuario ve y hace (`getByRole`, `userEvent`), no detalles de implementación.
-- La API se mockea en el borde (el fetcher), nunca los hooks del módulo.
+- La API se mockea en el borde (el fetcher), nunca los hooks del módulo. Lo de Better Auth se mockea en `@/lib/api/auth-client`, que es su borde.
 - Cada `test(...)` empieza con `renders`, `shows`, `does`, `does not` o el verbo real de la acción.
 
 ## e2e

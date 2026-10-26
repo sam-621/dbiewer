@@ -1,10 +1,18 @@
 {
-  "API connected": "API conectada",
-  "API unavailable": "API no disponible",
-  "Checking API": "Revisando la API",
+  "ana@acme.dev": "ana@acme.dev",
+  "Check your email": "Revisa tu correo",
+  "Email": "Correo",
+  "Enter a valid email": "Ingresa un correo válido",
   "Go home": "Ir al inicio",
   "Page not found": "Página no encontrada",
   "Reload": "Recargar",
-  "SQL client in the browser": "Cliente SQL en el navegador",
-  "Something went wrong": "Algo salió mal"
+  "Resend link": "Reenviar link",
+  "Send magic link": "Enviar magic link",
+  "Sign in to dbiewer": "Entra a dbiewer",
+  "Something went wrong": "Algo salió mal",
+  "This link expired. Request a new one.": "Este link venció. Pide uno nuevo.",
+  "Too many attempts. Wait a few minutes before requesting another link.": "Demasiados intentos. Espera unos minutos antes de pedir otro link.",
+  "Use another email": "Usar otro correo",
+  "We sent a magic link to {{email}}. It expires in 15 minutes.": "Enviamos un magic link a {{email}}. Vence en 15 minutos.",
+  "We sent you a new link.": "Te enviamos un link nuevo."
 }

@@ -9,11 +9,6 @@ export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetMeQuery = { me: { user: { id: string, name: string, email: string, image: string | null }, workspace: { id: string, name: string } | null } | null };
 
-export type GetHealthQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetHealthQuery = { health: boolean };
-
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -49,8 +44,3 @@ export const GetMeDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetMeQuery, GetMeQueryVariables>;
-export const GetHealthDocument = new TypedDocumentString(`
-    query GetHealth {
-  health
-}
-    `) as unknown as TypedDocumentString<GetHealthQuery, GetHealthQueryVariables>;

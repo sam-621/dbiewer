@@ -1,10 +1,18 @@
 {
-  "API connected": "API connected",
-  "API unavailable": "API unavailable",
-  "Checking API": "Checking API",
+  "ana@acme.dev": "ana@acme.dev",
+  "Check your email": "Check your email",
+  "Email": "Email",
+  "Enter a valid email": "Enter a valid email",
   "Go home": "Go home",
   "Page not found": "Page not found",
   "Reload": "Reload",
-  "SQL client in the browser": "SQL client in the browser",
-  "Something went wrong": "Something went wrong"
+  "Resend link": "Resend link",
+  "Send magic link": "Send magic link",
+  "Sign in to dbiewer": "Sign in to dbiewer",
+  "Something went wrong": "Something went wrong",
+  "This link expired. Request a new one.": "This link expired. Request a new one.",
+  "Too many attempts. Wait a few minutes before requesting another link.": "Too many attempts. Wait a few minutes before requesting another link.",
+  "Use another email": "Use another email",
+  "We sent a magic link to {{email}}. It expires in 15 minutes.": "We sent a magic link to {{email}}. It expires in 15 minutes.",
+  "We sent you a new link.": "We sent you a new link."
 }

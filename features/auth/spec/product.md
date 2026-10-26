@@ -73,6 +73,6 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 2. [x] api: magic link con envío de email y límite de pedidos.
 3. [x] api: creación del workspace al crear la cuenta y contexto del request con usuario, workspace y `app.current_tenant_id`.
 4. [x] api: query `me` y sus tests e2e, incluido el aislamiento por RLS.
-5. [ ] web: cliente de Better Auth, proxy de Vite, guards `protect` y `public`, y pantalla de acceso con magic link.
+5. [x] web: cliente de Better Auth, proxy de Vite, guards `protect` y `public`, y pantalla de acceso con magic link.
 6. [ ] web: layout de la app con menú de usuario, logout y estado vacío del workspace.
 7. [ ] web: e2e del acceso con magic link, las guards y el logout.

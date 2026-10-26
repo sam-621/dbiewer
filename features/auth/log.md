@@ -116,3 +116,13 @@
 **Pendiente:**
 - Decidir si en producción la conexión de admin usa un rol con `BYPASSRLS` y permisos acotados en vez de un superusuario.
 - Decidir si `app.bypass_rls` va en la policy de todas las tablas con tenant (el OR puede impedir usar el índice sobre `tenant_id`, ver `database.md` > RLS e índices).
+
+## 2026-10-26 — samuel.corrales621
+
+- (web) Guards conectadas en `app.tsx`: `/login` en `Public` y `/` en `Protect`. La home de health check queda sin ruta (el archivo sigue). En `/`, placeholder mínimo en `src/lib/workspace/pages/workspace-page.tsx`.
+- (web) Pantalla de acceso (`src/lib/account/pages/login-page.tsx`, `components/login/`) con `use-sign-in-magic-link` (`callbackURL` y `errorCallbackURL` absolutas), estados de `ui.md` (enviando, enviado con reenviar y usar otro email, email inválido, 429, `?error=`), `account.errors.ts` por status HTTP y `Brand` en `src/shared/components/`. Lint, tests y `yarn build` pasan.
+- (web) Modo oscuro por defecto: clase `dark` en el `<html>` de `index.html`.
+- (web) Se quita del login la línea "Si todavía no tienes cuenta, la creamos al entrar." y su key.
+- Docs web: `architecture.md` (módulos `account` y `workspace`, errores y mutation del auth client, formularios que no son `<X>Details`), `design-system.md` (piezas propias en `shared/components/`, tema oscuro por defecto, `inputMode="email"`, avisos en línea sin `ToastProvider`) y `testing.md` (mock de `auth-client`). Spec: `ui.md` sin la línea de cuenta nueva; `technical.md` con `errorCallbackURL`, 429, tema oscuro y módulo `workspace`.
+- (web) Se borra el módulo `src/lib/system/` (home de health check, `useGetHealth`, cache keys y test), su e2e `e2e/system/home.spec.ts`, `system.operations.ts` y sus keys de i18n. `yarn gen:types`, lint y `yarn build` pasan.
+

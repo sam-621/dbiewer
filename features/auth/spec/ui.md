@@ -9,7 +9,7 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
 ### Acceso
 
 - **Ubicación:** `apps/web`, ruta `/login`. Se llega al abrir la app sin sesión, o desde "Sign in" y "Open app" en la landing.
-- **Muestra:** la marca dbiewer, un título ("Sign in to dbiewer"), un campo de email y el botón "Send magic link". Una línea aclara que, si no hay cuenta, se crea al entrar. Se deja espacio arriba del campo para los botones de GitHub y Google que agrega `social-login`.
+- **Muestra:** la marca dbiewer, un título ("Sign in to dbiewer"), un campo de email y el botón "Send magic link". Se deja espacio arriba del campo para los botones de GitHub y Google que agrega `social-login`.
 - **Permite:** escribir un email y pedir el magic link.
 - **Estados:**
   - Enviando: el botón queda deshabilitado y muestra un indicador de carga.
