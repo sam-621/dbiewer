@@ -4,6 +4,7 @@ import { pgPolicy, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { user } from './auth';
 
 const currentTenantId = sql`nullif(current_setting('app.current_tenant_id', true), '')::uuid`;
+const bypassRls = sql`current_setting('app.bypass_rls', true) = 'on'`;
 
 export const workspace = pgTable(
   'workspace',
@@ -24,8 +25,8 @@ export const workspace = pgTable(
     pgPolicy('workspace_tenant_isolation', {
       as: 'permissive',
       for: 'all',
-      using: sql`${table.id} = ${currentTenantId}`,
-      withCheck: sql`${table.id} = ${currentTenantId}`
+      using: sql`${bypassRls} or ${table.id} = ${currentTenantId}`,
+      withCheck: sql`${bypassRls} or ${table.id} = ${currentTenantId}`
     })
   ]
 ).enableRLS();

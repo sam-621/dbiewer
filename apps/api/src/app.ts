@@ -7,7 +7,8 @@ import express from 'express';
 import { createYoga } from 'graphql-yoga';
 
 import { resolvers } from '@/api/resolvers';
-import type { AppContext } from '@/context';
+import type { AppContext, RequestContext } from '@/context';
+import { createRequestContext } from '@/context';
 import { createAuth } from '@/services/auth';
 import { maskError } from '@/shared/errors/error-handler';
 
@@ -18,8 +19,9 @@ const typeDefs = loadFilesSync(fileURLToPath(new URL('./api/schema', import.meta
 export const createApp = (appContext: AppContext) => {
   const auth = createAuth(appContext);
 
-  const yoga = createYoga({
+  const yoga = createYoga<Record<string, unknown>, RequestContext>({
     schema: makeExecutableSchema({ typeDefs, resolvers }),
+    context: createRequestContext(appContext, auth),
     maskedErrors: { maskError },
     logging: false
   });

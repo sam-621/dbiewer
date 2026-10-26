@@ -1,4 +1,5 @@
 import type { GraphQLResolveInfo } from 'graphql';
+import type { RequestContext } from '@/context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 /** All built-in and custom scalars, mapped to their actual values */
@@ -125,12 +126,12 @@ export type ResolversParentTypes = {
 };
 
 export type QueryResolvers<
-  ContextType = any,
+  ContextType = RequestContext,
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 };
 
-export type Resolvers<ContextType = any> = {
+export type Resolvers<ContextType = RequestContext> = {
   Query?: QueryResolvers<ContextType>;
 };

@@ -2,11 +2,17 @@ import { GraphQLError } from 'graphql';
 import { maskError as maskUnknownError } from 'graphql-yoga';
 import { ZodError } from 'zod';
 
+import { UnauthenticatedError } from '@/errors/account-errors';
+import { WorkspaceNotFoundError } from '@/errors/workspace-errors';
+
 import { DbiewerError } from './dbiewer-error';
 
 type DbiewerErrorClass = abstract new (...args: never[]) => DbiewerError;
 
-const ERROR_CODES: Array<[DbiewerErrorClass, string]> = [];
+const ERROR_CODES: Array<[DbiewerErrorClass, string]> = [
+  [UnauthenticatedError, 'UNAUTHENTICATED'],
+  [WorkspaceNotFoundError, 'WORKSPACE_NOT_FOUND']
+];
 
 const getOriginalError = (error: unknown) =>
   error instanceof GraphQLError && error.originalError ? error.originalError : error;

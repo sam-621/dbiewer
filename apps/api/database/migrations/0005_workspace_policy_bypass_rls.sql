@@ -1,0 +1,1 @@
+ALTER POLICY "workspace_tenant_isolation" ON "workspace" TO public USING (current_setting('app.bypass_rls', true) = 'on' or "workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid) WITH CHECK (current_setting('app.bypass_rls', true) = 'on' or "workspace"."id" = nullif(current_setting('app.current_tenant_id', true), '')::uuid);
