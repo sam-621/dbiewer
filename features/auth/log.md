@@ -43,6 +43,7 @@
 - (api) `sendMagicLink(emailSender, { email, url, locale })` pasa a ser una función normal con sus parámetros; el plugin resuelve el idioma y la llama.
 - (api) `SendMagicLinkInput` sin `export`. Regla nueva en `code-style.md` > General: `export` solo si se importa en otro archivo.
 - (api) `sendMagicLink` pasa a `plugins/magic-link/send-magic-link/` con `index.ts` y un unit que mockea el `EmailSender` (y `@/config`) y valida remitente, destinatario, asunto y link en es/en.
+- (api) Docs: naming de los use-cases (`code-style.md`); `UnitOfWork`, `rls.ts` y `build-repositories` (`architecture.md`); cómo se testean, el `UnitOfWork` en los tests de repositorio y `<nombre> - Middleware` en el `describe` (`testing.md`). Spec: sin límite por email y el workspace ya no se crea con la cuenta (`technical.md`, `product.md`).
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).

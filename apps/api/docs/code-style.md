@@ -27,9 +27,10 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 
 | Qué | Regla | Ejemplo |
 |-----|-------|---------|
-| Archivos | `<recurso>-<capa>.ts`, con guion y no con punto, así el único punto extra es el de los tests (`<recurso>-<capa>.test.ts`) | `connection-use-case.ts`, `connection-resolver.ts`, `connection-errors.ts`, `connection-repository.ts` |
-| Clases | `<Recurso><Capa>` | `ConnectionUseCase`, `ConnectionRepository` |
-| Métodos del use-case | verbo de la acción | `create`, `remove`, `testConnection` |
+| Archivos | `<recurso>-<capa>.ts`, con guion y no con punto, así el único punto extra es el de los tests (`<recurso>-<capa>.test.ts`) | `connection-resolver.ts`, `connection-errors.ts`, `connection-repository.ts` |
+| Clases | `<Recurso><Capa>` | `ConnectionRepository`, `ConnectionResolver` |
+| Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; carpeta y archivo con el mismo nombre en kebab-case | `use-cases/workspace-for-user-creator/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
+| Método del use-case | uno solo, `execute` | `new WorkspaceForUserCreator(ctx).execute(user)` |
 | Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `resend/resend-sender.ts`, `ResendSender` |
 | Templates de email | `<email>-template.tsx` | `magic-link-template.tsx` |
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |

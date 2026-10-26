@@ -31,13 +31,16 @@ src/
 │   ├── schema/<recurso>.gql
 │   ├── resolvers/<recurso>-resolver.ts
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
-├── use-cases/<recurso>-use-case.ts
+├── use-cases/<caso-de-uso>/          una carpeta por caso de uso: <caso-de-uso>.ts, su test e index.ts
 ├── persistence/
 │   ├── schema/                        schema de Drizzle
+│   ├── unit-of-work/                  UnitOfWork (ver "Unit of work y RLS")
+│   ├── rls.ts                         RLSContext, enableRLS, disableRLS, runWithoutRLS
 │   └── repositories/<recurso>/        una carpeta por repositorio
 │       ├── <recurso>-repository.ts
 │       ├── __tests__/                 <recurso>-repository.integration.test.ts y fixtures/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
+│   └── repositories/build-repositories.ts   arma todos los repositorios sobre una transacción
 ├── services/<servicio>/               servicios externos (ver "Services (externos)")
 ├── schemas/<recurso>-schemas.ts       schemas de zod del input
 ├── errors/<recurso>-errors.ts
@@ -55,10 +58,10 @@ Un archivo por recurso en cada capa (`connection-resolver.ts`, `connection-use-c
 
 ## Use-cases
 
-- Una clase por recurso con un método por acción (`ConnectionUseCase.create`, `QueryUseCase.run`).
-- Reciben por constructor sus repositorios y los services externos que usen.
+- Una clase por caso de uso, con un solo método `execute` (`WorkspaceForUserCreator.execute`). Naming en `code-style.md` > Naming.
+- Reciben por constructor el `UowContext` completo, no solo lo que usan (ver "Unit of work y RLS").
 - Las reglas de negocio viven aquí. Si una regla la usan varios use-cases, se mueve a `src/shared/` o a un use-case propio.
-- Si una acción escribe en varias tablas, abre una transacción y la pasa a los repositorios.
+- No saben de RLS ni de transacciones: eso lo manejan el `UnitOfWork` y los repositorios.
 - Se instancian donde se usan, con lo que necesitan del app context (ver "App context"). No hay un registro de use-cases.
 
 ## Services (externos)
@@ -111,6 +114,39 @@ El app context lleva, ya instanciados:
 - **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new MagicLinkUseCase(appContext.repositories.magicLinkRequest, appContext.repositories.verification, appContext.services.emailSender, ...)`.
 - Un service, repositorio o conexión nuevo se agrega al tipo `AppContext` y a `createAppContext`.
 
+## Unit of work y RLS
+
+Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persistence/unit-of-work/`), que lo aísla en una transacción con el RLS aplicado.
+
+- `new UnitOfWork(database, rlsContext?)`. `database` es la conexión `app`. `rlsContext` (`RLSContext = { tenantId }`) dice qué tenant aplicar; puede traer además una `trx` externa.
+- `execute(work)`:
+  1. Abre la transacción (o usa la externa).
+  2. Aplica el RLS con `enableRLS` (`app.bypass_rls = 'off'` y `app.current_tenant_id`).
+  3. Arma los repositorios sobre esa transacción con `buildRepositories(trx, rlsContext)`.
+  4. Llama a `work(repositories, uowContext)`.
+  5. Si la transacción es suya, hace commit, o rollback si `work` lanza. El error original nunca se tapa con el del rollback. Con `trx` externa no hace commit ni rollback.
+- `UowContext = { repositories, trx, runWithoutRLS, rlsContext }`.
+- Quien llama (el resolver) instancia el `UnitOfWork` y, dentro del callback, instancia el use-case con el `UowContext`, lo ejecuta y devuelve el resultado:
+
+  ```ts
+  new UnitOfWork(ctx.database, ctx.rlsContext).execute((_repositories, uow) =>
+    new WorkspaceForUserCreator(uow).execute(user)
+  );
+  ```
+
+- Una lectura de infraestructura que no es un caso de uso (p. ej. buscar el workspace al resolver la sesión) usa directo los repositorios del callback, sin use-case.
+
+### `rls.ts`
+
+- `enableRLS(trx, rlsContext)` y `disableRLS(trx)` cambian `app.current_tenant_id` y `app.bypass_rls` con `set_config(..., true)`, así duran solo lo que dura la transacción.
+- `runWithoutRLS(trx, rlsContext)(fn)` desactiva el RLS, corre `fn` y lo vuelve a activar en un `finally`.
+- La policy de una tabla deja pasar la fila si `app.bypass_rls = 'on'`.
+
+### `build-repositories.ts`
+
+- `buildRepositories(trx, rlsContext)` crea `runWithoutRLS` una sola vez y arma todos los repositorios con la transacción y el RLS (`RepositoryRLS = { context, runWithoutRLS }`). El `UnitOfWork` reutiliza esa misma función en el `UowContext`.
+- Un repositorio nuevo se agrega aquí.
+
 ## Config
 
 - `src/config/config.ts` valida `process.env` con zod y lo mapea a un objeto en camelCase, agrupado por tema: `config.port`, `config.database.url`, `config.auth.secret`, `config.emailSender.adapter`, `config.emailSender.resend.apiKey`. Nadie más lee `process.env` ni usa los nombres en mayúsculas.
@@ -119,7 +155,9 @@ El app context lleva, ya instanciados:
 
 ## Repositorios
 
-- Una clase por tabla o agregado de tablas. Solo queries, sin reglas.
+- Una clase por tabla o agregado de tablas. Solo queries, sin reglas (p. ej. nada de "buscar o crear": eso es del use-case).
+- Reciben siempre la transacción y el `RepositoryRLS` (`constructor(trx, rls)`), nunca la conexión.
+- Si una consulta tiene que correr sin tenant, el repositorio la envuelve en `this.rls.runWithoutRLS`. El use-case no sabe de RLS.
 - Devuelven tipos planos de la tabla.
 
 ## Bases de datos del usuario

@@ -20,7 +20,7 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 
 1. El usuario llega a `apps/web` sin sesión y ve la pantalla de acceso.
 2. Escribe su correo y recibe un magic link. Al abrirlo, queda con la sesión iniciada.
-3. Si es la primera vez, se crean su cuenta y su workspace en el mismo paso. No hay un registro separado del login.
+3. Si es la primera vez, se crea su cuenta. No hay un registro separado del login.
 4. Entra a la app y ve su workspace. Por ahora es un estado vacío que invita a conectar una base (milestone 2).
 5. Desde el menú de usuario puede cerrar sesión.
 6. Al volver otro día, la sesión sigue activa mientras no venza ni la cierre.
@@ -33,7 +33,6 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 - Registro y login son el mismo flujo: si el email no existe, se crea la cuenta.
 - Un email es una sola cuenta.
 - El magic link vence a los 15 minutos y sirve una sola vez.
-- Se pueden pedir como máximo 3 magic links por email cada 10 minutos.
 - La respuesta al pedir un magic link es la misma exista o no la cuenta, para no revelar qué emails están registrados.
 - Toda cuenta tiene el email verificado desde que existe, porque el magic link prueba que el correo es del usuario. No hay un paso de verificación aparte.
 
@@ -45,7 +44,7 @@ Como desarrollador que llega desde la landing, quiero entrar con mi email sin cr
 
 ### Workspace
 
-- Cada usuario tiene exactamente un workspace, que se crea junto con la cuenta.
+- Cada usuario tiene exactamente un workspace. No se crea junto con la cuenta: se crea aparte.
 - El nombre inicial es `<nombre del usuario>'s workspace`, o `My workspace` si no hay nombre.
 - El workspace es el tenant: todo dato que se agregue después (conexiones, queries, historial) le pertenece y solo lo ve su dueño.
 

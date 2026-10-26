@@ -30,6 +30,8 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 | Pieza | Test | Ubicación |
 |-------|------|-----------|
 | Use-case que no se usa desde un resolver (p. ej. `MagicLinkUseCase`, que llama Better Auth) | unit (repositorios y services mockeados) | junto al archivo |
+| `UnitOfWork` | unit con la DB mockeada: orden de las sentencias de RLS, commit, rollback, `trx` externa y que no se tape el error original | junto al archivo |
+| Middleware de GraphQL (`api/middlewares/`) | unit con el context mockeado | junto al archivo |
 | Use-case usado desde un resolver | lo cubre el e2e del resolver | `tests/<recurso>/<operación>/` |
 | Query o mutation de GraphQL | e2e | `tests/<recurso>/<operación>/` |
 | Repositorio | integración contra la DB, con fixtures | `persistence/repositories/<recurso>/__tests__/` |
@@ -50,6 +52,7 @@ No se testean:
 - Cada `test(...)` empieza con `returns`, `does`, `does not` o el verbo real de la acción (`adds`, `removes`, `updates`). Nunca una paráfrasis.
 - El objeto bajo prueba sale de la DB con datos de fixtures, nunca de factories in-memory. Excepción: tests unitarios, que construyen el objeto directo.
 - Antes de inventar un setup, copiar el del test más parecido que ya exista.
+- El `describe` raíz lleva el nombre de la pieza y, si no es obvio por el nombre, qué tipo de pieza es: `requireSession - Middleware`.
 
 ## Tests e2e
 
@@ -64,7 +67,7 @@ No se testean:
 
 ## Tests de integración
 
-- Los de repositorio usan `testDatabase` de `tests/utils/database.ts` (conexión de admin) para construir el repositorio y verificar el efecto.
+- Los de repositorio usan `testDatabase` de `tests/utils/database.ts` (conexión de admin). Como los repositorios reciben una transacción, cada caso corre dentro de un `UnitOfWork` sobre `testDatabase` y usa el repositorio del callback (`new UnitOfWork(testDatabase, rlsContext).execute(repositories => ...)`).
 - Setup: `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` en `afterAll`.
 - Corren sin paralelismo entre archivos (comparten la DB).
 - Los de senders y factories de un service también son de integración aunque no toquen la DB: van en esta suite, sin `loadFixtures`/`resetDatabase`/`destroyDatabase`.
@@ -84,6 +87,10 @@ No se testean:
   ```
 
   Se verifica qué recibe el SDK (`send`) y cómo responde el adapter a sus errores. Nunca se llama al proveedor real.
+
+## Use-cases y `UowContext`
+
+- En el unit de un use-case se mockea el `UowContext` con solo los repositorios que usa (`{ repositories: { workspace: { create } } } as unknown as UowContext`).
 
 ## RLS en tests
 
