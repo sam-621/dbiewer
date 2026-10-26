@@ -13,6 +13,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 - **Dinero en centavos** (enteros). Porcentajes como fracción (`0.2`).
 - **Sin parámetros con default solo para que los tests escriban menos.** Si producción siempre pasa el argumento, es requerido.
 - **`export` solo si se importa en otro archivo.** No se exporta "por si después se usa".
+- **En una clase, todo lo que usa va dentro de ella.** Las constantes simples como `private static readonly` (`STATEMENT_TIMEOUT_MS`), lo que se instancia (un mapa de config, el logger) en el constructor, y las funciones auxiliares como métodos privados. Nada suelto en el módulo, salvo los tipos.
 
 ## Formato e imports
 

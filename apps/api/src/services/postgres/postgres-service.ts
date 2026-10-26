@@ -6,14 +6,9 @@ import { createLogger } from '@/services/logger';
 
 import { PostgresConnectionFailedError, PostgresQueryFailedError } from './postgres-errors';
 
-const CONNECTION_TIMEOUT_MS = 10_000;
-const STATEMENT_TIMEOUT_MS = 30_000;
-const POOL_MAX_CLIENTS = 3;
-const POOL_IDLE_TIMEOUT_MS = 5 * 60_000;
-
 type PostgresSslMode = 'disable' | 'require' | 'verify-full';
 
-type PostgresCredentials = {
+export type PostgresCredentials = {
   host: string;
   port: number;
   database: string;
@@ -25,6 +20,11 @@ type PostgresCredentials = {
 type PostgresConnection = PostgresCredentials & { id: string };
 
 export class PostgresService {
+  private static readonly CONNECTION_TIMEOUT_MS = 10_000;
+  private static readonly STATEMENT_TIMEOUT_MS = 30_000;
+  private static readonly POOL_MAX_CLIENTS = 3;
+  private static readonly POOL_IDLE_TIMEOUT_MS = 5 * 60_000;
+
   private readonly pools = new Map<string, Pool>();
   private readonly sslByMode: Record<PostgresSslMode, ClientConfig['ssl']>;
   private readonly logger: Logger;
@@ -45,7 +45,7 @@ export class PostgresService {
       await client.connect();
       await client.query('select 1');
     } catch (error) {
-      throw this.toConnectionFailedError(credentials, error);
+      throw new PostgresConnectionFailedError(credentials, this.toReason(error));
     } finally {
       await client.end().catch(() => undefined);
     }
@@ -61,7 +61,7 @@ export class PostgresService {
     try {
       client = await this.getPool(connection).connect();
     } catch (error) {
-      throw this.toConnectionFailedError(connection, error);
+      throw new PostgresConnectionFailedError(connection, this.toReason(error));
     }
 
     try {
@@ -96,9 +96,9 @@ export class PostgresService {
 
     const pool = new Pool({
       ...this.toClientConfig(connection),
-      options: `-c statement_timeout=${STATEMENT_TIMEOUT_MS}`,
-      max: POOL_MAX_CLIENTS,
-      idleTimeoutMillis: POOL_IDLE_TIMEOUT_MS,
+      options: `-c statement_timeout=${PostgresService.STATEMENT_TIMEOUT_MS}`,
+      max: PostgresService.POOL_MAX_CLIENTS,
+      idleTimeoutMillis: PostgresService.POOL_IDLE_TIMEOUT_MS,
       allowExitOnIdle: true
     });
 
@@ -121,17 +121,8 @@ export class PostgresService {
       user: credentials.username,
       password: credentials.password ?? undefined,
       ssl: this.sslByMode[credentials.sslMode],
-      connectionTimeoutMillis: CONNECTION_TIMEOUT_MS
+      connectionTimeoutMillis: PostgresService.CONNECTION_TIMEOUT_MS
     };
-  }
-
-  private toConnectionFailedError(credentials: PostgresCredentials, error: unknown) {
-    return new PostgresConnectionFailedError(
-      credentials.host,
-      credentials.port,
-      credentials.database,
-      this.toReason(error)
-    );
   }
 
   private toReason(error: unknown) {

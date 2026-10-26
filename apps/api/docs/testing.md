@@ -37,6 +37,7 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 | Repositorio | integración contra la DB, con fixtures | `persistence/repositories/<recurso>/__tests__/` |
 | Adapter de un service externo | integración con el SDK del proveedor o sus dependencias mockeadas (`resend` con el SDK de Resend mockeado, `console` con un logger falso) | junto al archivo |
 | Factory de un service (`getEmailSender`) | integración: que devuelva el adapter que pide la config y falle sin credenciales | junto al archivo |
+| Service que se conecta a una base de datos externa (`PostgresService`) | integración contra la DB de test, que hace de base externa | junto al archivo |
 | Service sin proveedor externo (`EncryptionService`) | unit | junto al archivo |
 
 No se testean:
@@ -55,7 +56,8 @@ No se testean:
 - El objeto bajo prueba sale de la DB con datos de fixtures, nunca de factories in-memory. Excepción: tests unitarios, que construyen el objeto directo.
 - Antes de inventar un setup, copiar el del test más parecido que ya exista.
 - El `describe` raíz lleva el nombre de la pieza y, si no es obvio por el nombre, qué tipo de pieza es: `requireSession - Middleware`.
-- El valor esperado de un `expect` va escrito tal cual (`toBe('Acme')`, `{ code: 'WORKSPACE_ALREADY_EXISTS', message: '...' }`), nunca en una constante o variable del test, para leerlo sin ir a buscarlo. Las constantes (`<X>Constants`) sirven para armar el input o buscar filas, no como valor esperado. Excepción: los ids de los fixtures, que son UUID aleatorios y se comparan con su constante (`UserConstants.OwnerUserId`).
+- El valor esperado de un `expect` va escrito tal cual (`toBe('Acme')`, `{ code: 'WORKSPACE_ALREADY_EXISTS', message: '...' }`), nunca en una constante o variable del test, para leerlo sin ir a buscarlo. Las constantes (`<X>Constants`) sirven para armar el input o buscar filas, no como valor esperado. Excepciones: los ids de los fixtures, que son UUID aleatorios y se comparan con su constante (`UserConstants.OwnerUserId`), y los valores que genera el sistema y no se conocen de antemano (el pid de Postgres), que se comparan contra la variable donde se leyeron.
+- Los e2e verifican solo lo que devuelve el resolver y el efecto en DB, nunca que se llamó a un service (`vi.spyOn`).
 
 ## Tests e2e
 

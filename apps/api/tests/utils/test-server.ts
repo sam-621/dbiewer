@@ -33,7 +33,7 @@ export class TestServer {
   private readonly database = createDatabase(getEnv('DATABASE_URL'));
   private readonly adminDatabase = createDatabase(getEnv('ADMIN_DATABASE_URL'));
   private readonly server: Server;
-  readonly appContext: AppContext;
+  private readonly appContext: AppContext;
 
   constructor(options: TestServerOptions = {}) {
     this.headers = options.headers ?? {};

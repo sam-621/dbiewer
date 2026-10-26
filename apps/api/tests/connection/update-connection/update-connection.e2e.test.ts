@@ -1,7 +1,7 @@
 import { destroyDatabase, loadFixtures, resetDatabase, testDatabase } from '@tests/utils/database';
 import { TestServer } from '@tests/utils/test-server';
 import { eq } from 'drizzle-orm';
-import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { connection } from '@/persistence/schema';
 
@@ -70,7 +70,6 @@ describe('updateConnection', () => {
   });
 
   afterEach(async () => {
-    vi.restoreAllMocks();
     await resetDatabase();
   });
 
@@ -80,7 +79,6 @@ describe('updateConnection', () => {
   });
 
   test('updates the connection trimmed and keeps the password when it is not sent', async () => {
-    const discardPool = vi.spyOn(testServer.appContext.services.postgresService, 'discardPool');
     const headers = await testServer.signIn(UserConstants.OwnerEmail);
 
     const response = await testServer.query<UpdateConnectionResponse>(
@@ -121,7 +119,6 @@ describe('updateConnection', () => {
       passwordEncrypted: 'v1:iv:tag:ciphertext',
       sslMode: 'disable'
     });
-    expect(discardPool).toHaveBeenCalledWith(ConnectionConstants.ProductionConnectionId);
   });
 
   test('returns CONNECTION_NOT_FOUND when the connection does not exist', async () => {
@@ -194,7 +191,6 @@ describe('updateConnection', () => {
   });
 
   test('returns CONNECTION_NOT_FOUND for a connection of another workspace', async () => {
-    const discardPool = vi.spyOn(testServer.appContext.services.postgresService, 'discardPool');
     const headers = await testServer.signIn(UserConstants.OwnerEmail);
 
     const response = await testServer.query<UpdateConnectionResponse>(
@@ -216,7 +212,6 @@ describe('updateConnection', () => {
     expect((await findConnection(ConnectionConstants.OtherWorkspaceConnectionId))?.name).toBe(
       'Analytics'
     );
-    expect(discardPool).not.toHaveBeenCalled();
   });
 
   test('returns UNAUTHENTICATED when there is no session', async () => {
