@@ -43,3 +43,10 @@ El trabajo sobre una feature empieza con `/session-start <slug>`. Sin él, no le
 
 - Tocar solo la app en la que se está trabajando, salvo que se pida lo contrario.
 - Commits solo con `/commit`.
+
+## Reportes al usuario
+
+- Corto y en listas de una línea por ítem: **Quedó**, **Pendiente** y, si hace falta, **Necesito que decidas**.
+- No explicar cómo quedó el código ni repetir lo que ya se ve en el diff: el usuario lo lee directo. Si quiere detalle, lo pide.
+- Riesgos o avisos: una línea cada uno, dentro de Pendiente o Decidir.
+- Aplica también a los reportes que se reenvían de los subagentes.
