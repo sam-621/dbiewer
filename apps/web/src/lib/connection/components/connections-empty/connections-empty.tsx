@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { Brand } from '@/shared/components/brand';
+import { GridIcon } from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
 import {
   Empty,
@@ -18,8 +18,8 @@ export const ConnectionsEmpty = () => {
   return (
     <Empty>
       <EmptyHeader>
-        <EmptyMedia>
-          <Brand />
+        <EmptyMedia variant="icon">
+          <GridIcon />
         </EmptyMedia>
         <EmptyTitle>
           <h1>{t('Connect your first database')}</h1>

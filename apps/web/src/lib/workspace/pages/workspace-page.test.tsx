@@ -1,9 +1,8 @@
 import { Route, Routes } from 'react-router';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { authClient } from '@/lib/api/auth-client';
 import { gqlFetcher } from '@/lib/api/fetcher';
 import { Protect } from '@/shared/guards/protect';
 
@@ -12,9 +11,6 @@ import { render } from '../../../../tests/render';
 import { WorkspacePage } from './workspace-page';
 
 vi.mock('@/lib/api/fetcher');
-vi.mock('@/lib/api/auth-client', () => ({
-  authClient: { signOut: vi.fn() }
-}));
 
 const ME = {
   user: { id: 'user-1', name: 'Ana', email: 'ana@acme.dev', image: null },
@@ -34,15 +30,9 @@ const CONNECTION = {
 
 type Connections = (typeof CONNECTION)[] | Error | Promise<never>;
 
-const signOut = vi.mocked(authClient.signOut);
-
-let me: typeof ME | null = ME;
-
 const mockApi = (connections: Connections = []) => {
-  me = ME;
-
   vi.mocked(gqlFetcher).mockImplementation(async document => {
-    if (document.toString().includes('query GetMe')) return { me };
+    if (document.toString().includes('query GetMe')) return { me: ME };
 
     const result = await connections;
     if (result instanceof Error) throw result;
@@ -53,7 +43,6 @@ const mockApi = (connections: Connections = []) => {
 const renderPage = () =>
   render(
     <Routes>
-      <Route path="/login" element={<p>Login</p>} />
       <Route path="/connections/new" element={<p>New connection form</p>} />
       <Route element={<Protect />}>
         <Route path="/" element={<WorkspacePage />} />
@@ -64,11 +53,10 @@ const renderPage = () =>
 describe('WorkspacePage', () => {
   beforeEach(() => {
     vi.mocked(gqlFetcher).mockReset();
-    signOut.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  test('shows the empty state with the signed in user when there are no connections', async () => {
+  test('shows the empty state when there are no connections', async () => {
     mockApi();
 
     renderPage();
@@ -81,9 +69,18 @@ describe('WorkspacePage', () => {
         'Necesitas una conexión Postgres para explorar su esquema y ejecutar consultas.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Ana')).toBeInTheDocument();
-    expect(screen.getByText('ana@acme.dev')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+  });
+
+  test('shows the brand and the signed in user in the header without actions', async () => {
+    mockApi();
+
+    renderPage();
+
+    const header = await screen.findByRole('banner');
+    expect(await within(header).findByText('Ana')).toBeInTheDocument();
+    expect(within(header).getByText('dbiewer')).toBeInTheDocument();
+    expect(within(header).getByText('ana@acme.dev')).toBeInTheDocument();
+    expect(within(header).queryByRole('button')).not.toBeInTheDocument();
   });
 
   test('goes to the new connection form from the empty state', async () => {
@@ -119,6 +116,7 @@ describe('WorkspacePage', () => {
     expect(
       await screen.findByRole('heading', { name: 'No pudimos cargar tus conexiones' })
     ).toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).getByText('dbiewer')).toBeInTheDocument();
 
     mockApi();
     const user = userEvent.setup();
@@ -135,33 +133,7 @@ describe('WorkspacePage', () => {
     renderPage();
 
     expect(await screen.findByRole('heading', { name: "Ana's workspace" })).toBeInTheDocument();
+    expect(within(screen.getByRole('banner')).getByText('dbiewer')).toBeInTheDocument();
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
-  });
-
-  test('signs out and redirects to login', async () => {
-    mockApi();
-    signOut.mockImplementation(async () => {
-      me = null;
-      return { data: { success: true }, error: null };
-    });
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Cerrar sesión' }));
-
-    expect(await screen.findByText('Login')).toBeInTheDocument();
-    expect(signOut).toHaveBeenCalled();
-  });
-
-  test('shows a generic error when sign out fails', async () => {
-    mockApi();
-    signOut.mockRejectedValue(new Error('Network error'));
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Cerrar sesión' }));
-
-    expect(await screen.findByText('Algo salió mal')).toBeInTheDocument();
-    expect(screen.queryByText('Login')).not.toBeInTheDocument();
   });
 });

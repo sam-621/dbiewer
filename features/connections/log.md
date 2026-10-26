@@ -19,6 +19,9 @@
 - (web) Estado vacío de conexiones en `/` con el perfil del usuario en sesión (`SessionUser`: avatar, nombre, email y Sign out), carga y error con reintento. `GET_CONNECTIONS_QUERY` y `useGetConnections` (parte del paso 4).
 - (api) Los errores inesperados ya no salen con `originalError` en ningún ambiente. Se loguean con el patrón de vendyx: plugin `useErrorLogger` de yoga, `Logger` con `error(message, error, meta)` y `formatError`.
 - (api) `architecture.md` y `testing.md` actualizados con `api/plugins/`, `useErrorLogger`, la firma del logger y el error genérico en todos los ambientes.
+- (web) Header en `/` con la marca a la izquierda y el perfil (avatar, nombre y email, sin acciones) a la derecha. Se quita la marca del estado vacío y el botón "Sign out".
+- (web) El estado vacío lleva arriba el ícono `grid-2x2` de amicons (`GridIcon`) en `EmptyMedia` con variante `icon`.
+- (web) `ui.md` actualizado: header del workspace con el perfil, ícono del estado vacío y sin "Sign out".
 
 **Decisiones:**
 - Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.

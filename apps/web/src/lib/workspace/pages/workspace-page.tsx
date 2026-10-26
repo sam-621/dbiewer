@@ -69,7 +69,8 @@ export const WorkspacePage = () => {
 
 const WorkspaceLayout = ({ children }: { children: ReactNode }) => (
   <main className="flex min-h-svh flex-col">
-    <header className="flex justify-end p-4">
+    <header className="flex items-center justify-between gap-4 border-b px-4 py-3">
+      <Brand />
       <SessionUser />
     </header>
     {children}
