@@ -50,3 +50,4 @@ Todas son obligatorias y ninguna tiene default, salvo las credenciales de un ada
 | `EMAIL_SENDER` | Adapter de emails: `resend`, `console` (escribe el email en el log) o `dummy` (no hace nada; lo usan los e2e). Cada ambiente elige la suya. |
 | `RESEND_API_KEY` | API key de Resend. Obligatoria si `EMAIL_SENDER=resend`. |
 | `EMAIL_FROM` | Dirección remitente de los emails. Obligatoria. |
+| `CONNECTIONS_ENCRYPTION_KEY` | Llave para cifrar las contraseñas de las conexiones: 32 bytes en base64 (`openssl rand -base64 32`). Los tests usan una fija, en el bloque `env` de `vitest.integration.config.ts` y `vitest.e2e.config.ts`. |

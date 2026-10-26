@@ -44,8 +44,8 @@ src/
 │       ├── __tests__/                 <recurso>-repository.integration.test.ts y fixtures/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
 │   └── repositories/build-repositories.ts   arma todos los repositorios sobre una transacción
-├── services/<servicio>/               servicios externos (ver "Services (externos)")
-├── errors/<recurso>-errors.ts        errores que no son de un módulo (sesión, services)
+├── services/<servicio>/               servicios externos (ver "Services (externos)"); sus errores en <servicio>-errors.ts
+├── errors/<recurso>-errors.ts        errores que no son de un módulo ni de un service (sesión)
 ├── config/                            config.ts: valida las variables de entorno y las mapea a un objeto (ver "Config"); index.ts lo reexporta (@/config)
 └── shared/
 ```
@@ -131,10 +131,12 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 
 Un service es una capa de abstracción sobre un proveedor externo: emails (Resend), autenticación (Better Auth, `services/auth/`), logs (`services/logger/`, hoy winston a consola; más adelante un proveedor de logs), billing, almacenamiento de archivos (S3), etc. Permite cambiar de proveedor, o usar uno falso en desarrollo y tests, sin tocar los use-cases.
 
+Un service sin proveedor externo (cifrado, `services/encryption/`) es una sola clase (`EncryptionService`), sin interface, adapters ni factory: corre igual en todos los ambientes. Se instancia en `createAppContext` con su parte de la config y queda en `appContext.services`. Lo demás de esta sección aplica igual.
+
 - **Sin reglas de negocio.** Un service hace lo que le piden contra el proveedor y nada más; qué mandar, a quién y cuándo lo decide el use-case.
 - Lo usan solo los use-cases, que reciben la interface por constructor. Nunca un resolver ni un repositorio. Excepción: el logger, que se puede usar desde cualquier capa.
 - Si la carpeta del service lleva el nombre de su archivo principal (`services/auth/auth.ts`), tiene un `index.ts` que lo reexporta y se importa como `@/services/auth`. Lo mismo para cada adapter dentro de su carpeta. Ver `code-style.md` > Carpetas e `index.ts`.
-- Si el proveedor falla, el adapter lanza un error de `errors/<servicio>-errors.ts` con el motivo; no lo ignora.
+- Si el proveedor falla o la entrada no es válida, el service lanza un error de `services/<servicio>/<servicio>-errors.ts` con el motivo; no lo ignora.
 
 Estructura, con `emails` como ejemplo:
 
@@ -147,6 +149,7 @@ src/services/emails/
 │   │   └── index.ts
 │   ├── console/                     desarrollo: escribe en el log lo necesario para usar el email
 │   └── dummy/                       tests: no hace nada
+├── email-errors.ts                  EmailSendFailedError
 ├── templates/
 │   ├── <email>-template.tsx         react-email: componente, PreviewProps, export default y create<Email>Email(input)
 │   └── _shared/                     componentes compartidos entre templates (con `_` para que el preview de React Email no la muestre)
@@ -213,7 +216,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 ## Config
 
 - `src/config/config.ts` valida `process.env` con zod y lo mapea a un objeto en camelCase, agrupado por tema: `config.port`, `config.database.url`, `config.auth.secret`, `config.emailSender.adapter`, `config.emailSender.resend.apiKey`. Nadie más lee `process.env` ni usa los nombres en mayúsculas.
-- Cada service tiene su grupo (`emailSender`, más adelante `billing`, `assetStorage`), con `adapter` y una clave por proveedor con sus credenciales. Su tipo se exporta desde `@/config` (`EmailSenderConfig = Config['emailSender']`).
+- Cada service tiene su grupo (`emailSender`, más adelante `billing`, `assetStorage`), con `adapter` y una clave por proveedor con sus credenciales. Su tipo se exporta desde `@/config` (`EmailSenderConfig = Config['emailSender']`). Un service sin proveedor externo no lleva `adapter`: su grupo tiene solo lo que usa (`encryption.connectionsKey`).
 - **La config solo valida forma y presencia**: que estén las variables que se necesitan, con el tipo correcto, y las credenciales del adapter elegido. Nada de reglas por ambiente (p. ej. "en production solo `resend`"): cada ambiente se configura con lo que quiera, pero tiene que configurarlo. Por eso ninguna variable tiene default.
 
 ## Repositorios
@@ -227,14 +230,14 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 - Hay dos tipos de base de datos: la propia de la api (usuarios, conexiones, queries guardadas, historial; ver `database.md`) y las del usuario, a las que la api se conecta para ejecutar queries y leer su esquema.
 - Motor soportado al inicio: Postgres. Cómo se abstrae un motor para agregar otros: por definir.
-- Las credenciales de las conexiones se guardan cifradas. Esquema de cifrado: por definir.
+- De las credenciales de las conexiones solo se cifra la contraseña, con `EncryptionService`: AES-256-GCM (`node:crypto`), IV aleatorio de 12 bytes, tag de 16 y la llave de `CONNECTIONS_ENCRYPTION_KEY`. Se guarda como `v1:<iv>:<authTag>:<ciphertext>` en base64; el prefijo de versión permite rotar la llave o pasar a KMS sin romper lo guardado. El `id` de la conexión va como dato asociado, así el valor no se descifra en otra fila.
 
 ## Errores
 
-- Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`). Los de negocio viven en `modules/<modulo>/<modulo>-errors.ts`; los de infraestructura, en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
+- Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`). Los de negocio viven en `modules/<modulo>/<modulo>-errors.ts`; los de un service, en `services/<servicio>/<servicio>-errors.ts`; los demás de infraestructura, en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
 - Hay dos tipos:
   - **Errores de negocio**: los que devuelve un use-case por una regla (`WorkspaceAlreadyExistsError`). Extienden `BusinessError` (`src/shared/errors/business-error.ts`) y llevan su `code` en SCREAMING_SNAKE_CASE (`WORKSPACE_ALREADY_EXISTS`), tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` (`BusinessError<WorkspaceErrorCode>`). Sin mapper: el error ya trae lo que necesita la API.
-  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`). Extienden `DbiewerError` directo y se lanzan.
+  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`, `SecretDecryptionFailedError`). Extienden `DbiewerError` directo y se lanzan.
 - Los use-cases **devuelven** el error de negocio, no lo lanzan: es parte de su tipo de retorno (`Promise<Workspace | WorkspaceAlreadyExistsError>`). El resolver lo pasa a `apiResponse` (ver "Resolvers") y llega al cliente en `apiErrors` del payload con su `code` y `message`.
 - Como el error se devuelve, el `UnitOfWork` hace commit: el use-case verifica sus reglas y devuelve el error antes de escribir.
 - Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles.

@@ -50,6 +50,7 @@ Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int
   | `services/auth/` | `auth.ts` | `@/services/auth` |
   | `services/logger/` | `logger.ts` | `@/services/logger` |
   | `services/emails/senders/resend/` | `resend-sender.ts` | `./resend` |
+  | `services/encryption/` | `encryption-service.ts` | `@/services/encryption` |
   | `persistence/repositories/verification/` | `verification-repository.ts` | `@/persistence/repositories/verification` |
 
 - Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/modules/workspace/use-cases/workspace-for-user-creator`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).

@@ -11,7 +11,13 @@ const EnvSchema = z
     WEB_URL: z.url(),
     EMAIL_SENDER: z.enum(['resend', 'console', 'dummy']),
     EMAIL_FROM: z.email(),
-    RESEND_API_KEY: z.string().min(1).optional()
+    RESEND_API_KEY: z.string().min(1).optional(),
+    CONNECTIONS_ENCRYPTION_KEY: z
+      .base64()
+      .refine(
+        value => Buffer.from(value, 'base64').length === 32,
+        'CONNECTIONS_ENCRYPTION_KEY must decode to 32 bytes'
+      )
   })
   .superRefine((env, ctx) => {
     if (env.EMAIL_SENDER === 'resend' && !env.RESEND_API_KEY) {
@@ -41,6 +47,9 @@ const ConfigSchema = EnvSchema.transform(env => ({
     resend: {
       apiKey: env.RESEND_API_KEY
     }
+  },
+  encryption: {
+    connectionsKey: env.CONNECTIONS_ENCRYPTION_KEY
   }
 }));
 

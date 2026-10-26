@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { EmailSendFailedError } from '@/errors/email-errors';
+import { EmailSendFailedError } from '@/services/emails/email-errors';
 
 import { ResendSender } from './resend-sender';
 

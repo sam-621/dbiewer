@@ -37,6 +37,7 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 | Repositorio | integración contra la DB, con fixtures | `persistence/repositories/<recurso>/__tests__/` |
 | Adapter de un service externo | integración con el SDK del proveedor o sus dependencias mockeadas (`resend` con el SDK de Resend mockeado, `console` con un logger falso) | junto al archivo |
 | Factory de un service (`getEmailSender`) | integración: que devuelva el adapter que pide la config y falle sin credenciales | junto al archivo |
+| Service sin proveedor externo (`EncryptionService`) | unit | junto al archivo |
 
 No se testean:
 

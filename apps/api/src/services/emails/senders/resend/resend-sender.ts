@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-import { EmailSendFailedError } from '@/errors/email-errors';
+import { EmailSendFailedError } from '@/services/emails/email-errors';
 import type { EmailData, EmailSender } from '@/services/emails/senders/email-sender';
 
 export class ResendSender implements EmailSender {
