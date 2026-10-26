@@ -26,11 +26,10 @@ disable-model-invocation: true
 ## Pasos
 
 1. Revisar `git status` y `git diff` para entender el cambio.
-2. Agrupar los archivos por app. Si el cambio toca varias apps, hacer un commit por app.
-   - Los cambios a `docs/` de la app y a `features/<slug>/` (spec, log, plan) van en el mismo commit que el código que documentan. Un commit `docs` solo existe cuando el cambio es únicamente de documentación.
-3. Agregar solo los archivos de cada grupo por ruta explícita. Nunca `git add -A` ni `git add .`.
-4. Commitear con `git commit -m "<mensaje>"`.
-5. Si hay archivos modificados que no parecen parte del cambio, no incluirlos y avisar al usuario.
+2. Por defecto, un solo commit con **todos** los cambios pendientes (código, `docs/`, `features/`, `.claude/`, `CLAUDE.md`, de cualquier app). Se separa en varios commits solo si el usuario lo pide explícitamente.
+3. El tipo, el scope y la descripción salen del cambio más grande y funcional. Los cambios chicos que lo acompañan (docs, reglas del harness) no se mencionan ni cambian el mensaje.
+4. Agregar los archivos por ruta explícita, todos los que muestra `git status`. Nunca `git add -A` ni `git add .`.
+5. Commitear con `git commit -m "<mensaje>"`.
 6. Nunca hacer push.
 
 ## Ejemplos

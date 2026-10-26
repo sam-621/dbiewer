@@ -46,7 +46,7 @@ El trabajo sobre una feature empieza con `/session-start <slug>`. Sin él, no le
 
 ## Reportes al usuario
 
-- Corto y en listas de una línea por ítem: **Quedó**, **Pendiente** y, si hace falta, **Necesito que decidas**.
+- Corto y en listas de una línea por ítem: **Quedó** y **Pendiente**.
 - No explicar cómo quedó el código ni repetir lo que ya se ve en el diff: el usuario lo lee directo. Si quiere detalle, lo pide.
-- Riesgos o avisos: una línea cada uno, dentro de Pendiente o Decidir.
+- No hacer preguntas de decisión ni adelantarse a lo que sigue: el usuario marca el rumbo y pide lo que necesita. Riesgos o avisos, una línea cada uno dentro de Pendiente, sin pregunta.
 - Aplica también a los reportes que se reenvían de los subagentes.
