@@ -128,4 +128,6 @@
 - Spec: `ui.md` y `technical.md` reflejan que se borró la home de health check.
 - (web) Logout: `use-sign-out.ts` (`authClient.signOut()` e invalida `AccountCacheKeys.Me`; la guard manda a `/login`) y botón "Sign out" provisorio en `workspace-page.tsx`, con test. Lint, tests y `yarn build` pasan.
 - Docs web: `architecture.md` > Mutation (la sesión se invalida con `invalidateQueries`; lo demás con `refetchQueries`) y > Mutation del auth client (se traduce con `get<Dominio>Error` solo si hay un code para esa acción).
-
+- (web) Refactor del login: `useLoginForm({ onSent })` concentra mutation, `submitError` y `onSubmit` y devuelve `{ form, isLoading, submitError, onSubmit }`; schema y `FormValues` dentro de `use-form.ts` (se borra `form-schema.ts`). Docs web: `architecture.md` > Hooks de formulario. Lint, tests y `yarn build` pasan.
+- (web) Login: el aviso de link vencido fija `?error=` al montar (`useState`) y lo borra de la URL con `setSearchParams(..., { replace: true })`, conservando los demás params; test verifica la URL limpia. Lint, tests y `yarn build` pasan.
+- (web) `useLoginForm` sale de `use-form/use-form.ts` a `components/login/use-login-form.ts`. Docs web: `architecture.md`, los hooks de formulario viven en `use-<nombre>-form.ts` junto al componente, sin carpeta `use-form/` (también en `<X>Details`). Lint, tests y `yarn build` pasan.

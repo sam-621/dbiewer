@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -13,6 +14,8 @@ vi.mock('@/lib/api/auth-client', () => ({
 }));
 
 const magicLink = vi.mocked(authClient.signIn.magicLink);
+
+const LocationSearch = () => <output data-testid="location-search">{useLocation().search}</output>;
 
 const requestLink = async (email = 'ana@acme.dev') => {
   const user = userEvent.setup();
@@ -84,9 +87,16 @@ describe('LoginPage', () => {
   });
 
   test('shows a notice when the link expired', () => {
-    render(<LoginPage />, { route: '/login?error=INVALID_TOKEN' });
+    render(
+      <>
+        <LoginPage />
+        <LocationSearch />
+      </>,
+      { route: '/login?error=INVALID_TOKEN' }
+    );
 
     expect(screen.getByText('Este link venció. Pide uno nuevo.')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
   });
 
   test('resends the link from the sent state', async () => {

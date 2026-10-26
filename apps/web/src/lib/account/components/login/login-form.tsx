@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
@@ -8,9 +8,7 @@ import { Field, FieldError, FieldLabel } from '@/shared/components/ui/field';
 import { Form } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 
-import { useSignInMagicLink } from '../../hooks/use-sign-in-magic-link';
-
-import { type FormValues, useLoginForm } from './use-form/use-form';
+import { useLoginForm } from './use-login-form';
 
 type Props = {
   onSent: (email: string) => void;
@@ -18,25 +16,25 @@ type Props = {
 
 export const LoginForm = ({ onSent }: Props) => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const { signInMagicLink, isLoading } = useSignInMagicLink();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [hasLinkError] = useState(() => searchParams.has('error'));
+  const { form, isLoading, submitError, onSubmit } = useLoginForm({ onSent });
   const {
     register,
-    handleSubmit,
     formState: { errors }
-  } = useLoginForm();
+  } = form;
 
-  const hasLinkError = searchParams.has('error');
+  useEffect(() => {
+    if (!hasLinkError) return;
 
-  const onSubmit = async ({ email }: FormValues) => {
-    setSubmitError(null);
-    const result = await signInMagicLink(email);
-
-    if (result.isSuccess) return onSent(email);
-
-    setSubmitError(result.error);
-  };
+    setSearchParams(
+      params => {
+        params.delete('error');
+        return params;
+      },
+      { replace: true }
+    );
+  }, [hasLinkError, setSearchParams]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -50,7 +48,7 @@ export const LoginForm = ({ onSent }: Props) => {
           <AlertDescription>{t(submitError)}</AlertDescription>
         </Alert>
       )}
-      <Form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+      <Form className="flex flex-col gap-4" onSubmit={onSubmit}>
         <Field invalid={!!errors.email}>
           <FieldLabel>{t('Email')}</FieldLabel>
           <Input

@@ -136,9 +136,7 @@ Cada entidad editable tiene un solo componente `<X>Details` que sirve para crear
 ```
 components/details/
 ├── <x>-details.tsx           el componente: provider + Form + layout de la página
-├── use-form/
-│   ├── form-schema.ts        schema de zod
-│   └── use-form.ts           use<X>DetailsForm y use<X>DetailsFormContext
+├── use-<x>-details-form.ts  use<X>DetailsForm, use<X>DetailsFormContext, schema y FormValues
 ├── actions/                  acciones del header (remove, archive...)
 │   └── remove/
 │       ├── remove-<x>.tsx
@@ -163,12 +161,13 @@ export const ConnectionDetailsPage = () => {
 };
 ```
 
-### `use-form.ts`
+### `use-<x>-details-form.ts`
+
+Sigue la forma de los hooks de formulario (ver abajo):
 
 - `use<X>DetailsForm(entity)`: `useForm` con `zodResolver(Schema)` y `defaultValues` tomados de la entidad o vacíos.
-- `onSubmit`: si hay entidad, llama al hook de update y hace `form.reset(values)`; si no, llama al de create y navega a `/<ruta>/<id>`.
+- `onSubmit` vive en el hook: si hay entidad, llama al hook de update y hace `form.reset(values)`; si no, llama al de create y navega a `/<ruta>/<id>`.
 - `use<X>DetailsFormContext()`: une `useFormContext<FormValues>()` con el contexto de la página. Las secciones lo usan para leer el form y la entidad sin recibir props.
-- `export type FormValues = z.infer<typeof Schema>`.
 
 ### Secciones y acciones
 
@@ -177,18 +176,55 @@ export const ConnectionDetailsPage = () => {
 
 ## Formularios que no son `<X>Details`
 
-Un formulario que no edita una entidad (login, búsqueda) usa la misma carpeta `use-form/` dentro de su componente, sin provider ni contexto:
+Un formulario que no edita una entidad (login, búsqueda) tiene su hook en un archivo junto al componente, sin provider ni contexto:
 
 ```
 components/<pieza>/
-├── <pieza>-form.tsx
-└── use-form/
-    ├── form-schema.ts        schema de zod
-    └── use-form.ts           use<Pieza>Form y FormValues
+├── <pieza>-form.tsx          solo UI
+└── use-<pieza>-form.ts       use<Pieza>Form, schema y FormValues
 ```
 
-- `use<Pieza>Form()`: `useForm` con `zodResolver(Schema)` y `defaultValues` vacíos.
+- `use<Pieza>Form(params)`: sigue la forma de los [hooks de formulario](#hooks-de-formulario), con `defaultValues` vacíos.
 - Los mensajes del schema son keys de i18n y se muestran con `t(errors.<campo>.message)`.
+
+## Hooks de formulario
+
+Todo hook de formulario (`<X>Details` u otro) vive en un solo archivo `use-<nombre>-form.ts`, sin carpeta, y tiene la misma forma:
+
+- El hook tiene adentro la mutation, el estado que necesite el submit (`submitError`) y el `onSubmit`, que se devuelve ya envuelto con `form.handleSubmit`.
+- Devuelve `{ form, isLoading, onSubmit, ... }`: `form` es el resultado de `useForm` sin spread, y al lado lo demás que use el componente.
+- El schema de zod y `type FormValues = z.infer<typeof Schema>` van en el mismo archivo, debajo del hook. No hay `form-schema.ts`.
+- Lo que llega de afuera (callbacks como `onSent`) entra por parámetro.
+- El componente solo arma la UI: `<Form onSubmit={onSubmit}>` y lee `form.register`, `form.formState`, etc.
+
+```ts
+export const useLoginForm = ({ onSent }: Params) => {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { signInMagicLink, isLoading } = useSignInMagicLink();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(Schema),
+    defaultValues: { email: '' }
+  });
+
+  const onSubmit = async ({ email }: FormValues) => {
+    setSubmitError(null);
+    const result = await signInMagicLink(email);
+
+    if (result.isSuccess) return onSent(email);
+
+    setSubmitError(result.error);
+  };
+
+  return { form, isLoading, submitError, onSubmit: form.handleSubmit(onSubmit) };
+};
+
+const Schema = z.object({
+  email: z.email('Enter a valid email')
+});
+
+type FormValues = z.infer<typeof Schema>;
+```
 
 ## UI
 
