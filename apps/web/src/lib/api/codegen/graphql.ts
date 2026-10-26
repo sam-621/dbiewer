@@ -4,6 +4,11 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+export type ConnectionSslMode =
+  | 'DISABLE'
+  | 'REQUIRE'
+  | 'VERIFY_FULL';
+
 export type CreateWorkspaceInput = {
   name: string;
 };
@@ -38,6 +43,13 @@ export type CreateWorkspaceMutationVariables = Exact<{
 
 export type CreateWorkspaceMutation = { createWorkspace: { apiErrors: Array<{ code: WorkspaceErrorCode, message: string }>, workspace: { id: string, name: string } | null } };
 
+export type CommonConnectionFragment = { id: string, name: string, host: string, port: number, database: string, username: string, hasPassword: boolean, sslMode: ConnectionSslMode } & { ' $fragmentName'?: 'CommonConnectionFragment' };
+
+export type GetConnectionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetConnectionsQuery = { connections: { items: Array<{ ' $fragmentRefs'?: { 'CommonConnectionFragment': CommonConnectionFragment } }> } };
+
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -56,7 +68,18 @@ export class TypedDocumentString<TResult, TVariables>
     return this.value;
   }
 }
-
+export const CommonConnectionFragmentDoc = new TypedDocumentString(`
+    fragment CommonConnection on Connection {
+  id
+  name
+  host
+  port
+  database
+  username
+  hasPassword
+  sslMode
+}
+    `, {"fragmentName":"CommonConnection"}) as unknown as TypedDocumentString<CommonConnectionFragment, unknown>;
 export const GetMeDocument = new TypedDocumentString(`
     query GetMe {
   me {
@@ -101,3 +124,21 @@ export const CreateWorkspaceDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<CreateWorkspaceMutation, CreateWorkspaceMutationVariables>;
+export const GetConnectionsDocument = new TypedDocumentString(`
+    query GetConnections {
+  connections {
+    items {
+      ...CommonConnection
+    }
+  }
+}
+    fragment CommonConnection on Connection {
+  id
+  name
+  host
+  port
+  database
+  username
+  hasPassword
+  sslMode
+}`) as unknown as TypedDocumentString<GetConnectionsQuery, GetConnectionsQueryVariables>;

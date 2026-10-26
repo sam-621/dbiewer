@@ -2,6 +2,7 @@
   "Ana": "Ana",
   "ana@acme.dev": "ana@acme.dev",
   "Check your email": "Revisa tu correo",
+  "Connect your first database": "Conecta tu primera base de datos",
   "Continue": "Continuar",
   "Dark": "Oscuro",
   "Email": "Correo",
@@ -11,6 +12,7 @@
   "Go home": "Ir al inicio",
   "Light": "Claro",
   "Name must be 50 characters or less": "El nombre debe tener 50 caracteres o menos",
+  "New connection": "Nueva conexión",
   "Page not found": "Página no encontrada",
   "Reload": "Recargar",
   "Resend link": "Reenviar link",
@@ -22,12 +24,15 @@
   "System": "Sistema",
   "This link expired. Request a new one.": "Este link venció. Pide uno nuevo.",
   "Too many attempts. Wait a few minutes before requesting another link.": "Demasiados intentos. Espera unos minutos antes de pedir otro link.",
+  "Try again": "Intentar de nuevo",
   "Use another email": "Usar otro correo",
+  "We couldn't load your connections": "No pudimos cargar tus conexiones",
   "We sent a magic link to {{email}}. It expires in 15 minutes.": "Enviamos un magic link a {{email}}. Vence en 15 minutos.",
   "We sent you a new link.": "Te enviamos un link nuevo.",
   "Welcome to dbiewer": "Te damos la bienvenida a dbiewer",
   "What is your preferred language?": "¿Cuál es tu idioma preferido?",
   "What is your preferred theme?": "¿Cuál es tu tema preferido?",
   "What should we call you?": "¿Cómo quieres que te llamemos?",
-  "You already have a workspace": "Ya tienes un workspace"
+  "You already have a workspace": "Ya tienes un workspace",
+  "You need a Postgres connection to explore its schema and run queries.": "Necesitas una conexión Postgres para explorar su esquema y ejecutar consultas."
 }

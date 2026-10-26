@@ -2,6 +2,7 @@
   "Ana": "Ana",
   "ana@acme.dev": "ana@acme.dev",
   "Check your email": "Check your email",
+  "Connect your first database": "Connect your first database",
   "Continue": "Continue",
   "Dark": "Dark",
   "Email": "Email",
@@ -11,6 +12,7 @@
   "Go home": "Go home",
   "Light": "Light",
   "Name must be 50 characters or less": "Name must be 50 characters or less",
+  "New connection": "New connection",
   "Page not found": "Page not found",
   "Reload": "Reload",
   "Resend link": "Resend link",
@@ -22,12 +24,15 @@
   "System": "System",
   "This link expired. Request a new one.": "This link expired. Request a new one.",
   "Too many attempts. Wait a few minutes before requesting another link.": "Too many attempts. Wait a few minutes before requesting another link.",
+  "Try again": "Try again",
   "Use another email": "Use another email",
+  "We couldn't load your connections": "We couldn't load your connections",
   "We sent a magic link to {{email}}. It expires in 15 minutes.": "We sent a magic link to {{email}}. It expires in 15 minutes.",
   "We sent you a new link.": "We sent you a new link.",
   "Welcome to dbiewer": "Welcome to dbiewer",
   "What is your preferred language?": "What is your preferred language?",
   "What is your preferred theme?": "What is your preferred theme?",
   "What should we call you?": "What should we call you?",
-  "You already have a workspace": "You already have a workspace"
+  "You already have a workspace": "You already have a workspace",
+  "You need a Postgres connection to explore its schema and run queries.": "You need a Postgres connection to explore its schema and run queries."
 }

@@ -15,6 +15,8 @@
 - (api) Mutations `createConnection`, `updateConnection` y `removeConnection` con sus use-cases, `ConnectionValidator` y sus tests unit y e2e (paso 3).
 - (api) Clase base `UseCase` con zod (`src/shared/use-case.ts`) e `InvalidInputError`. Los use-cases de conexiones la extienden; se borran `ConnectionValidator` y los 6 códigos de error de formato.
 - (api) `INVALID_INPUT` con el mensaje de `z.prettifyError`; se borra la rama de `ZodError` del error handler. `architecture.md`, `code-style.md` y `technical.md` actualizados con `UseCase`, los schemas e `INVALID_INPUT`.
+- (web) Avatar generado con `boring-avatars` (`UserAvatar`, variante `marble`, a partir del id del usuario) para los usuarios sin foto (parte del paso 4).
+- (web) Estado vacío de conexiones en `/` con el perfil del usuario en sesión (`SessionUser`: avatar, nombre, email y Sign out), carga y error con reintento. `GET_CONNECTIONS_QUERY` y `useGetConnections` (parte del paso 4).
 
 **Decisiones:**
 - Los use-cases validan el input crudo con zod extendiendo `UseCase`. Los errores de formato salen con un único `INVALID_INPUT` y el mensaje de zod; los códigos propios quedan solo para reglas de negocio.
