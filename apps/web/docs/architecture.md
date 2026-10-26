@@ -27,14 +27,14 @@ src/lib/<módulo>/
 ```
 
 - Las rutas se registran en `src/app/app.tsx` importando la página del módulo.
-- Las guards de ruta están en `src/shared/guards/` (`protect.tsx` para sesión, `public.tsx` para rutas sin sesión). Se montan como ruta contenedora (`<Route element={<Protect />}>...</Route>`): renderizan `<Outlet />` o redirigen con `<Navigate replace>`. Sus piezas auxiliares (como `guard-loading.tsx`) van en la misma carpeta.
+- Las guards de ruta están en `src/shared/guards/` (`protect.tsx` para sesión con workspace, `onboarding.tsx` para sesión sin workspace, `public.tsx` para rutas sin sesión). `Protect` manda a `/onboarding` si `me.workspace` es `null`, y `Onboarding` manda a `/` si ya existe. Se montan como ruta contenedora (`<Route element={<Protect />}>...</Route>`): renderizan `<Outlet />` o redirigen con `<Navigate replace>`. Sus piezas auxiliares (como `guard-loading.tsx`) van en la misma carpeta.
 - `@/` apunta a `src/`.
 
 ## API
 
 - **Operations:** cada query, mutation y fragment se declara con `graphql(...)` en `src/lib/api/operations/<dominio>.operations.ts`.
 - **Tipos:** `yarn gen:types` los genera en `src/lib/api/codegen/` a partir del schema de `apps/api`. Se importan desde `@/lib/api/types`. Los fragments se leen con `getFragmentData(FRAGMENT, data)`.
-- **Errores:** la API lanza los errores de negocio como errores de GraphQL con `extensions.code`. Cada dominio tiene `src/lib/api/errors/<dominio>.errors.ts` con `get<Dominio>Error(error)`, que traduce ese `code` a un `ApiError` con mensaje para el usuario. Un `code` nuevo en la API se agrega aquí.
+- **Errores:** la API devuelve los errores de negocio en `apiErrors` del payload de la mutation (`{ apiErrors: [{ code, message }], <entidad> }`). Cada dominio tiene `src/lib/api/errors/<dominio>.errors.ts` con `get<Dominio>Error(code)`, que traduce ese `code` a un `ApiError` con mensaje para el usuario. Un `code` nuevo en la API se agrega aquí.
 - **Errores del auth client:** Better Auth no pasa por GraphQL. Sus errores se traducen en el mismo `<dominio>.errors.ts` por el `status` HTTP (`getAccountError` → `TOO_MANY_REQUESTS` con 429), y devuelven `ApiError | null`: `null` cae en `GENERIC_ERROR`.
 
 ## Hooks
@@ -57,7 +57,7 @@ export const useGetConnections = () => {
 ### Mutation
 
 - Devuelve `Promise<ActionResult<XErrorCode>>`: `{ isSuccess: true }` o `{ isSuccess: false, error, errorCode }`.
-- Si la API lanza un error de negocio (`isApiError(error)`), se traduce con `get<Dominio>Error`. Si todo sale bien, se refrescan las queries afectadas por sus cache keys con `refetchQueries`. La sesión (`AccountCacheKeys.Me`) es la excepción: se invalida con `invalidateQueries` después del login o el logout, para que las guards reaccionen.
+- Si el payload trae un error en `apiErrors`, se traduce con `get<Dominio>Error(code)`. Si todo sale bien, se refrescan las queries afectadas por sus cache keys con `refetchQueries`; las mutations que cambian el usuario o su workspace refrescan `AccountCacheKeys.Me`. La excepción es el login y el logout: ahí la sesión se invalida con `invalidateQueries`, para que las guards reaccionen.
 - Errores inesperados: `Logger.error(error)` y `GENERIC_ERROR`.
 
 ```ts
@@ -69,17 +69,14 @@ export const useRemoveConnection = () => {
     connectionId: string
   ): Promise<ActionResult<ConnectionErrorCode>> => {
     try {
-      await mutateAsync({ connectionId });
-      await queryClient.refetchQueries({ queryKey: [ConnectionCacheKeys.Connections] });
+      const { removeConnection } = await mutateAsync({ connectionId });
+      const [apiError] = removeConnection.apiErrors;
 
+      if (apiError) return { isSuccess: false, ...getConnectionError(apiError.code) };
+
+      await queryClient.refetchQueries({ queryKey: [ConnectionCacheKeys.Connections] });
       return { isSuccess: true };
     } catch (error) {
-      if (isApiError(error)) {
-        const { error: message, errorCode } = getConnectionError(error);
-
-        return { isSuccess: false, error: message, errorCode };
-      }
-
       Logger.error(error);
       return { isSuccess: false, error: GENERIC_ERROR };
     }
@@ -229,5 +226,5 @@ type FormValues = z.infer<typeof Schema>;
 ## UI
 
 - Componentes de `src/shared/components/ui` (coss ui). Si falta uno, se agrega desde el registry `@coss`, no se escribe a mano. Ver `docs/design-system.md`.
-- Íconos de `lucide-react`.
+- Íconos de [amicons](https://amicons.design) a través del wrapper `@/shared/components/icons/icons` (`amicons/icons/round/{line,solid}/<nombre>.svg?react` con `vite-plugin-svgr`, prop `variant="line" | "solid"`; el estado seleccionado usa `solid`). Si falta un ícono, se agrega al wrapper. Lo nuevo no usa `lucide-react`.
 - Tailwind v4: el tema vive en `app.css` con `@theme`. No existe ni se crea `tailwind.config.js`.

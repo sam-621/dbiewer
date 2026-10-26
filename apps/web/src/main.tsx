@@ -6,8 +6,11 @@ import { App } from '@/app/app';
 import { ErrorBoundary } from '@/app/error-boundary';
 import { Providers } from '@/app/providers';
 import { createQueryClient } from '@/app/query-client';
+import { applyTheme, getStoredTheme } from '@/shared/utils/theme.utils';
 
 import '@/app/app.css';
+
+applyTheme(getStoredTheme());
 
 const root = document.getElementById('root');
 

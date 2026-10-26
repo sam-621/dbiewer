@@ -1,0 +1,15 @@
+import { Navigate, Outlet } from 'react-router';
+
+import { useGetMe } from '@/lib/account/hooks/use-get-me';
+
+import { GuardLoading } from './guard-loading';
+
+export const Onboarding = () => {
+  const { isLoading, me } = useGetMe();
+
+  if (isLoading) return <GuardLoading />;
+  if (!me) return <Navigate to="/login" replace />;
+  if (me.workspace) return <Navigate to="/" replace />;
+
+  return <Outlet />;
+};

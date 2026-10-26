@@ -20,6 +20,7 @@ const renderGuard = () =>
     <Routes>
       <Route path="/" element={<p>Workspace</p>} />
       <Route path="/login" element={<p>Login</p>} />
+      <Route path="/onboarding" element={<p>Onboarding</p>} />
       <Route element={<Protect />}>
         <Route path="/guarded" element={<p>Guarded</p>} />
       </Route>
@@ -55,6 +56,15 @@ describe('Protect', () => {
     renderGuard();
 
     expect(await screen.findByText('Login')).toBeInTheDocument();
+    expect(screen.queryByText('Guarded')).not.toBeInTheDocument();
+  });
+
+  test('redirects to onboarding when the user has no workspace', async () => {
+    vi.mocked(gqlFetcher).mockResolvedValue({ me: { ...ME, workspace: null } });
+
+    renderGuard();
+
+    expect(await screen.findByText('Onboarding')).toBeInTheDocument();
     expect(screen.queryByText('Guarded')).not.toBeInTheDocument();
   });
 });

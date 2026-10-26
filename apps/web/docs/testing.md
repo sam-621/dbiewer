@@ -14,7 +14,7 @@
 ## Unit
 
 - Vitest + React Testing Library, entorno jsdom.
-- Setup en `tests/setup.ts`; render con `tests/render.tsx`, que envuelve con los providers de la app.
+- Setup en `tests/setup.ts`; render con `tests/render.tsx`, que envuelve con los providers de la app. `setup.ts` trae los polyfills que jsdom no tiene y Base UI necesita (como `PointerEvent`).
 - El test va junto al archivo (`sql.utils.ts` → `sql.utils.test.ts`).
 - Se prueba lo que el usuario ve y hace (`getByRole`, `userEvent`), no detalles de implementación.
 - La API se mockea en el borde (el fetcher), nunca los hooks del módulo. Lo de Better Auth se mockea en `@/lib/api/auth-client`, que es su borde.

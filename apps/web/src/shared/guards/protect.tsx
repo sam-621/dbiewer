@@ -9,6 +9,7 @@ export const Protect = () => {
 
   if (isLoading) return <GuardLoading />;
   if (!me) return <Navigate to="/login" replace />;
+  if (!me.workspace) return <Navigate to="/onboarding" replace />;
 
   return <Outlet />;
 };

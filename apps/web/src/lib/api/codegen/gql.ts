@@ -16,15 +16,27 @@ import * as types from './graphql';
  */
 type Documents = {
     "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": typeof types.GetMeDocument,
+    "\n  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {\n    updateUserProfile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      user {\n        id\n        name\n      }\n    }\n  }\n": typeof types.UpdateUserProfileDocument,
+    "\n  mutation CreateWorkspace($input: CreateWorkspaceInput!) {\n    createWorkspace(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
 };
 const documents: Documents = {
     "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": types.GetMeDocument,
+    "\n  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {\n    updateUserProfile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      user {\n        id\n        name\n      }\n    }\n  }\n": types.UpdateUserProfileDocument,
+    "\n  mutation CreateWorkspace($input: CreateWorkspaceInput!) {\n    createWorkspace(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": types.CreateWorkspaceDocument,
 };
 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').GetMeDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateUserProfile($input: UpdateUserProfileInput!) {\n    updateUserProfile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      user {\n        id\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').UpdateUserProfileDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateWorkspace($input: CreateWorkspaceInput!) {\n    createWorkspace(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n"): typeof import('./graphql').CreateWorkspaceDocument;
 
 
 export function graphql(source: string) {
