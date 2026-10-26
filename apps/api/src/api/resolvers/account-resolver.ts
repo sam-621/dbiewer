@@ -2,8 +2,8 @@ import type { MutationCreateWorkspaceArgs, Resolvers } from '@/api/codegen';
 import type { SessionContext } from '@/api/middlewares/require-session';
 import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
+import { WorkspaceForUserCreator } from '@/modules/workspace/use-cases/workspace-for-user-creator';
 import { UnitOfWork } from '@/persistence/unit-of-work';
-import { WorkspaceForUserCreator } from '@/use-cases/workspace-for-user-creator';
 
 async function createWorkspace(
   _parent: unknown,

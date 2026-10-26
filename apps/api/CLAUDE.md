@@ -14,7 +14,7 @@ Backend: conexiones a las bases de datos del usuario, ejecución de queries, esq
 
 ## Reglas que aplican siempre
 
-- La lógica de negocio va en `src/use-cases`. Los resolvers solo llaman al use-case y responden. `src/services` es solo para servicios externos (email, auth, logger, billing, storage), sin reglas de negocio.
+- La lógica de negocio va en `src/modules/<modulo>/use-cases`. Los resolvers solo llaman al use-case y responden. `src/services` es solo para servicios externos (email, auth, logger, billing, storage), sin reglas de negocio.
 - Sin comentarios en el código.
 - Migraciones solo con `yarn migrate:make <nombre>`, que genera el archivo sin aplicarlo.
 - Nunca correr comandos contra una DB real (`migrate`, `seed`...).

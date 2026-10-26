@@ -29,7 +29,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 |-----|-------|---------|
 | Archivos | `<recurso>-<capa>.ts`, con guion y no con punto, así el único punto extra es el de los tests (`<recurso>-<capa>.test.ts`) | `connection-resolver.ts`, `connection-errors.ts`, `connection-repository.ts` |
 | Clases | `<Recurso><Capa>` | `ConnectionRepository`, `ConnectionResolver` |
-| Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; carpeta y archivo con el mismo nombre en kebab-case | `use-cases/workspace-for-user-creator/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
+| Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; archivo en kebab-case en `modules/<modulo>/use-cases/`; carpeta con el mismo nombre solo si tiene test | `modules/workspace/use-cases/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
 | Método del use-case | uno solo, `execute` | `new WorkspaceForUserCreator(ctx).execute(user)` |
 | Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `resend/resend-sender.ts`, `ResendSender` |
 | Templates de email | `<email>-template.tsx` | `magic-link-template.tsx` |
@@ -52,7 +52,7 @@ Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int
   | `services/emails/senders/resend/` | `resend-sender.ts` | `./resend` |
   | `persistence/repositories/verification/` | `verification-repository.ts` | `@/persistence/repositories/verification` |
 
-- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/use-cases/magic-link-use-case`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).
+- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/modules/workspace/use-cases/workspace-for-user-creator`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).
 
 ## Use-case
 

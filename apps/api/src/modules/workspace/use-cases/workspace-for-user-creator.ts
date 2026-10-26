@@ -1,4 +1,4 @@
-import { WorkspaceAlreadyExistsError } from '@/errors/workspace-errors';
+import { WorkspaceAlreadyExistsError } from '@/modules/workspace/workspace-errors';
 import type { Workspace } from '@/persistence/repositories/workspace';
 import type { UowContext } from '@/persistence/unit-of-work';
 import { slugify } from '@/shared/utils/slugify';

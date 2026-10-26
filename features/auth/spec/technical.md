@@ -118,12 +118,12 @@ type Mutation {
 |------|---------|
 | Schema | `src/api/schema/account.gql` |
 | Resolvers | `src/api/resolvers/account-resolver.ts` |
-| Use-cases | `src/use-cases/workspace-for-user-creator/` |
+| Use-cases | `src/modules/workspace/use-cases/workspace-for-user-creator.ts` |
 | Respuesta | `src/api/utils/api-response.ts` |
 | Middlewares | `src/api/middlewares/require-session/` |
 | Services externos | `src/services/auth/` (Better Auth), `src/services/emails/` |
 | Repositorios | `src/persistence/repositories/workspace/` |
-| Errores | `src/errors/account-errors.ts`, `src/errors/email-errors.ts`, `src/errors/workspace-errors.ts` |
+| Errores | `src/modules/workspace/workspace-errors.ts`, `src/errors/account-errors.ts`, `src/errors/email-errors.ts` |
 
 ### Errores
 

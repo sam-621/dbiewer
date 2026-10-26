@@ -13,7 +13,7 @@ src/api/schema      los .gql del schema de GraphQL
 src/api/resolvers   validan el input, llaman al use-case, responden
         │
         ▼
-src/use-cases       reglas de negocio ──────────► src/services   servicios externos
+src/modules/<modulo>/use-cases   reglas de negocio ──► src/services   servicios externos
         │                                                     (email, billing, storage...)
         ▼
 src/persistence/repositories   acceso a datos
@@ -32,7 +32,9 @@ src/
 │   ├── resolvers/<recurso>-resolver.ts
 │   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
-├── use-cases/<caso-de-uso>/          una carpeta por caso de uso: <caso-de-uso>.ts, su test e index.ts
+├── modules/<modulo>/                 un módulo por dominio (workspace, connection...)
+│   ├── use-cases/<caso-de-uso>.ts    un archivo por caso de uso; si tiene test, va en use-cases/<caso-de-uso>/ con su test e index.ts
+│   └── <modulo>-errors.ts            errores de negocio del módulo
 ├── persistence/
 │   ├── schema/                        schema de Drizzle
 │   ├── unit-of-work/                  UnitOfWork (ver "Unit of work y RLS")
@@ -43,7 +45,7 @@ src/
 │       └── index.ts                   reexporta, se importa como @/persistence/repositories/<recurso>
 │   └── repositories/build-repositories.ts   arma todos los repositorios sobre una transacción
 ├── services/<servicio>/               servicios externos (ver "Services (externos)")
-├── errors/<recurso>-errors.ts
+├── errors/<recurso>-errors.ts        errores que no son de un módulo (sesión, services)
 ├── config/                            config.ts: valida las variables de entorno y las mapea a un objeto (ver "Config"); index.ts lo reexporta (@/config)
 └── shared/
 ```
@@ -219,7 +221,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 ## Errores
 
-- Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`) y vive en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
+- Todo error propio extiende `DbiewerError` (`src/shared/errors/dbiewer-error.ts`). Los de negocio viven en `modules/<modulo>/<modulo>-errors.ts`; los de infraestructura, en `errors/<recurso>-errors.ts`. El mensaje incluye los valores que lo causaron.
 - Hay dos tipos:
   - **Errores de negocio**: los que devuelve un use-case por una regla (`WorkspaceAlreadyExistsError`). Extienden `BusinessError` (`src/shared/errors/business-error.ts`) y llevan su `code` en SCREAMING_SNAKE_CASE (`WORKSPACE_ALREADY_EXISTS`), tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` (`BusinessError<WorkspaceErrorCode>`). Sin mapper: el error ya trae lo que necesita la API.
   - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`). Extienden `DbiewerError` directo y se lanzan.
