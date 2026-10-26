@@ -27,7 +27,7 @@ src/lib/<módulo>/
 ```
 
 - Las rutas se registran en `src/app/app.tsx` importando la página del módulo.
-- Las guards de ruta están en `src/shared/guards/` (`protect.tsx` para sesión, `public.tsx` para rutas sin sesión).
+- Las guards de ruta están en `src/shared/guards/` (`protect.tsx` para sesión, `public.tsx` para rutas sin sesión). Se montan como ruta contenedora (`<Route element={<Protect />}>...</Route>`): renderizan `<Outlet />` o redirigen con `<Navigate replace>`. Sus piezas auxiliares (como `guard-loading.tsx`) van en la misma carpeta.
 - `@/` apunta a `src/`.
 
 ## API

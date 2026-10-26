@@ -4,6 +4,11 @@ type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
+export type GetMeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMeQuery = { me: { user: { id: string, name: string, email: string, image: string | null }, workspace: { id: string, name: string } | null } | null };
+
 export type GetHealthQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -28,6 +33,22 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const GetMeDocument = new TypedDocumentString(`
+    query GetMe {
+  me {
+    user {
+      id
+      name
+      email
+      image
+    }
+    workspace {
+      id
+      name
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetMeQuery, GetMeQueryVariables>;
 export const GetHealthDocument = new TypedDocumentString(`
     query GetHealth {
   health

@@ -71,6 +71,8 @@
 - (api) CORS con `cors` (`origin: config.webUrl`, `credentials: true`) en `/api/auth/*splat`, y la opción `cors` de Yoga limitada a lo mismo en `/graphql`. `yarn build` y e2e de `me` pasan.
 - Spec (`technical.md`): sin proxy de Vite; `baseURL` del auth client y CORS de la api.
 - Docs: api `commands.md` (`WEB_URL` también para CORS; `yarn build` lo puede correr el agente) y `architecture.md` > HTTP (CORS en `/api/auth` y en Yoga); web `architecture.md` > Estructura (auth client en `src/lib/api/`).
+- (web) Sesión y guards: operation `GET_ME_QUERY` (`account.operations.ts`), `AccountCacheKeys.Me`, `useGetMe` y las guards `Protect` y `Public` en `src/shared/guards/` (rutas contenedoras con `<Outlet />` y `<Navigate replace>`, carga compartida en `guard-loading.tsx`), con tests. Todavía no conectadas en `app.tsx`. `yarn gen:types` con la api levantada; lint, tests y `yarn build` pasan.
+- Docs web: `architecture.md` (guards como ruta contenedora con `<Outlet />`, auxiliares en la misma carpeta) y `commands.md` (`yarn build` lo puede correr el agente).
 
 **Decisiones:**
 - Las migraciones generadas por drizzle-kit no se editan: el SQL que no sabe generar (`FORCE`, `GRANT`/`REVOKE`) va en una migración custom aparte (`yarn migrate:make <nombre> --custom`).
