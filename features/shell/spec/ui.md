@@ -83,7 +83,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Panel de abajo con Results, sin otros tabs. A la derecha, `7 rows · 124 ms`.
   - Results: grilla como la de la tabla, con aviso si el resultado está truncado en 1,000 filas. Si no hay filas, el tag de la sentencia (`UPDATE 3`).
 - **Permite:**
-  - Escribir SQL.
+  - Escribir SQL, con autocompletado de palabras clave, esquemas, tablas, vistas y columnas (también después de `tabla.` o del alias).
   - Ejecutar con "Run" o `⌘↵` lo seleccionado o la sentencia bajo el cursor.
   - Guardar con "Save" o `⌘S`. Si es nueva, pide el nombre.
   - Formatear el SQL.

@@ -56,6 +56,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ### Ejecutar queries
 
 - Se ejecuta lo seleccionado o, si no hay selección, la sentencia bajo el cursor.
+- El editor autocompleta palabras clave de Postgres y los esquemas, tablas, vistas y columnas de la conexión activa. Las tablas de `public` se sugieren también sin el esquema.
 - Una query devuelve como máximo 1,000 filas. Si había más, se avisa que el resultado está truncado.
 - Una query se corta a los 30 s.
 - Si la ejecución tiene varias sentencias, se muestran las filas de la última que devuelva filas. Si ninguna devuelve filas, se muestra el resultado de la última (`UPDATE 3`).
@@ -94,7 +95,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ## Fuera de alcance
 
 - Diagrama del esquema (milestone 6).
-- Autocompletado y `EXPLAIN` (milestone 7).
+- `EXPLAIN` (milestone 7).
 - Asistente IA (milestone 8).
 - Editar, insertar o borrar filas desde la vista de tabla, y saltar de una FK a la fila referenciada (milestone 9).
 - Exportar resultados a CSV o JSON (milestone 5).

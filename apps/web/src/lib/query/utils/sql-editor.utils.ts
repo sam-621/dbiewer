@@ -1,7 +1,8 @@
+import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
 import { bracketMatching, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Extension, Prec } from '@codemirror/state';
+import { type Compartment, type Extension, Prec } from '@codemirror/state';
 import {
   drawSelection,
   EditorView,
@@ -12,6 +13,8 @@ import {
 } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { format } from 'sql-formatter';
+
+import type { DbSchemaNode } from '@/lib/database-schema/utils/database-schema.utils';
 
 const sqlEditorTheme = EditorView.theme({
   '&': {
@@ -34,7 +37,37 @@ const sqlEditorTheme = EditorView.theme({
   '.cm-activeLineGutter': { color: 'var(--foreground)' },
   '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
     { backgroundColor: 'color-mix(in srgb, var(--color-brand) 28%, transparent)' },
-  '.cm-matchingBracket': { backgroundColor: 'var(--accent)', outline: '1px solid var(--ring)' }
+  '.cm-matchingBracket': { backgroundColor: 'var(--accent)', outline: '1px solid var(--ring)' },
+  '.cm-tooltip': {
+    backgroundColor: 'var(--popover)',
+    color: 'var(--popover-foreground)',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    boxShadow: '0 8px 24px color-mix(in srgb, var(--foreground) 12%, transparent)',
+    overflow: 'hidden'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul': {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '12px',
+    maxHeight: '16em',
+    padding: '4px'
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul > li': {
+    padding: '2px 8px',
+    borderRadius: '4px',
+    lineHeight: '1.6'
+  },
+  '.cm-tooltip-autocomplete ul li[aria-selected]': {
+    backgroundColor: 'var(--accent)',
+    color: 'var(--accent-foreground)'
+  },
+  '.cm-completionIcon': { color: 'var(--muted-foreground)', opacity: '1' },
+  '.cm-completionMatchedText': {
+    textDecoration: 'none',
+    color: 'var(--sql-kw)',
+    fontWeight: '600'
+  },
+  '.cm-completionDetail': { color: 'var(--muted-foreground)', fontStyle: 'normal' }
 });
 
 const sqlHighlightStyle = HighlightStyle.define([
@@ -49,18 +82,40 @@ const sqlHighlightStyle = HighlightStyle.define([
 
 type Params = {
   label: string;
+  languageCompartment: Compartment;
+  schema: SQLNamespace;
   onRun: () => void;
   onChange: (sql: string) => void;
 };
 
-export const getSqlEditorExtensions = ({ label, onRun, onChange }: Params): Extension[] => [
+export const getSqlLanguage = (schema: SQLNamespace) =>
+  sql({ dialect: PostgreSQL, schema, defaultSchema: 'public' });
+
+export const getSqlSchema = (schemas: DbSchemaNode[]): SQLNamespace =>
+  Object.fromEntries(
+    schemas.map(({ name, tables, views }) => [
+      name,
+      Object.fromEntries(
+        [...tables, ...views].map(({ name, columns }) => [name, columns.map(({ name }) => name)])
+      )
+    ])
+  );
+
+export const getSqlEditorExtensions = ({
+  label,
+  languageCompartment,
+  schema,
+  onRun,
+  onChange
+}: Params): Extension[] => [
   lineNumbers(),
   highlightActiveLineGutter(),
   highlightActiveLine(),
   drawSelection(),
   bracketMatching(),
   history(),
-  sql({ dialect: PostgreSQL }),
+  languageCompartment.of(getSqlLanguage(schema)),
+  autocompletion(),
   syntaxHighlighting(sqlHighlightStyle),
   sqlEditorTheme,
   Prec.highest(
@@ -74,6 +129,7 @@ export const getSqlEditorExtensions = ({ label, onRun, onChange }: Params): Exte
       }
     ])
   ),
+  Prec.high(keymap.of([{ key: 'Tab', run: acceptCompletion }])),
   keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
   EditorView.contentAttributes.of({ 'aria-label': label }),
   EditorView.updateListener.of(update => {

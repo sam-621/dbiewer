@@ -28,8 +28,30 @@ const EXECUTION = {
   command: 'SELECT 2'
 };
 
+const SCHEMAS = [
+  {
+    name: 'public',
+    tables: [
+      {
+        name: 'users',
+        columns: [
+          { name: 'id', type: 'integer', isPrimaryKey: true, isForeignKey: false },
+          { name: 'email', type: 'text', isPrimaryKey: false, isForeignKey: false }
+        ]
+      }
+    ],
+    views: [],
+    functions: []
+  }
+];
+
+const isSchemaQuery = (document: { toString: () => string }) =>
+  document.toString().includes('query GetConnectionSchema');
+
 const mockRun = (result: unknown) =>
-  vi.mocked(gqlFetcher).mockImplementation(async () => {
+  vi.mocked(gqlFetcher).mockImplementation(async document => {
+    if (isSchemaQuery(document)) return { connectionSchema: { apiErrors: [], schemas: SCHEMAS } };
+
     const value = await result;
     if (value instanceof Error) throw value;
     return value;
@@ -41,7 +63,12 @@ const mockExecution = (execution: Partial<typeof EXECUTION> = {}) =>
 const getRunInputs = () =>
   vi
     .mocked(gqlFetcher)
-    .mock.calls.map(([, variables]) => (variables as { input: Record<string, unknown> }).input);
+    .mock.calls.filter(([document]) => !isSchemaQuery(document))
+    .map(([, variables]) => (variables as { input: Record<string, unknown> }).input);
+
+const getSuggestions = () => screen.queryAllByRole('option').map(option => option.textContent);
+
+const waitForCompletionDelay = () => new Promise(resolve => setTimeout(resolve, 100));
 
 const renderTab = (sql = 'select id, email from users;\nselect 2;') => {
   localStorage.setItem(DRAFT_STORAGE_KEY, sql);
@@ -57,6 +84,7 @@ describe('SqlTab', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.mocked(gqlFetcher).mockReset();
+    mockRun(null);
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -174,6 +202,28 @@ describe('SqlTab', () => {
     expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toBe(
       'SELECT\n  id\nFROM\n  users\nWHERE\n  id = 1'
     );
-    expect(gqlFetcher).not.toHaveBeenCalled();
+    expect(getRunInputs()).toEqual([]);
+  });
+
+  test('suggests the tables and columns of the connection', async () => {
+    renderTab('');
+    const user = userEvent.setup();
+    const editor = screen.getByRole('textbox', { name: 'Editor SQL' });
+
+    await user.click(editor);
+    await user.keyboard('select * from us');
+
+    await waitFor(() => expect(getSuggestions()).toContain('users'));
+
+    await waitForCompletionDelay();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' u where u.em');
+    await waitFor(() => expect(getSuggestions()[0]).toBe('email'));
+    await waitForCompletionDelay();
+    await user.keyboard('{Tab}');
+
+    await waitFor(() =>
+      expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toBe('select * from users u where u.email')
+    );
   });
 });

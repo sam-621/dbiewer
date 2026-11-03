@@ -1,8 +1,11 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { useGetConnectionSchema } from '@/lib/database-schema/hooks/use-get-connection-schema';
 
 import { useDraftSql } from '../../hooks/use-draft-sql';
 import { type RunQueryResult, useRunQuery } from '../../hooks/use-run-query';
+import { getSqlSchema } from '../../utils/sql-editor.utils';
 
 import { SqlResults } from './sql-results/sql-results';
 import { SqlTabResizer } from './sql-tab-resizer/sql-tab-resizer';
@@ -25,6 +28,11 @@ export const SqlTab = ({ connectionId, connectionName, tabKey }: Props) => {
   const [resultsHeight, setResultsHeight] = useState(RESULTS_DEFAULT_HEIGHT);
   const { initialSql, changeDraftSql } = useDraftSql(connectionId, tabKey);
   const tabRef = useRef<HTMLDivElement>(null);
+  const { data: schemaData } = useGetConnectionSchema(connectionId);
+  const sqlSchema = useMemo(
+    () => getSqlSchema(schemaData?.connectionSchema.schemas ?? []),
+    [schemaData]
+  );
 
   const run = async () => {
     if (isLoading) return;
@@ -38,6 +46,7 @@ export const SqlTab = ({ connectionId, connectionName, tabKey }: Props) => {
   const { containerRef, getSqlToRun, formatEditorSql } = useSqlEditor({
     label: t('SQL editor'),
     initialSql,
+    schema: sqlSchema,
     onRun: () => void run(),
     onChange: changeDraftSql
   });

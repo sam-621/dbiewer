@@ -1,23 +1,26 @@
 import { useEffect, useRef } from 'react';
-import { EditorState } from '@codemirror/state';
+import type { SQLNamespace } from '@codemirror/lang-sql';
+import { Compartment, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import { Logger } from '@/shared/utils/logger';
 
 import { getStatementAt } from '../../utils/sql.utils';
-import { formatSql, getSqlEditorExtensions } from '../../utils/sql-editor.utils';
+import { formatSql, getSqlEditorExtensions, getSqlLanguage } from '../../utils/sql-editor.utils';
 
 type Params = {
   label: string;
   initialSql: string;
+  schema: SQLNamespace;
   onRun: () => void;
   onChange: (sql: string) => void;
 };
 
-export const useSqlEditor = ({ label, initialSql, onRun, onChange }: Params) => {
+export const useSqlEditor = ({ label, initialSql, schema, onRun, onChange }: Params) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const setupRef = useRef({ label, initialSql });
+  const setupRef = useRef({ label, initialSql, schema });
+  const languageCompartmentRef = useRef(new Compartment());
   const callbacksRef = useRef({ onRun, onChange });
 
   useEffect(() => {
@@ -28,13 +31,15 @@ export const useSqlEditor = ({ label, initialSql, onRun, onChange }: Params) => 
     const parent = containerRef.current;
     if (!parent) return;
 
-    const { label, initialSql } = setupRef.current;
+    const { label, initialSql, schema } = setupRef.current;
     const view = new EditorView({
       parent,
       state: EditorState.create({
         doc: initialSql,
         extensions: getSqlEditorExtensions({
           label,
+          languageCompartment: languageCompartmentRef.current,
+          schema,
           onRun: () => callbacksRef.current.onRun(),
           onChange: sql => callbacksRef.current.onChange(sql)
         })
@@ -47,6 +52,12 @@ export const useSqlEditor = ({ label, initialSql, onRun, onChange }: Params) => 
       viewRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: languageCompartmentRef.current.reconfigure(getSqlLanguage(schema))
+    });
+  }, [schema]);
 
   const getSqlToRun = () => {
     const view = viewRef.current;

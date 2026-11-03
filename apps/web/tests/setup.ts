@@ -21,6 +21,11 @@ if (!window.matchMedia) {
     }) as MediaQueryList;
 }
 
+if (!Range.prototype.getClientRects) {
+  Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
+  Range.prototype.getBoundingClientRect = () => new DOMRect();
+}
+
 afterEach(() => {
   cleanup();
 });
