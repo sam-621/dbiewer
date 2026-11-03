@@ -17,11 +17,11 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Selector de conexión
 
 - **Ubicación:** header del workspace, a la derecha de la marca.
-- **Muestra:** minimalista: la conexión activa con un indicador y su nombre, sin el motor ni el host. Al abrirlo, la lista de conexiones con su nombre y host, la activa marcada, y la acción "New connection".
+- **Muestra:** minimalista: la conexión activa con un indicador y su nombre, sin el motor ni el host. Al abrirlo, la lista de conexiones con el ícono del motor, su nombre y host, la activa marcada, y la acción "New connection".
 - **Permite:**
   - Cambiar la conexión activa. Cambian el sidebar y las pestañas.
   - Abrir el modal de nueva conexión de `connections`. Al guardar, la nueva pasa a ser la activa.
-  - Eliminar una conexión, con confirmación.
+  - Eliminar una conexión, con confirmación, desde el submenú "Remove connection".
 
 ### Sidebar
 
@@ -42,7 +42,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Una acción "Reload" para volver a leer el esquema.
 - **Permite:**
   - Expandir y contraer esquemas, grupos y tablas.
-  - Toda la fila de una tabla o vista es un solo botón: un clic la expande o contrae. Cómo se abre en una pestaña se define con el paso 4. Con un clic en una función, abrirla en la pestaña provisional; con doble clic, fija.
+  - Toda la fila de una tabla o vista es un solo botón: un clic expande o contrae sus columnas y un doble clic la abre en la pestaña provisional. Con una función, doble clic la abre en la pestaña provisional.
   - Buscar por nombre: filtra en todos los esquemas y expande los grupos con resultados.
 - **Estados:** cargando el esquema; no se pudo conectar, con reintento; base sin objetos; búsqueda sin resultados.
 
@@ -68,8 +68,9 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Barra de filtros: `WHERE` con un chip por condición (`plan = 'pro'`), cada uno con quitar, y "Add filter"; a la derecha, `ORDER BY` con la columna y dirección.
   - Grilla: número de fila y una columna por campo con su nombre y tipo, la PK marcada. `NULL` se ve distinto de un texto vacío. Los valores largos se cortan.
   - Pie: `14 of 14,823 rows · 38 ms`, página actual y total, anterior y siguiente.
+- **Detalle de fila:** al hacer clic en una fila de la grilla se abre un panel a la derecha con un campo por columna (nombre, tipo, PK) y su valor en un input de solo lectura, con copiar. `NULL` se ve distinto del texto vacío. La fila abierta queda marcada. Más adelante será un form para editar la fila (milestone 9).
 - **Structure:** columnas (nombre, tipo, si admite null, default), índices (nombre, definición, si es único), FKs (columnas, referencia, acción al borrar) y el DDL o la definición de la vista, con copiar.
-- **Permite:** agregar, editar y quitar filtros; ordenar por una columna, también desde el encabezado de la grilla; paginar; copiar el valor de una celda; pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
+- **Permite:** agregar, editar y quitar filtros; ordenar por una columna, también desde el encabezado de la grilla; paginar; abrir el detalle de una fila (desde ahí se copia cada valor); pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
 - **Estados:** cargando; error de conexión o de query, con reintento; la tabla ya no existe; sin filas, o sin filas con esos filtros.
 
 ### Pestaña SQL

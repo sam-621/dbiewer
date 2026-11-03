@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 
-import { ConnectionsDevList } from '@/lib/connection/components/connections-dev-list/connections-dev-list';
 import { ConnectionsEmpty } from '@/lib/connection/components/connections-empty/connections-empty';
 import { useGetConnections } from '@/lib/connection/hooks/use-get-connections';
 import { Button } from '@/shared/components/ui/button';
@@ -50,13 +49,7 @@ export const WorkspacePage = () => {
 
   return (
     <WorkspaceLayout hasConnections={connections.length > 0}>
-      {connections.length ? (
-        <WorkspaceShell>
-          <ConnectionsDevList connections={connections} />
-        </WorkspaceShell>
-      ) : (
-        <ConnectionsEmpty />
-      )}
+      {connections.length ? <WorkspaceShell /> : <ConnectionsEmpty />}
     </WorkspaceLayout>
   );
 };

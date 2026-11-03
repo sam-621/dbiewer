@@ -20,7 +20,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 1. El usuario entra a `/`. Si no tiene conexiones, ve el estado vacío de `connections`. Si tiene, entra al shell con la última conexión que usó o, si no hay una, con la más reciente.
 2. En el sidebar, el tab Explorer muestra el esquema de la conexión: tablas, vistas y funciones, agrupadas por esquema de Postgres.
-3. Con un clic en una tabla, se abre una pestaña provisional con sus datos. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. Con doble clic, o en cuanto hace algo en ella, la pestaña se fija.
+3. Con un clic en una tabla, ve sus columnas; con doble clic, se abre una pestaña provisional con sus datos. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. En cuanto hace algo en ella, o con doble clic en la pestaña, se fija.
 4. En el tab Queries ve sus queries guardadas de esa conexión. Puede abrir una o crear una nueva.
 5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados, los mensajes y el historial de la conexión. Guarda con ⌘S.
 6. Desde el header cambia de conexión. Todo el espacio de trabajo cambia, y al volver encuentra sus pestañas como las dejó.
@@ -112,9 +112,9 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ## Plan de trabajo recomendado
 
 1. [x] api: pool de conexiones en `PostgresService` e introspección con la query `connectionSchema`, con sus tests e2e.
-2. [ ] web: shell con header y selector de conexión, sidebar con Explorer y buscador; reemplaza el listado temporal.
+2. [x] web: shell con header y selector de conexión, sidebar con Explorer y buscador; reemplaza el listado temporal.
 3. [x] api: queries `tableStructure` y `tableRows` con filtros, orden y paginación, con sus tests e2e.
-4. [ ] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
+4. [x] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
 5. [ ] api: tabla `query_history`, mutation `runQuery` con límites y query `queryHistory`, con sus tests e2e.
 6. [ ] web: pestaña SQL con editor, ejecutar, Results, Messages e History, y pestaña de función en solo lectura.
 7. [ ] api: tabla `saved_query` con su CRUD, con sus tests e2e.

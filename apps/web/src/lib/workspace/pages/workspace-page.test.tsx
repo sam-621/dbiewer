@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router';
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -155,58 +155,32 @@ describe('WorkspacePage', () => {
     ).toBeInTheDocument();
   });
 
-  test('shows the connections list when there are connections', async () => {
-    mockApi([CONNECTION]);
+  test('shows the shell without tabs when there are connections', async () => {
+    mockApi([CONNECTION], null, { [CONNECTION.id]: [createSchema('users')] });
 
     renderPage();
 
-    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
-    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
-    expect(screen.getByText('ana@db.acme.dev:5432/acme_prod')).toBeInTheDocument();
+    expect(await screen.findByText('users')).toBeInTheDocument();
+    expect(
+      screen.getByText('Abre una tabla desde el explorador para ver sus datos.')
+    ).toBeInTheDocument();
     const header = screen.getByRole('banner');
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
     expect(within(header).getByRole('button', { name: /Acme prod/ })).toBeInTheDocument();
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
   });
 
-  test('opens the new connection dialog from the connections list', async () => {
-    mockApi([CONNECTION]);
+  test('removes the last connection from the header and shows the empty state', async () => {
+    mockApi([CONNECTION], null, { [CONNECTION.id]: [createSchema('users')] });
 
     renderPage();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Nueva conexión' }));
-
-    const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByRole('heading', { name: 'Nueva conexión' })).toBeInTheDocument();
-  });
-
-  test('does not remove the connection when the confirmation is cancelled', async () => {
-    mockApi([CONNECTION]);
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
+    await user.click(
+      await within(await screen.findByRole('banner')).findByRole('button', { name: /Acme prod/ })
+    );
+    await user.hover(await screen.findByRole('menuitem', { name: 'Eliminar conexión' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Acme prod' }));
     const dialog = await screen.findByRole('alertdialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
-
-    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
-    expect(
-      vi
-        .mocked(gqlFetcher)
-        .mock.calls.some(([document]) => document.toString().includes('RemoveConnection'))
-    ).toBe(false);
-  });
-
-  test('removes the last connection after confirming and shows the empty state', async () => {
-    mockApi([CONNECTION]);
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
-    const dialog = await screen.findByRole('alertdialog');
-    expect(
-      within(dialog).getByText('Acme prod se eliminará de forma definitiva.')
-    ).toBeInTheDocument();
 
     mockApi([], { apiErrors: [], success: true });
     await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
@@ -215,22 +189,6 @@ describe('WorkspacePage', () => {
       await screen.findByRole('heading', { name: 'Conecta tu primera base de datos' })
     ).toBeInTheDocument();
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), { connectionId: 'connection-1' });
-  });
-
-  test('shows the remove error on the connection row', async () => {
-    mockApi([CONNECTION], {
-      apiErrors: [{ code: 'CONNECTION_NOT_FOUND', message: 'Not found' }],
-      success: null
-    });
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Eliminar Acme prod' }));
-    const dialog = await screen.findByRole('alertdialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
-
-    expect(await screen.findByText('Esta conexión ya no existe')).toBeInTheDocument();
-    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
   });
 
   test('shows the schema of the connection selected in the header', async () => {

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useCreateConnection } from '../../hooks/use-create-connection';
 import { type ConnectionUrlSslMode, parseConnectionUrl } from '../../utils/connection-url.utils';
 
-type Params = { onSuccess: () => void };
+type Params = { onSuccess: (connectionId: string | null) => void };
 
 export const useConnectionForm = ({ onSuccess }: Params) => {
   const { createConnection, isLoading } = useCreateConnection();
@@ -49,7 +49,7 @@ export const useConnectionForm = ({ onSuccess }: Params) => {
       password: password || null
     });
 
-    if (result.isSuccess) return onSuccess();
+    if (result.isSuccess) return onSuccess(result.connectionId);
 
     if (result.errorCode === 'CONNECTION_NAME_ALREADY_EXISTS') {
       return form.setError('name', { message: result.error });

@@ -13,13 +13,31 @@ import {
 
 import { ConnectionForm } from '../connection-form/connection-form';
 
-export const NewConnectionDialog = () => {
+type Props = {
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+  onCreated?: (connectionId: string) => void;
+};
+
+export const NewConnectionDialog = ({ isOpen, onOpenChange, onCreated }: Props) => {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenState, setIsOpenState] = useState(false);
+  const isControlled = isOpen !== undefined;
+  const open = isControlled ? isOpen : isOpenState;
+
+  const changeOpen = (nextIsOpen: boolean) => {
+    if (!isControlled) setIsOpenState(nextIsOpen);
+    onOpenChange?.(nextIsOpen);
+  };
+
+  const handleSuccess = (connectionId: string | null) => {
+    changeOpen(false);
+    if (connectionId) onCreated?.(connectionId);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={<Button />}>{t('New connection')}</DialogTrigger>
+    <Dialog open={open} onOpenChange={changeOpen}>
+      {!isControlled && <DialogTrigger render={<Button />}>{t('New connection')}</DialogTrigger>}
       <DialogPopup>
         <DialogHeader>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -28,7 +46,7 @@ export const NewConnectionDialog = () => {
           </div>
           <DialogTitle>{t('New connection')}</DialogTitle>
         </DialogHeader>
-        <ConnectionForm onSuccess={() => setIsOpen(false)} />
+        <ConnectionForm onSuccess={handleSuccess} />
       </DialogPopup>
     </Dialog>
   );

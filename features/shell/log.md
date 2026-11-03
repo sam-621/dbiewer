@@ -31,3 +31,9 @@
 - (web) Explorer: los nombres de tablas, vistas y funciones muestran el completo al pasar el mouse, y se quita el número de filas estimadas. El sidebar se puede redimensionar (200–520 px, con teclado y doble clic para volver al default) y recuerda el ancho en `localStorage`.
 - (web) Explorer: toda la fila de una tabla o vista es un solo botón que la expande o contrae, sin un botón aparte para el chevron. Cómo se abre la vista de tabla queda para el paso 4.
 - (web) `design-system.md`: si coss no tiene un componente, se puede armar propio con tokens.
+- (web) Selector de conexiones: acción "New connection" que abre el modal de `connections`; al guardar, la nueva pasa a ser la activa. Las filas vuelven a tener el ícono de Postgres.
+- (web) Barra de pestañas por conexión en `localStorage` (una provisional, se fija con doble clic o al actuar en ella) y pestaña de tabla o vista con Data (filtros, orden, paginación, copiar) y Structure (columnas, índices, FKs, DDL). Cierra el paso 4.
+- (web) Eliminar conexión desde el selector, con confirmación. Se borra el listado temporal. Cierra el paso 2.
+- (web) Las pestañas Data y Structure tienen el mismo ancho.
+- (web) Detalle de fila: clic en una fila abre un panel a la derecha con un campo de solo lectura por columna, con copiar. Se quita el botón de copiar de las celdas de la grilla.
+- (web) Explorer: clic despliega la tabla o vista y doble clic la abre en la pestaña provisional. La pestaña se fija con doble clic en la barra o al actuar en ella.

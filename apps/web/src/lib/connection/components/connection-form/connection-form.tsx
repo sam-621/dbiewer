@@ -21,7 +21,7 @@ import {
 import { TestConnectionButton } from './test-connection-button/test-connection-button';
 import { useConnectionForm } from './use-connection-form';
 
-type Props = { onSuccess: () => void };
+type Props = { onSuccess: (connectionId: string | null) => void };
 
 export const ConnectionForm = ({ onSuccess }: Props) => {
   const { t } = useTranslation();

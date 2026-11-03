@@ -27,8 +27,10 @@ export const ExplorerRelation = ({ kind, schemaName, relation, onOpenObject }: P
       <Collapsible>
         <CollapsibleTrigger
           render={<SidebarMenuButton size="sm" />}
-          onClick={() => onOpenObject?.(object, { isPinned: false })}
-          onDoubleClick={() => onOpenObject?.(object, { isPinned: true })}
+          onClick={event => {
+            if (event.detail > 1) event.preventBaseUIHandler();
+          }}
+          onDoubleClick={() => onOpenObject?.(object, { isPinned: false })}
         >
           <ExplorerChevron />
           <Icon className="text-muted-foreground" />

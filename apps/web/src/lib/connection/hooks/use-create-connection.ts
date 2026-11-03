@@ -1,13 +1,21 @@
 import { useQueryClient } from '@tanstack/react-query';
 
+import { getFragmentData } from '@/lib/api/codegen';
 import { GENERIC_ERROR } from '@/lib/api/errors/api-error';
 import { getConnectionError } from '@/lib/api/errors/connection.errors';
-import { CREATE_CONNECTION_MUTATION } from '@/lib/api/operations/connection.operations';
+import {
+  COMMON_CONNECTION_FRAGMENT,
+  CREATE_CONNECTION_MUTATION
+} from '@/lib/api/operations/connection.operations';
 import type { ActionResult, ConnectionErrorCode, CreateConnectionInput } from '@/lib/api/types';
 import { useGqlMutation } from '@/shared/hooks/use-gql-mutation';
 import { Logger } from '@/shared/utils/logger';
 
 import { ConnectionCacheKeys } from '../constants/cache-keys';
+
+type CreateConnectionResult =
+  | { isSuccess: true; connectionId: string | null }
+  | Extract<ActionResult<ConnectionErrorCode>, { isSuccess: false }>;
 
 export const useCreateConnection = () => {
   const queryClient = useQueryClient();
@@ -15,7 +23,7 @@ export const useCreateConnection = () => {
 
   const createConnection = async (
     input: CreateConnectionInput
-  ): Promise<ActionResult<ConnectionErrorCode>> => {
+  ): Promise<CreateConnectionResult> => {
     try {
       const { createConnection } = await mutateAsync({ input });
       const [apiError] = createConnection.apiErrors;
@@ -23,7 +31,8 @@ export const useCreateConnection = () => {
       if (apiError) return { isSuccess: false, ...getConnectionError(apiError.code) };
 
       await queryClient.refetchQueries({ queryKey: [ConnectionCacheKeys.Connections] });
-      return { isSuccess: true };
+      const connection = getFragmentData(COMMON_CONNECTION_FRAGMENT, createConnection.connection);
+      return { isSuccess: true, connectionId: connection?.id ?? null };
     } catch (error) {
       Logger.error(error);
       return { isSuccess: false, error: GENERIC_ERROR };

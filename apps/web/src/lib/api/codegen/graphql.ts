@@ -28,9 +28,37 @@ export type CreateWorkspaceInput = {
   name: string;
 };
 
+export type DbFilterInput = {
+  column: string;
+  operator: DbFilterOperator;
+  value?: string | null | undefined;
+};
+
+export type DbFilterOperator =
+  | 'CONTAINS'
+  | 'EQ'
+  | 'GT'
+  | 'GTE'
+  | 'IS_NOT_NULL'
+  | 'IS_NULL'
+  | 'LT'
+  | 'LTE'
+  | 'NEQ';
+
 export type DbFunctionKind =
   | 'FUNCTION'
   | 'PROCEDURE';
+
+export type DbObjectInput = {
+  connectionId: string | number;
+  name: string;
+  schema: string;
+};
+
+export type DbOrderInput = {
+  column: string;
+  direction: SortDirection;
+};
 
 export type ShellErrorCode =
   | 'CONNECTION_FAILED'
@@ -38,6 +66,19 @@ export type ShellErrorCode =
   | 'INVALID_INPUT'
   | 'OBJECT_NOT_FOUND'
   | 'QUERY_FAILED';
+
+export type SortDirection =
+  | 'ASC'
+  | 'DESC';
+
+export type TableRowsInput = {
+  connectionId: string | number;
+  filters?: Array<DbFilterInput> | null | undefined;
+  name: string;
+  orderBy?: DbOrderInput | null | undefined;
+  page: number;
+  schema: string;
+};
 
 export type TestConnectionInput = {
   database?: string | null | undefined;
@@ -112,6 +153,20 @@ export type GetConnectionSchemaQueryVariables = Exact<{
 
 
 export type GetConnectionSchemaQuery = { connectionSchema: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, schemas: Array<{ name: string, tables: Array<{ name: string, columns: Array<{ name: string, type: string, isPrimaryKey: boolean, isForeignKey: boolean }> }>, views: Array<{ name: string, columns: Array<{ name: string, type: string, isPrimaryKey: boolean, isForeignKey: boolean }> }>, functions: Array<{ name: string, arguments: string, kind: DbFunctionKind }> }> | null } };
+
+export type GetTableStructureQueryVariables = Exact<{
+  input: DbObjectInput;
+}>;
+
+
+export type GetTableStructureQuery = { tableStructure: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, structure: { definition: string, columns: Array<{ name: string, type: string, isNullable: boolean, default: string | null, isPrimaryKey: boolean }>, indexes: Array<{ name: string, definition: string, isUnique: boolean }>, foreignKeys: Array<{ columns: Array<string>, referencedSchema: string, referencedTable: string, referencedColumns: Array<string>, onDelete: string }> } | null } };
+
+export type GetTableRowsQueryVariables = Exact<{
+  input: TableRowsInput;
+}>;
+
+
+export type GetTableRowsQuery = { tableRows: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, tableRows: { rows: Array<Array<string | null>>, totalRows: number, columns: Array<{ name: string, type: string }> } | null } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -285,3 +340,53 @@ export const GetConnectionSchemaDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetConnectionSchemaQuery, GetConnectionSchemaQueryVariables>;
+export const GetTableStructureDocument = new TypedDocumentString(`
+    query GetTableStructure($input: DbObjectInput!) {
+  tableStructure(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    structure {
+      columns {
+        name
+        type
+        isNullable
+        default
+        isPrimaryKey
+      }
+      indexes {
+        name
+        definition
+        isUnique
+      }
+      foreignKeys {
+        columns
+        referencedSchema
+        referencedTable
+        referencedColumns
+        onDelete
+      }
+      definition
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetTableStructureQuery, GetTableStructureQueryVariables>;
+export const GetTableRowsDocument = new TypedDocumentString(`
+    query GetTableRows($input: TableRowsInput!) {
+  tableRows(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    tableRows {
+      columns {
+        name
+        type
+      }
+      rows
+      totalRows
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetTableRowsQuery, GetTableRowsQueryVariables>;

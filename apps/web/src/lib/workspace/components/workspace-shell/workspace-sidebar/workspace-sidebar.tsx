@@ -9,7 +9,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shared/component
 import { Sidebar, SidebarContent, SidebarHeader } from '@/shared/components/ui/sidebar';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/shared/components/ui/tabs';
 
-import { useActiveConnection } from '../../../hooks/use-active-connection';
+import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
 
 type SidebarTab = 'explorer' | 'queries';
 
@@ -18,16 +18,14 @@ const SEARCH_PLACEHOLDERS: Record<SidebarTab, string> = {
   queries: 'Filter queries…'
 };
 
-export const WorkspaceSidebar = () => {
+export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => {
   const { t } = useTranslation();
-  const { activeConnection } = useActiveConnection();
+  const { openObject } = useWorkspaceTabs();
   const [tab, setTab] = useState<SidebarTab>('explorer');
   const [searches, setSearches] = useState<Record<SidebarTab, string>>({
     explorer: '',
     queries: ''
   });
-
-  if (!activeConnection) return null;
 
   return (
     <Sidebar collapsible="none" className="border-e">
@@ -54,15 +52,16 @@ export const WorkspaceSidebar = () => {
                 onChange={event => setSearches({ ...searches, [tab]: event.target.value })}
               />
             </InputGroup>
-            {tab === 'explorer' && <ExplorerReloadButton connectionId={activeConnection.id} />}
+            {tab === 'explorer' && <ExplorerReloadButton connectionId={connectionId} />}
           </div>
         </SidebarHeader>
         <SidebarContent>
           <TabsPanel value="explorer" className="px-2 pb-2">
             <Explorer
-              key={activeConnection.id}
-              connectionId={activeConnection.id}
+              key={connectionId}
+              connectionId={connectionId}
               search={searches.explorer}
+              onOpenObject={openObject}
             />
           </TabsPanel>
           <TabsPanel value="queries">

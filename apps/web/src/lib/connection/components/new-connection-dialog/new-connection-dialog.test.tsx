@@ -189,7 +189,9 @@ describe('NewConnectionDialog', () => {
     );
     await save(user, dialog);
 
-    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+    ).toBeInTheDocument();
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
       input: {
         name: 'Acme prod',
@@ -232,7 +234,7 @@ describe('NewConnectionDialog', () => {
     expect(password).toHaveAttribute('type', 'password');
   });
 
-  test('saves the connection, closes the dialog and shows the connections list', async () => {
+  test('saves the connection, closes the dialog and shows it in the header', async () => {
     mockApi();
 
     renderPage();
@@ -240,8 +242,9 @@ describe('NewConnectionDialog', () => {
     await user.type(within(dialog).getByLabelText('Contraseña'), ' secret ');
     await save(user, dialog);
 
-    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
-    expect(screen.getByText('ana@db.acme.dev:5432/acme_prod')).toBeInTheDocument();
+    expect(
+      await within(await screen.findByRole('banner')).findByRole('button', { name: /Acme prod/ })
+    ).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
       input: {
@@ -263,7 +266,9 @@ describe('NewConnectionDialog', () => {
     const { user, dialog } = await fillForm();
     await save(user, dialog);
 
-    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+    ).toBeInTheDocument();
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
       input: expect.objectContaining({ password: null })
     });
@@ -411,7 +416,9 @@ describe('NewConnectionDialog', () => {
     await within(dialog).findByRole('button', { name: 'Falló la conexión' });
     await save(user, dialog);
 
-    expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+    ).toBeInTheDocument();
     expect(createConnectionCalls()).toHaveLength(1);
   });
 });
