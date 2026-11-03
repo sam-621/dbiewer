@@ -14,6 +14,7 @@ import {
 import { Spinner } from '@/shared/components/ui/spinner';
 
 import { WorkspaceLayout } from '../components/workspace-layout/workspace-layout';
+import { WorkspaceShell } from '../components/workspace-shell/workspace-shell';
 
 export const WorkspacePage = () => {
   const { t } = useTranslation();
@@ -48,8 +49,14 @@ export const WorkspacePage = () => {
   }
 
   return (
-    <WorkspaceLayout>
-      {connections.length ? <ConnectionsDevList connections={connections} /> : <ConnectionsEmpty />}
+    <WorkspaceLayout hasConnections={connections.length > 0}>
+      {connections.length ? (
+        <WorkspaceShell>
+          <ConnectionsDevList connections={connections} />
+        </WorkspaceShell>
+      ) : (
+        <ConnectionsEmpty />
+      )}
     </WorkspaceLayout>
   );
 };

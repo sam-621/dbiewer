@@ -28,12 +28,38 @@ const CONNECTION = {
   sslMode: 'REQUIRE'
 };
 
-type Connections = (typeof CONNECTION)[] | Error | Promise<never>;
+const STAGING = {
+  ...CONNECTION,
+  id: 'connection-0',
+  name: 'Acme staging',
+  host: 'staging.acme.dev'
+};
 
-const mockApi = (connections: Connections = [], removeConnection: unknown = null) => {
-  vi.mocked(gqlFetcher).mockImplementation(async document => {
+const createSchema = (table: string) => ({
+  name: 'public',
+  tables: [{ name: table, columns: [] }],
+  views: [],
+  functions: []
+});
+
+type Connections = (typeof CONNECTION)[] | Error | Promise<never>;
+type Schemas = Record<string, ReturnType<typeof createSchema>[]>;
+
+const mockApi = (
+  connections: Connections = [],
+  removeConnection: unknown = null,
+  schemas: Schemas = {}
+) => {
+  vi.mocked(gqlFetcher).mockImplementation(async (document, variables) => {
     if (document.toString().includes('query GetMe')) return { me: ME };
     if (document.toString().includes('mutation RemoveConnection')) return { removeConnection };
+
+    const connectionId = (variables as { connectionId?: string } | undefined)?.connectionId;
+    if (connectionId) {
+      const connectionSchemas = schemas[connectionId];
+      if (!connectionSchemas) return new Promise<never>(() => {});
+      return { connectionSchema: { apiErrors: [], schemas: connectionSchemas } };
+    }
 
     const result = await connections;
     if (result instanceof Error) throw result;
@@ -52,6 +78,7 @@ const renderPage = () =>
 
 describe('WorkspacePage', () => {
   beforeEach(() => {
+    localStorage.removeItem('dbiewer:active-connection');
     vi.mocked(gqlFetcher).mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -134,9 +161,11 @@ describe('WorkspacePage', () => {
     renderPage();
 
     expect(await screen.findByRole('heading', { name: 'Conexiones' })).toBeInTheDocument();
-    expect(screen.getByText('Acme prod')).toBeInTheDocument();
+    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
     expect(screen.getByText('ana@db.acme.dev:5432/acme_prod')).toBeInTheDocument();
-    expect(within(screen.getByRole('banner')).getByText('dbiewer')).toBeInTheDocument();
+    const header = screen.getByRole('banner');
+    expect(within(header).getByText('dbiewer')).toBeInTheDocument();
+    expect(within(header).getByRole('button', { name: /Acme prod/ })).toBeInTheDocument();
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
   });
 
@@ -160,7 +189,7 @@ describe('WorkspacePage', () => {
     const dialog = await screen.findByRole('alertdialog');
     await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
-    expect(screen.getByText('Acme prod')).toBeInTheDocument();
+    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
     expect(
       vi
         .mocked(gqlFetcher)
@@ -201,6 +230,23 @@ describe('WorkspacePage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
     expect(await screen.findByText('Esta conexión ya no existe')).toBeInTheDocument();
-    expect(screen.getByText('Acme prod')).toBeInTheDocument();
+    expect(within(screen.getByRole('list')).getByText('Acme prod')).toBeInTheDocument();
+  });
+
+  test('shows the schema of the connection selected in the header', async () => {
+    mockApi([CONNECTION, STAGING], null, {
+      [CONNECTION.id]: [createSchema('users')],
+      [STAGING.id]: [createSchema('events')]
+    });
+
+    renderPage();
+    const user = userEvent.setup();
+    expect(await screen.findByText('users')).toBeInTheDocument();
+
+    await user.click(within(screen.getByRole('banner')).getByRole('button', { name: /Acme prod/ }));
+    await user.click(await screen.findByRole('menuitemradio', { name: /Acme staging/ }));
+
+    expect(await screen.findByText('events')).toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
   });
 });

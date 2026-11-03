@@ -314,6 +314,7 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 ## Web
 
 - **Conexión activa:** `useActiveConnection` en `src/lib/workspace/hooks/`, con el id en `localStorage` (`dbiewer:active-connection`). Si el id guardado ya no existe, usa la conexión más reciente.
+- **Ancho del sidebar:** en `localStorage` (`dbiewer:sidebar-width`), con `try/catch`.
 - **Pestañas:** estado por conexión en `localStorage` (`dbiewer:tabs:<connectionId>`): lista de pestañas, activa y cuál es provisional. Los borradores sin guardar van en `dbiewer:draft:<connectionId>:<tabKey>`. Todo leído y escrito con `try/catch`: si falla, el shell arranca sin pestañas.
 - **Clave de pestaña:** `table:<schema>.<name>`, `view:<schema>.<name>`, `function:<schema>.<name>(<args>)`, `query:<savedQueryId>` y `draft:<uuid>` para una query sin guardar.
 - **Módulos:**

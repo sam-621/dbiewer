@@ -23,6 +23,7 @@ type Documents = {
     "\n  mutation CreateConnection($input: CreateConnectionInput!) {\n    createConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      connection {\n        ...CommonConnection\n      }\n    }\n  }\n": typeof types.CreateConnectionDocument,
     "\n  mutation RemoveConnection($connectionId: ID!) {\n    removeConnection(id: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": typeof types.RemoveConnectionDocument,
     "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": typeof types.TestConnectionDocument,
+    "\n  query GetConnectionSchema($connectionId: ID!) {\n    connectionSchema(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      schemas {\n        name\n        tables {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        views {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        functions {\n          name\n          arguments\n          kind\n        }\n      }\n    }\n  }\n": typeof types.GetConnectionSchemaDocument,
 };
 const documents: Documents = {
     "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": types.GetMeDocument,
@@ -33,6 +34,7 @@ const documents: Documents = {
     "\n  mutation CreateConnection($input: CreateConnectionInput!) {\n    createConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      connection {\n        ...CommonConnection\n      }\n    }\n  }\n": types.CreateConnectionDocument,
     "\n  mutation RemoveConnection($connectionId: ID!) {\n    removeConnection(id: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": types.RemoveConnectionDocument,
     "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": types.TestConnectionDocument,
+    "\n  query GetConnectionSchema($connectionId: ID!) {\n    connectionSchema(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      schemas {\n        name\n        tables {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        views {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        functions {\n          name\n          arguments\n          kind\n        }\n      }\n    }\n  }\n": types.GetConnectionSchemaDocument,
 };
 
 /**
@@ -67,6 +69,10 @@ export function graphql(source: "\n  mutation RemoveConnection($connectionId: ID
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n"): typeof import('./graphql').TestConnectionDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetConnectionSchema($connectionId: ID!) {\n    connectionSchema(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      schemas {\n        name\n        tables {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        views {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        functions {\n          name\n          arguments\n          kind\n        }\n      }\n    }\n  }\n"): typeof import('./graphql').GetConnectionSchemaDocument;
 
 
 export function graphql(source: string) {

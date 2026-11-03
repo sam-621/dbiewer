@@ -38,7 +38,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - El esquema no se guarda en dbiewer: se lee de la base del usuario cada vez que hace falta. El usuario puede recargarlo a mano.
 - Se muestran los esquemas de la base que tienen objetos, menos los del sistema (`pg_catalog`, `information_schema`, `pg_toast` y los temporales).
 - Si la base tiene un solo esquema con objetos, el explorador no muestra ese nivel.
-- En el explorador, el número de filas de una tabla es un estimado. Si Postgres no tiene estimado (la tabla nunca se analizó), no se muestra ningún número.
+- El explorador no muestra el número de filas de las tablas.
 - Dentro de la tabla, el número de filas es exacto y respeta los filtros aplicados.
 
 ### Tablas y vistas

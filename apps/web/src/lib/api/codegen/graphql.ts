@@ -28,6 +28,17 @@ export type CreateWorkspaceInput = {
   name: string;
 };
 
+export type DbFunctionKind =
+  | 'FUNCTION'
+  | 'PROCEDURE';
+
+export type ShellErrorCode =
+  | 'CONNECTION_FAILED'
+  | 'CONNECTION_NOT_FOUND'
+  | 'INVALID_INPUT'
+  | 'OBJECT_NOT_FOUND'
+  | 'QUERY_FAILED';
+
 export type TestConnectionInput = {
   database?: string | null | undefined;
   host?: string | null | undefined;
@@ -94,6 +105,13 @@ export type TestConnectionMutationVariables = Exact<{
 
 
 export type TestConnectionMutation = { testConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
+
+export type GetConnectionSchemaQueryVariables = Exact<{
+  connectionId: string | number;
+}>;
+
+
+export type GetConnectionSchemaQuery = { connectionSchema: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, schemas: Array<{ name: string, tables: Array<{ name: string, columns: Array<{ name: string, type: string, isPrimaryKey: boolean, isForeignKey: boolean }> }>, views: Array<{ name: string, columns: Array<{ name: string, type: string, isPrimaryKey: boolean, isForeignKey: boolean }> }>, functions: Array<{ name: string, arguments: string, kind: DbFunctionKind }> }> | null } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -231,3 +249,39 @@ export const TestConnectionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<TestConnectionMutation, TestConnectionMutationVariables>;
+export const GetConnectionSchemaDocument = new TypedDocumentString(`
+    query GetConnectionSchema($connectionId: ID!) {
+  connectionSchema(connectionId: $connectionId) {
+    apiErrors {
+      code
+      message
+    }
+    schemas {
+      name
+      tables {
+        name
+        columns {
+          name
+          type
+          isPrimaryKey
+          isForeignKey
+        }
+      }
+      views {
+        name
+        columns {
+          name
+          type
+          isPrimaryKey
+          isForeignKey
+        }
+      }
+      functions {
+        name
+        arguments
+        kind
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetConnectionSchemaQuery, GetConnectionSchemaQueryVariables>;

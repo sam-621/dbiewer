@@ -17,7 +17,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Selector de conexión
 
 - **Ubicación:** header del workspace, a la derecha de la marca.
-- **Muestra:** la conexión activa con un indicador, su nombre y `postgres · db.acme.dev`. Al abrirlo, la lista de conexiones con su nombre y host, la activa marcada, y la acción "New connection".
+- **Muestra:** minimalista: la conexión activa con un indicador y su nombre, sin el motor ni el host. Al abrirlo, la lista de conexiones con su nombre y host, la activa marcada, y la acción "New connection".
 - **Permite:**
   - Cambiar la conexión activa. Cambian el sidebar y las pestañas.
   - Abrir el modal de nueva conexión de `connections`. Al guardar, la nueva pasa a ser la activa.
@@ -27,7 +27,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 
 - **Ubicación:** a la izquierda del shell.
 - **Muestra:** dos tabs, "Explorer" y "Queries", y un buscador debajo ("Search tables, views…" o "Filter queries…").
-- **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo.
+- **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo; cambiar el ancho arrastrando el borde (también con las flechas, y doble clic vuelve al ancho por defecto), entre 200 y 520 px. El ancho se recuerda en el navegador.
 
 ### Explorer
 
@@ -35,13 +35,14 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 - **Muestra:**
   - Un nivel por esquema (`public`, `billing`), salvo que haya uno solo.
   - Dentro, los grupos "Tables", "Views" y "Functions" con su cantidad. Un grupo vacío no se muestra.
-  - Por tabla: nombre y filas estimadas (`~14.8k`). Al expandirla, sus columnas con tipo, y un ícono para PK y otro para FK.
+  - Por tabla: nombre, sin número de filas. Al expandirla, sus columnas con tipo, y un ícono para PK y otro para FK. El tipo se muestra con su alias corto de Postgres (`timestamptz`, `varchar(255)`) y se corta si no entra; el nombre de la columna tiene prioridad.
   - Por vista: nombre, y sus columnas al expandirla.
   - Por función: nombre con sus argumentos (`refresh_stats()`).
+  - Los nombres largos de tablas, vistas, funciones y columnas se cortan y se ven completos al pasar el mouse.
   - Una acción "Reload" para volver a leer el esquema.
 - **Permite:**
   - Expandir y contraer esquemas, grupos y tablas.
-  - Con un clic en una tabla, vista o función, abrirla en la pestaña provisional. Con doble clic, abrirla fija.
+  - Toda la fila de una tabla o vista es un solo botón: un clic la expande o contrae. Cómo se abre en una pestaña se define con el paso 4. Con un clic en una función, abrirla en la pestaña provisional; con doble clic, fija.
   - Buscar por nombre: filtra en todos los esquemas y expande los grupos con resultados.
 - **Estados:** cargando el esquema; no se pudo conectar, con reintento; base sin objetos; búsqueda sin resultados.
 

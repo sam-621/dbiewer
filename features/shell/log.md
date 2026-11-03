@@ -20,3 +20,14 @@
 - El diagrama queda para el milestone 6: sin pestaña fija por ahora.
 - El historial es de la conexión, no de la pestaña.
 - El explorador no muestra esquemas sin objetos. Las vistas materializadas van como vistas y las tablas particionadas como tablas.
+
+## 2026-11-02 — samuel.corrales621
+
+**Hecho:**
+- (web) Selector de conexiones en el header con `useActiveConnection`: la activa se guarda en `localStorage` (`dbiewer:active-connection`) y, si no hay o ya no existe, se usa la más reciente. Sin "New connection" ni eliminar todavía. Parte del paso 2.
+- (web) Selector de conexiones más minimalista: el trigger muestra solo el indicador y el nombre; la lista, nombre y host, en la tipografía normal (sin mono). `ui.md` actualizado.
+- (web) Sidebar del shell: conexión activa compartida con un context, layout a toda la altura, tabs Explorer y Queries (vacío hasta los pasos 7 y 8) con buscador, y Explorer con el árbol de `connectionSchema`, búsqueda, Reload y estados. El área principal sigue con el listado temporal hasta que el selector tenga "New connection" y eliminar.
+- (web) Explorer: los tipos largos tapaban el nombre de la columna. El nombre tiene prioridad, el tipo se corta, y se muestra con su alias corto de Postgres (`timestamptz`, `varchar(255)`, `char(2)`).
+- (web) Explorer: los nombres de tablas, vistas y funciones muestran el completo al pasar el mouse, y se quita el número de filas estimadas. El sidebar se puede redimensionar (200–520 px, con teclado y doble clic para volver al default) y recuerda el ancho en `localStorage`.
+- (web) Explorer: toda la fila de una tabla o vista es un solo botón que la expande o contrae, sin un botón aparte para el chevron. Cómo se abre la vista de tabla queda para el paso 4.
+- (web) `design-system.md`: si coss no tiene un componente, se puede armar propio con tokens.

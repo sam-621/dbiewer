@@ -47,8 +47,9 @@ const mockApi = (
       return { createConnection };
     }
     if (query.includes('query GetConnections')) return { connections: { items: connections } };
+    if (query.includes('query GetMe')) return { me: ME };
 
-    return { me: ME };
+    return new Promise<never>(() => {});
   });
 };
 
