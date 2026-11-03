@@ -9,6 +9,8 @@ export const LANGUAGES = [
   { code: 'en', label: 'English' }
 ] as const;
 
+export type LanguageCode = (typeof LANGUAGES)[number]['code'];
+
 const LANGUAGE_STORAGE_KEY = 'language';
 const DEFAULT_LANGUAGE = 'es';
 

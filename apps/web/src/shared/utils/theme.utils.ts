@@ -2,6 +2,12 @@ export const THEMES = ['dark', 'light', 'system'] as const;
 
 export type Theme = (typeof THEMES)[number];
 
+export const THEME_OPTIONS: { value: Theme; label: string }[] = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' }
+];
+
 const THEME_STORAGE_KEY = 'theme';
 const DEFAULT_THEME: Theme = 'dark';
 

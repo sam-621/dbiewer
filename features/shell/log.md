@@ -46,3 +46,4 @@
 - (web) Explorer: al pasar el mouse por una tabla o vista aparece un botón para abrirla en la pestaña provisional; el clic sigue expandiendo y el doble clic sigue abriéndola.
 - (web) Las barras de scroll nativas usan el esquema oscuro en modo oscuro.
 - (web) Explorer: en las tablas, el clic en la fila la abre en la pestaña provisional y la flechita despliega las columnas. Las vistas siguen expandiéndose con clic y abriéndose con doble clic o el botón al pasar el mouse.
+- (web) Header: el perfil abre un menú con idioma (banderas), tema (Sistema, Claro, Oscuro) y cerrar sesión en rojo, ocupando todo el alto del header a la derecha. Se comparten las banderas, los íconos y las opciones de tema con el onboarding.

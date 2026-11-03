@@ -93,7 +93,7 @@ describe('WorkspacePage', () => {
     ).toBeInTheDocument();
   });
 
-  test('shows the brand and the signed in user in the header without actions', async () => {
+  test('shows the brand and the account menu in the header without connection actions', async () => {
     mockApi();
 
     renderPage();
@@ -102,7 +102,9 @@ describe('WorkspacePage', () => {
     expect(await within(header).findByText('Ana')).toBeInTheDocument();
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
     expect(within(header).getByText('ana@acme.dev')).toBeInTheDocument();
-    expect(within(header).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(header).getAllByRole('button')).toEqual([
+      within(header).getByRole('button', { name: 'Abrir el menú de la cuenta' })
+    ]);
   });
 
   test('opens the new connection dialog from the empty state', async () => {

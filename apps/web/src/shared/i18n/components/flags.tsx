@@ -1,5 +1,6 @@
-import type { ComponentProps, SVGProps } from 'react';
+import type { ComponentProps, ReactElement, SVGProps } from 'react';
 
+import type { LanguageCode } from '@/shared/i18n/i18n';
 import { cn } from '@/shared/utils/cn';
 
 export const MexicoFlag = ({ className, ...props }: ComponentProps<'img'>) => (
@@ -55,3 +56,14 @@ export const UsaFlag = (props: SVGProps<SVGSVGElement>) => (
     </defs>
   </svg>
 );
+
+const FLAGS: Record<LanguageCode, (props: { className?: string }) => ReactElement> = {
+  en: UsaFlag,
+  es: MexicoFlag
+};
+
+export const LanguageFlag = ({ code, className }: { code: LanguageCode; className?: string }) => {
+  const Flag = FLAGS[code];
+
+  return <Flag className={className} />;
+};

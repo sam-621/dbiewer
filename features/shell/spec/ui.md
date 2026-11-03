@@ -104,7 +104,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Header del workspace
 
 - **Ubicación:** `WorkspaceLayout`, arriba de `/`.
-- **Cambia:** suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil queda igual.
+- **Cambia:** suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil (avatar, nombre y email) ocupa todo el alto del header pegado a la derecha y abre un menú: fila Idioma (banderas), fila Tema (Sistema, Claro, Oscuro, con sus íconos), separador y Cerrar sesión en rojo.
 
 ### Workspace (inicio)
 
