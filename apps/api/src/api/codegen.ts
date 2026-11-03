@@ -174,6 +174,7 @@ export type Mutation = {
   createConnection: ConnectionResult;
   createWorkspace: WorkspaceResult;
   removeConnection: RemoveConnectionResult;
+  runQuery: RunQueryResult;
   testConnection: TestConnectionResult;
   updateConnection: ConnectionResult;
   updateUserProfile: UserResult;
@@ -189,6 +190,10 @@ export type MutationCreateWorkspaceArgs = {
 
 export type MutationRemoveConnectionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationRunQueryArgs = {
+  input: RunQueryInput;
 };
 
 export type MutationTestConnectionArgs = {
@@ -230,10 +235,31 @@ export type QueryTableStructureArgs = {
   input: DbObjectInput;
 };
 
+export type QueryExecution = {
+  __typename?: 'QueryExecution';
+  columns: Array<DbResultColumn>;
+  command: Scalars['String']['output'];
+  durationMs: Scalars['Int']['output'];
+  isTruncated: Scalars['Boolean']['output'];
+  rowCount: Scalars['Int']['output'];
+  rows: Array<Array<Maybe<Scalars['String']['output']>>>;
+};
+
 export type RemoveConnectionResult = {
   __typename?: 'RemoveConnectionResult';
   apiErrors: Array<ConnectionErrorResult>;
   success?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type RunQueryInput = {
+  connectionId: Scalars['ID']['input'];
+  sql: Scalars['String']['input'];
+};
+
+export type RunQueryResult = {
+  __typename?: 'RunQueryResult';
+  apiErrors: Array<ShellErrorResult>;
+  execution?: Maybe<QueryExecution>;
 };
 
 export type ShellErrorCode =
@@ -478,7 +504,10 @@ export type ResolversTypes = {
   Me: ResolverTypeWrapper<Me>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  QueryExecution: ResolverTypeWrapper<QueryExecution>;
   RemoveConnectionResult: ResolverTypeWrapper<RemoveConnectionResult>;
+  RunQueryInput: RunQueryInput;
+  RunQueryResult: ResolverTypeWrapper<RunQueryResult>;
   ShellErrorCode: ShellErrorCode;
   ShellErrorResult: ResolverTypeWrapper<ShellErrorResult>;
   SortDirection: SortDirection;
@@ -529,7 +558,10 @@ export type ResolversParentTypes = {
   Me: Me;
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
+  QueryExecution: QueryExecution;
   RemoveConnectionResult: RemoveConnectionResult;
+  RunQueryInput: RunQueryInput;
+  RunQueryResult: RunQueryResult;
   ShellErrorResult: ShellErrorResult;
   String: Scalars['String']['output'];
   TableRows: TableRows;
@@ -730,6 +762,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemoveConnectionArgs, 'id'>
   >;
+  runQuery?: Resolver<
+    ResolversTypes['RunQueryResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRunQueryArgs, 'input'>
+  >;
   testConnection?: Resolver<
     ResolversTypes['TestConnectionResult'],
     ParentType,
@@ -783,6 +821,18 @@ export type QueryResolvers<
   >;
 };
 
+export type QueryExecutionResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['QueryExecution'] = ResolversParentTypes['QueryExecution']
+> = {
+  columns?: Resolver<Array<ResolversTypes['DbResultColumn']>, ParentType, ContextType>;
+  command?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  durationMs?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  isTruncated?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  rowCount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  rows?: Resolver<Array<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
+};
+
 export type RemoveConnectionResultResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['RemoveConnectionResult'] =
@@ -790,6 +840,14 @@ export type RemoveConnectionResultResolvers<
 > = {
   apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
   success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+};
+
+export type RunQueryResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['RunQueryResult'] = ResolversParentTypes['RunQueryResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  execution?: Resolver<Maybe<ResolversTypes['QueryExecution']>, ParentType, ContextType>;
 };
 
 export type ShellErrorResultResolvers<
@@ -911,7 +969,9 @@ export type Resolvers<ContextType = RequestContext> = {
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  QueryExecution?: QueryExecutionResolvers<ContextType>;
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
+  RunQueryResult?: RunQueryResultResolvers<ContextType>;
   ShellErrorResult?: ShellErrorResultResolvers<ContextType>;
   TableRows?: TableRowsResolvers<ContextType>;
   TableRowsResult?: TableRowsResultResolvers<ContextType>;

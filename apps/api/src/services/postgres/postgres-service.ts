@@ -98,7 +98,7 @@ export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: 
 
 type PostgresResultColumn = { name: string; type: string };
 
-type PostgresQueryExecution = {
+export type PostgresQueryExecution = {
   columns: PostgresResultColumn[];
   rows: Array<Array<string | null>>;
   rowCount: number;

@@ -1,0 +1,22 @@
+input RunQueryInput {
+  connectionId: ID!
+  sql: String!
+}
+
+type QueryExecution {
+  columns: [DbResultColumn!]!
+  rows: [[String]!]!
+  rowCount: Int!
+  isTruncated: Boolean!
+  durationMs: Int!
+  command: String!
+}
+
+type RunQueryResult {
+  apiErrors: [ShellErrorResult!]!
+  execution: QueryExecution
+}
+
+type Mutation {
+  runQuery(input: RunQueryInput!): RunQueryResult!
+}
