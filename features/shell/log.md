@@ -50,3 +50,4 @@
 - (web) Los botones (`Button`) bajan 1 px al hacer clic, con la misma animación que vendyx.
 - (web) Favicon con el logo de dbiewer.
 - (api, web) Se quitan el historial de ejecuciones y el tab Messages: el panel de la pestaña SQL solo tiene Results, que muestra el error de Postgres o el tag de la sentencia cuando no hay filas. `runQuery` no guarda nada, devuelve `command` en vez de `commands` y acepta SQL de hasta 100,000 caracteres. Pasos 5 y 6 actualizados en el spec.
+- (api) `PostgresService.runQuery`: corre SQL libre con el protocolo simple, toma las filas del último resultado con columnas (máximo 1,000, con `isTruncated`), devuelve `command` y `durationMs`, y destruye el cliente al terminar para no arrastrar estado de sesión. Con tests de integración. Parte del paso 5.

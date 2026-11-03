@@ -1,4 +1,11 @@
-import type { ClientConfig, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import type {
+  ClientConfig,
+  FieldDef,
+  PoolClient,
+  QueryArrayResult,
+  QueryResult,
+  QueryResultRow
+} from 'pg';
 import { Client, escapeIdentifier, Pool } from 'pg';
 
 import type { Logger } from '@/services/logger';
@@ -88,6 +95,17 @@ type PostgresRowsQuery = PostgresObject & {
 };
 
 export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: number };
+
+type PostgresResultColumn = { name: string; type: string };
+
+type PostgresQueryExecution = {
+  columns: PostgresResultColumn[];
+  rows: Array<Array<string | null>>;
+  rowCount: number;
+  isTruncated: boolean;
+  durationMs: number;
+  command: string;
+};
 
 export class PostgresService {
   private static readonly CONNECTION_TIMEOUT_MS = 10_000;
@@ -273,6 +291,12 @@ export class PostgresService {
   `;
   private static readonly VIEW_KINDS = ['v', 'm'];
   private static readonly PAGE_SIZE = 50;
+  private static readonly MAX_RESULT_ROWS = 1_000;
+  private static readonly COLUMN_TYPES_SQL = `
+    select pg_catalog.format_type(t.oid, t.modifier) as type
+    from unnest($1::oid[], $2::int[]) with ordinality as t (oid, modifier, position)
+    order by t.position
+  `;
   private static readonly COMPARISON_OPERATORS: Record<
     Exclude<PostgresFilterOperator, 'CONTAINS' | 'IS_NULL' | 'IS_NOT_NULL'>,
     string
@@ -374,6 +398,47 @@ export class PostgresService {
     });
   }
 
+  async runQuery(connection: PostgresConnection, sql: string): Promise<PostgresQueryExecution> {
+    return this.withClient(
+      connection,
+      async client => {
+        const startedAt = performance.now();
+        const response:
+          QueryArrayResult<Array<string | null>> | QueryArrayResult<Array<string | null>>[] =
+          await client.query<Array<string | null>>({
+            text: sql,
+            rowMode: 'array',
+            types: { getTypeParser: () => (value: string) => value }
+          });
+        const durationMs = Math.round(performance.now() - startedAt);
+        const results = Array.isArray(response) ? response : [response];
+        const result = results.findLast(item => item.fields.length > 0) ?? results.at(-1);
+
+        if (!result) {
+          return {
+            columns: [],
+            rows: [],
+            rowCount: 0,
+            isTruncated: false,
+            durationMs,
+            command: ''
+          };
+        }
+
+        return {
+          columns: await this.readResultColumns(client, result.fields),
+          rows: result.rows.slice(0, PostgresService.MAX_RESULT_ROWS),
+          rowCount: result.rows.length,
+          isTruncated: result.rows.length > PostgresService.MAX_RESULT_ROWS,
+          durationMs,
+          command:
+            result.rowCount === null ? result.command : `${result.command} ${result.rowCount}`
+        };
+      },
+      { discardClient: true }
+    );
+  }
+
   async discardPool(connectionId: string) {
     const pool = this.pools.get(connectionId);
 
@@ -392,7 +457,8 @@ export class PostgresService {
 
   private async withClient<T>(
     connection: PostgresConnection,
-    run: (client: PoolClient) => Promise<T>
+    run: (client: PoolClient) => Promise<T>,
+    options?: { discardClient: boolean }
   ): Promise<T> {
     let client: PoolClient;
 
@@ -407,8 +473,25 @@ export class PostgresService {
     } catch (error) {
       throw new PostgresQueryFailedError(this.toReason(error));
     } finally {
-      client.release();
+      client.release(options?.discardClient);
     }
+  }
+
+  private async readResultColumns(
+    client: PoolClient,
+    fields: FieldDef[]
+  ): Promise<PostgresResultColumn[]> {
+    if (!fields.length) return [];
+
+    const types = await client.query<{ type: string }>(PostgresService.COLUMN_TYPES_SQL, [
+      fields.map(field => field.dataTypeID),
+      fields.map(field => field.dataTypeModifier)
+    ]);
+
+    return fields.map((field, index) => ({
+      name: field.name,
+      type: types.rows[index]?.type ?? ''
+    }));
   }
 
   private getPool(connection: PostgresConnection) {

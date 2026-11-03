@@ -489,6 +489,106 @@ describe('PostgresService', () => {
     });
   });
 
+  describe('runQuery', () => {
+    beforeAll(async () => {
+      await testDatabase.execute(
+        sql.raw(`
+          create schema library;
+          create table library.books (id integer primary key, title varchar(200), price numeric(10, 2));
+          grant usage, create on schema library to "${getTestConnection().username}";
+          grant select, insert, update on all tables in schema library to "${getTestConnection().username}";
+        `)
+      );
+    });
+
+    afterAll(async () => {
+      await testDatabase.execute(sql.raw('drop schema library cascade'));
+    });
+
+    test('returns the rows of the last statement that returns rows', async () => {
+      const execution = await postgresService.runQuery(
+        getTestConnection(),
+        `
+          insert into library.books values (1, 'COBOL Manual', 8.00), (2, null, 12.50);
+          select id, title, price from library.books order by id;
+          update library.books set price = price + 1;
+        `
+      );
+
+      expect(execution).toEqual({
+        columns: [
+          { name: 'id', type: 'integer' },
+          { name: 'title', type: 'character varying(200)' },
+          { name: 'price', type: 'numeric(10,2)' }
+        ],
+        rows: [
+          ['1', 'COBOL Manual', '8.00'],
+          ['2', null, '12.50']
+        ],
+        rowCount: 2,
+        isTruncated: false,
+        durationMs: expect.any(Number),
+        command: 'SELECT 2'
+      });
+    });
+
+    test('returns at most 1000 rows with the total returned by Postgres', async () => {
+      const execution = await postgresService.runQuery(
+        getTestConnection(),
+        'select id from generate_series(1, 1500) as id'
+      );
+
+      expect(execution.rows).toHaveLength(1000);
+      expect(execution.rows.at(-1)).toEqual(['1000']);
+      expect(execution.rowCount).toBe(1500);
+      expect(execution.isTruncated).toBe(true);
+      expect(execution.command).toBe('SELECT 1500');
+    });
+
+    test('returns the command of the last statement when no statement returns rows', async () => {
+      const execution = await postgresService.runQuery(
+        getTestConnection(),
+        `
+          insert into library.books values (10, 'Notes', 5.00), (11, 'Manual', 6.00);
+          update library.books set price = 7.00 where id in (10, 11);
+        `
+      );
+
+      expect(execution).toEqual({
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        isTruncated: false,
+        durationMs: expect.any(Number),
+        command: 'UPDATE 2'
+      });
+    });
+
+    test('does not keep the session state of the query for the next query', async () => {
+      await postgresService.runQuery(
+        getTestConnection(),
+        'begin; create table library.drafts (id integer); set search_path to library'
+      );
+
+      const execution = await postgresService.runQuery(
+        getTestConnection(),
+        "select current_setting('search_path'), to_regclass('library.drafts')::text, now() = statement_timestamp()"
+      );
+
+      expect(execution.rows).toEqual([['"$user", public', null, 't']]);
+    });
+
+    test('throws PostgresQueryFailedError with the message of Postgres when a statement fails', async () => {
+      const execution = postgresService.runQuery(
+        getTestConnection(),
+        'select 1; select * from library.missing_table'
+      );
+
+      await expect(execution).rejects.toThrow(PostgresQueryFailedError);
+      await expect(execution).rejects.toThrow('relation "library.missing_table" does not exist');
+    });
+  });
+
   test('throws PostgresConnectionFailedError when it cannot connect', async () => {
     const connection = { ...getTestConnection(), password: 'wrong-password' };
 

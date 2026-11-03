@@ -223,7 +223,7 @@ type Mutation {
 }
 ```
 
-- `runQuery` corre el SQL en un cliente del pool con el protocolo simple, así se aceptan varias sentencias. Las filas son las del último resultado que tenga filas; `command` trae el tag de ese resultado o, si ninguno tiene filas, el de la última sentencia (`SELECT 7`, `UPDATE 3`).
+- `runQuery` corre el SQL en un cliente del pool con el protocolo simple, así se aceptan varias sentencias. Al terminar, el cliente se destruye en vez de volver al pool, para que el estado de sesión que deje el SQL (`begin` sin cerrar, `set search_path`) no pase a otras queries. Las filas son las del último resultado que tenga filas; `command` trae el tag de ese resultado o, si ninguno tiene filas, el de la última sentencia (`SELECT 7`, `UPDATE 3`).
 - Devuelve como máximo 1,000 filas con `isTruncated` si había más. `rowCount` es el total que devolvió Postgres.
 - `sql` tiene como máximo 100,000 caracteres, validado con zod en el use-case.
 - No guarda nada en la base de la api. Si falla, responde `QUERY_FAILED` con el mensaje de Postgres.
