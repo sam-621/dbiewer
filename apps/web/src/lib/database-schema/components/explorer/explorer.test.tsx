@@ -108,7 +108,7 @@ describe('Explorer', () => {
     renderExplorer();
     const user = userEvent.setup();
     expect(screen.queryByText('workspace_id')).not.toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
 
     expect(screen.getByText('workspace_id')).toBeInTheDocument();
     expect(screen.getByText('varchar(255)')).toBeInTheDocument();

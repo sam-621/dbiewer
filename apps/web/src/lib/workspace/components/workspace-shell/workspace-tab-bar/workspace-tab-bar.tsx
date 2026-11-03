@@ -25,14 +25,14 @@ export const WorkspaceTabBar = () => {
           <div
             key={tab.key}
             className={cn(
-              'group/tab flex shrink-0 items-center gap-1 border-e pe-1 hover:bg-accent/50',
+              'group/tab relative flex shrink-0 items-center border-e hover:bg-accent/50',
               isActive && 'bg-background'
             )}
           >
             <TabsTab
               value={tab.key}
               title={`${tab.schema}.${tab.name}`}
-              className="h-full grow-0 gap-1.5 rounded-none border-0 ps-3 pe-1 hover:bg-transparent sm:h-full"
+              className="h-full grow-0 gap-1.5 rounded-none border-0 ps-3 pe-8 hover:bg-transparent sm:h-full"
               onDoubleClick={() => pinTab(tab.key)}
             >
               <Icon className="size-3.5" />
@@ -50,7 +50,7 @@ export const WorkspaceTabBar = () => {
               size="icon-xs"
               aria-label={t('Close {{name}}', { name: tab.name })}
               className={cn(
-                'size-5 text-muted-foreground sm:size-5',
+                'absolute end-1.5 size-5 text-muted-foreground sm:size-5',
                 !isActive && 'opacity-0 group-hover/tab:opacity-100 focus-visible:opacity-100'
               )}
               onClick={() => closeTab(tab.key)}

@@ -4,7 +4,8 @@ import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerFunction } from '../explorer-function/explorer-function';
 import { ExplorerGroup } from '../explorer-group/explorer-group';
 import type { OpenExplorerObject } from '../explorer-object';
-import { ExplorerRelation } from '../explorer-relation/explorer-relation';
+import { ExplorerTable } from '../explorer-table/explorer-table';
+import { ExplorerView } from '../explorer-view/explorer-view';
 
 type Props = {
   schema: DbSchemaNode;
@@ -20,11 +21,10 @@ export const ExplorerGroups = ({ schema, isSearching, onOpenObject }: Props) => 
       {schema.tables.length > 0 && (
         <ExplorerGroup label={t('Tables')} count={schema.tables.length} isSearching={isSearching}>
           {schema.tables.map(table => (
-            <ExplorerRelation
+            <ExplorerTable
               key={table.name}
-              kind="table"
               schemaName={schema.name}
-              relation={table}
+              table={table}
               onOpenObject={onOpenObject}
             />
           ))}
@@ -33,11 +33,10 @@ export const ExplorerGroups = ({ schema, isSearching, onOpenObject }: Props) => 
       {schema.views.length > 0 && (
         <ExplorerGroup label={t('Views')} count={schema.views.length} isSearching={isSearching}>
           {schema.views.map(view => (
-            <ExplorerRelation
+            <ExplorerView
               key={view.name}
-              kind="view"
               schemaName={schema.name}
-              relation={view}
+              view={view}
               onOpenObject={onOpenObject}
             />
           ))}

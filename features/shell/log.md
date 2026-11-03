@@ -42,3 +42,7 @@
 
 **Hecho:**
 - (web) Se quita eliminar conexión del selector del header, junto con su diálogo y la mutation. Eliminar una conexión queda fuera de alcance en el web. El check de la conexión activa pasa a la derecha, separado del texto.
+- (web) Barra de pestañas: el subrayado de la pestaña activa abarca también el botón de cerrar.
+- (web) Explorer: al pasar el mouse por una tabla o vista aparece un botón para abrirla en la pestaña provisional; el clic sigue expandiendo y el doble clic sigue abriéndola.
+- (web) Las barras de scroll nativas usan el esquema oscuro en modo oscuro.
+- (web) Explorer: en las tablas, el clic en la fila la abre en la pestaña provisional y la flechita despliega las columnas. Las vistas siguen expandiéndose con clic y abriéndose con doble clic o el botón al pasar el mouse.

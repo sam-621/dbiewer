@@ -29,7 +29,7 @@ const SCHEMAS = [
       { name: 'users', columns: [] },
       { name: 'orders', columns: [] }
     ],
-    views: [],
+    views: [{ name: 'active_users', columns: [] }],
     functions: []
   },
   {
@@ -193,38 +193,68 @@ describe('WorkspaceShell', () => {
     vi.restoreAllMocks();
   });
 
-  test('expands a table with a click without opening it', async () => {
+  test('expands a table from its chevron without opening it', async () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
 
     expect(screen.queryByRole('tablist', { name: 'Pestañas abiertas' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'users' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Columnas de users' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+  });
+
+  test('expands a view with a click without opening it', async () => {
+    renderShell();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'active_users' }));
+
+    expect(screen.queryByRole('tablist', { name: 'Pestañas abiertas' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'active_users' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
   });
 
   test('opens a table in the provisional tab and replaces it with the next one', async () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     expect(await screen.findByRole('heading', { name: /users/ })).toBeInTheDocument();
     expect(getTabs()).toEqual(['users']);
     expect(screen.getByRole('tab', { name: 'users' })).toHaveAttribute('aria-selected', 'true');
 
-    await user.dblClick(screen.getByRole('button', { name: 'orders' }));
+    await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(await screen.findByRole('heading', { name: /orders/ })).toBeInTheDocument();
     expect(getTabs()).toEqual(['orders']);
+  });
+
+  test('opens a view in the provisional tab from its open button', async () => {
+    renderShell();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Abrir active_users' }));
+
+    expect(await screen.findByRole('heading', { name: /active_users/ })).toBeInTheDocument();
+    expect(getTabs()).toEqual(['active_users']);
+    expect(screen.getByRole('button', { name: 'active_users' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 
   test('pins a tab with a double click and keeps it when opening another', async () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     await user.dblClick(await screen.findByRole('tab', { name: 'users' }));
-    await user.dblClick(screen.getByRole('button', { name: 'orders' }));
+    await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(getTabs()).toEqual(['users', 'orders']);
     await user.click(screen.getByRole('tab', { name: 'users' }));
@@ -235,9 +265,9 @@ describe('WorkspaceShell', () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     await user.click(await screen.findByRole('tab', { name: 'Estructura' }));
-    await user.dblClick(screen.getByRole('button', { name: 'orders' }));
+    await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(getTabs()).toEqual(['users', 'orders']);
   });
@@ -246,7 +276,7 @@ describe('WorkspaceShell', () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     await user.click(await screen.findByRole('button', { name: 'Cerrar users' }));
 
     expect(screen.queryByRole('tablist', { name: 'Pestañas abiertas' })).not.toBeInTheDocument();
@@ -258,7 +288,7 @@ describe('WorkspaceShell', () => {
   test('restores the open tabs of the connection', async () => {
     const { unmount } = renderShell();
     const user = userEvent.setup();
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     await user.dblClick(await screen.findByRole('tab', { name: 'users' }));
     unmount();
 
@@ -271,11 +301,11 @@ describe('WorkspaceShell', () => {
     renderShell();
     const user = userEvent.setup();
 
-    await user.dblClick(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: 'users' }));
     const cell = await screen.findByRole('cell', { name: /user-1/ });
     await user.click(cell);
     await user.keyboard('{Escape}');
-    await user.dblClick(screen.getByRole('button', { name: 'orders' }));
+    await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(getTabs()).toEqual(['users', 'orders']);
   });

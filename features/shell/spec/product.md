@@ -20,7 +20,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 1. El usuario entra a `/`. Si no tiene conexiones, ve el estado vacío de `connections`. Si tiene, entra al shell con la última conexión que usó o, si no hay una, con la más reciente.
 2. En el sidebar, el tab Explorer muestra el esquema de la conexión: tablas, vistas y funciones, agrupadas por esquema de Postgres.
-3. Con un clic en una tabla, ve sus columnas; con doble clic, se abre una pestaña provisional con sus datos. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. En cuanto hace algo en ella, o con doble clic en la pestaña, se fija.
+3. Con un clic en una tabla, se abre una pestaña provisional con sus datos; con la flechita, ve sus columnas. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. En cuanto hace algo en ella, o con doble clic en la pestaña, se fija.
 4. En el tab Queries ve sus queries guardadas de esa conexión. Puede abrir una o crear una nueva.
 5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados, los mensajes y el historial de la conexión. Guarda con ⌘S.
 6. Desde el header cambia de conexión. Todo el espacio de trabajo cambia, y al volver encuentra sus pestañas como las dejó.
