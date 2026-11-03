@@ -14,11 +14,9 @@ Reglas de negocio y decisiones en `product.md`.
 
 | Tabla | Columnas | Notas |
 |-------|----------|-------|
-| `query_history` | `id uuid`, `tenant_id uuid`, `connection_id uuid`, `sql text`, `status text`, `row_count integer` (nullable), `duration_ms integer`, `error_message text` (nullable), `executed_at timestamptz`, `created_at`, `updated_at` | Tenant con RLS. |
 | `saved_query` | `id uuid`, `tenant_id uuid`, `connection_id uuid`, `name text`, `sql text`, `created_at`, `updated_at` | Tenant con RLS. |
 
-- Las dos llevan `tenant_id` con el default, la policy, `ENABLE` y `FORCE` de `database.md`, y FK a `connection(id)` con `ON DELETE CASCADE`.
-- `query_history.status` guarda `success` o `error`. Índice `query_history_connection_id_executed_at_idx` sobre `(connection_id, executed_at desc)`.
+- Lleva `tenant_id` con el default, la policy, `ENABLE` y `FORCE` de `database.md`, y FK a `connection(id)` con `ON DELETE CASCADE`.
 - Índice único `saved_query_connection_id_name_idx` sobre `(connection_id, lower(name))`.
 
 ## API GraphQL
@@ -212,7 +210,7 @@ type QueryExecution {
   rowCount: Int!
   isTruncated: Boolean!
   durationMs: Int!
-  commands: [String!]!
+  command: String!
 }
 
 type RunQueryResult {
@@ -220,34 +218,15 @@ type RunQueryResult {
   execution: QueryExecution
 }
 
-type QueryHistoryEntry {
-  id: ID!
-  sql: String!
-  status: QueryHistoryStatus!
-  rowCount: Int
-  durationMs: Int!
-  errorMessage: String
-  executedAt: DateTime!
-}
-
-type QueryHistoryList {
-  items: [QueryHistoryEntry!]!
-}
-
-type Query {
-  queryHistory(connectionId: ID!): QueryHistoryList!
-}
-
 type Mutation {
   runQuery(input: RunQueryInput!): RunQueryResult!
 }
 ```
 
-- `runQuery` corre el SQL en un cliente del pool con el protocolo simple, así se aceptan varias sentencias. Las filas son las del último resultado que tenga filas; `commands` trae el tag de cada sentencia (`SELECT 7`, `UPDATE 3`).
+- `runQuery` corre el SQL en un cliente del pool con el protocolo simple, así se aceptan varias sentencias. Las filas son las del último resultado que tenga filas; `command` trae el tag de ese resultado o, si ninguno tiene filas, el de la última sentencia (`SELECT 7`, `UPDATE 3`).
 - Devuelve como máximo 1,000 filas con `isTruncated` si había más. `rowCount` es el total que devolvió Postgres.
-- Guarda una fila en `query_history` siempre, también si falla. Si falla, responde `QUERY_FAILED` con el mensaje de Postgres.
-- `queryHistory` devuelve las últimas 100, ordenadas por `executed_at desc, id`.
-- `status` se traduce con un enum resolver y `enumValues`, como `ConnectionSslMode`.
+- `sql` tiene como máximo 100,000 caracteres, validado con zod en el use-case.
+- No guarda nada en la base de la api. Si falla, responde `QUERY_FAILED` con el mensaje de Postgres.
 
 ### Queries guardadas
 
@@ -307,7 +286,7 @@ type Mutation {
 | Resolvers | uno por archivo de schema en `src/api/resolvers/` |
 | Use-cases | `src/modules/database-schema/use-cases/` (lectura del esquema, estructura, filas, definición), `src/modules/query/use-cases/` (`query-runner.ts`), `src/modules/saved-query/use-cases/` (creator, updater, remover) |
 | Services | `src/services/postgres/`: pool, introspección y ejecución |
-| Repositorios | `src/persistence/repositories/query-history/`, `src/persistence/repositories/saved-query/` |
+| Repositorios | `src/persistence/repositories/saved-query/` |
 
 Las operaciones que leen la base del usuario sí llevan use-case: tienen que leer la conexión, descifrar la contraseña y llamar al service.
 
@@ -320,18 +299,17 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 - **Módulos:**
   - `src/lib/workspace/`: `WorkspaceLayout` con el selector de conexión, el shell (sidebar y área de pestañas) y el estado de pestañas.
   - `src/lib/database-schema/`: explorador, pestaña de tabla o vista (Data y Structure) y pestaña de función.
-  - `src/lib/query/`: pestaña SQL, editor, panel de resultados, historial y queries guardadas.
+  - `src/lib/query/`: pestaña SQL, editor, panel de resultados y queries guardadas.
 - **Editor:** CodeMirror 6 con `@codemirror/lang-sql` (dialecto Postgres) y `sql-formatter` para "Format". La sentencia bajo el cursor se toma separando por `;` fuera de strings y comentarios.
 - **Grilla:** el componente `table` de coss, con encabezado fijo y scroll horizontal. Sin virtualización: el máximo es 1,000 filas.
 - **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página. "Reload" en el explorador o en la tabla los vuelve a pedir.
-- Después de `runQuery` se refresca `queryHistory`. Después de crear, editar o eliminar una query guardada, `savedQueries`.
+- Después de crear, editar o eliminar una query guardada, `savedQueries`.
 
 ## Impacto en código existente
 
 - `apps/api/src/services/postgres/postgres-service.ts`: pool, introspección y ejecución, además de `testConnection`.
 - `apps/api/src/modules/connection/use-cases/connection-updater.ts` y `connection-remover.ts`: descartan el pool de la conexión.
-- `apps/api/src/persistence/schema/`: tablas `query_history` y `saved_query`, con sus migraciones generada y custom.
-- `apps/api/codegen.ts`: `enumValues` de `QueryHistoryStatus`.
+- `apps/api/src/persistence/schema/`: tabla `saved_query`, con sus migraciones generada y custom.
 - `apps/web/src/lib/workspace/components/workspace-layout/workspace-layout.tsx`: suma el selector de conexión en el header.
 - `apps/web/src/lib/workspace/pages/workspace-page.tsx`: muestra el shell en lugar del listado temporal.
 - `apps/web/src/lib/connection/components/connections-dev-list/`: se borra.
@@ -340,6 +318,6 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 
 ## Tests
 
-- **api, integración:** repositorios de `query_history` y `saved_query`, incluido el índice único por nombre.
-- **api, e2e:** contra la DB de test como base del usuario. `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (filtros, orden, paginación, columna inválida, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, que guarda historial en los dos casos); `queryHistory`; CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
+- **api, integración:** repositorio de `saved_query`, incluido el índice único por nombre.
+- **api, e2e:** contra la DB de test como base del usuario. `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (filtros, orden, paginación, columna inválida, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
 - **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla y pestaña SQL con el fetcher mockeado.

@@ -80,17 +80,14 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Barra: "Run" con `⌘↵`, "Save" y "Format", y a la derecha la conexión contra la que corre (la activa, solo informativa).
   - Editor de SQL con números de línea y resaltado.
   - Separador que se puede arrastrar.
-  - Panel de abajo con tres tabs: "Results" (con la cantidad), "Messages" e "History" (con la cantidad). A la derecha, `7 rows · 124 ms`.
-  - Results: grilla como la de la tabla, con aviso si el resultado está truncado en 1,000 filas.
-  - Messages: el tag de cada sentencia (`SELECT 7`, `UPDATE 3`) o el error de Postgres.
-  - History: las ejecuciones de la conexión con hora, SQL, duración y filas, y las fallidas marcadas.
+  - Panel de abajo con Results, sin otros tabs. A la derecha, `7 rows · 124 ms`.
+  - Results: grilla como la de la tabla, con aviso si el resultado está truncado en 1,000 filas. Si no hay filas, el tag de la sentencia (`UPDATE 3`).
 - **Permite:**
   - Escribir SQL.
   - Ejecutar con "Run" o `⌘↵` lo seleccionado o la sentencia bajo el cursor.
   - Guardar con "Save" o `⌘S`. Si es nueva, pide el nombre.
   - Formatear el SQL.
-  - Desde History, abrir una ejecución en una pestaña nueva.
-- **Estados:** sin ejecutar ("Run the query with ⌘↵ to see results here"); ejecutando, con indicador y "Run" deshabilitado; error, que abre Messages; guardando; nombre inválido o repetido, en el diálogo del nombre.
+- **Estados:** sin ejecutar ("Run the query with ⌘↵ to see results here"); ejecutando, con indicador y "Run" deshabilitado; error, con el mensaje de Postgres en el panel; guardando; nombre inválido o repetido, en el diálogo del nombre.
 
 ### Pestaña de función
 

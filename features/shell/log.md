@@ -49,3 +49,4 @@
 - (web) Header: el perfil abre un menú con idioma (banderas), tema (Sistema, Claro, Oscuro) y cerrar sesión en rojo, ocupando todo el alto del header a la derecha. Se comparten las banderas, los íconos y las opciones de tema con el onboarding.
 - (web) Los botones (`Button`) bajan 1 px al hacer clic, con la misma animación que vendyx.
 - (web) Favicon con el logo de dbiewer.
+- (api, web) Se quitan el historial de ejecuciones y el tab Messages: el panel de la pestaña SQL solo tiene Results, que muestra el error de Postgres o el tag de la sentencia cuando no hay filas. `runQuery` no guarda nada, devuelve `command` en vez de `commands` y acepta SQL de hasta 100,000 caracteres. Pasos 5 y 6 actualizados en el spec.

@@ -22,7 +22,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 2. En el sidebar, el tab Explorer muestra el esquema de la conexión: tablas, vistas y funciones, agrupadas por esquema de Postgres.
 3. Con un clic en una tabla, se abre una pestaña provisional con sus datos; con la flechita, ve sus columnas. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. En cuanto hace algo en ella, o con doble clic en la pestaña, se fija.
 4. En el tab Queries ve sus queries guardadas de esa conexión. Puede abrir una o crear una nueva.
-5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados, los mensajes y el historial de la conexión. Guarda con ⌘S.
+5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados. Guarda con ⌘S.
 6. Desde el header cambia de conexión. Todo el espacio de trabajo cambia, y al volver encuentra sus pestañas como las dejó.
 
 ## Reglas de negocio
@@ -30,7 +30,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ### Conexión activa
 
 - Siempre hay una conexión activa mientras el workspace tenga conexiones. Es la única de la que se muestra algo.
-- Todo corre contra la conexión activa: el esquema, las tablas, las queries y el historial. No hay otro selector de conexión.
+- Todo corre contra la conexión activa: el esquema, las tablas y las queries. No hay otro selector de conexión.
 - Desde el selector del header también se crea una conexión nueva. Eliminar una conexión no se hace desde el web por ahora.
 
 ### Esquema
@@ -58,15 +58,10 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Se ejecuta lo seleccionado o, si no hay selección, la sentencia bajo el cursor.
 - Una query devuelve como máximo 1,000 filas. Si había más, se avisa que el resultado está truncado.
 - Una query se corta a los 30 s.
-- Si la ejecución tiene varias sentencias, se muestran las filas de la última y en Messages el resultado de cada una.
-- Si la query falla, se muestra el mensaje de error de Postgres.
+- Si la ejecución tiene varias sentencias, se muestran las filas de la última que devuelva filas. Si ninguna devuelve filas, se muestra el resultado de la última (`UPDATE 3`).
+- Si la query falla, se muestra el mensaje de error de Postgres en lugar de los resultados.
+- Las ejecuciones no se guardan: no hay historial.
 - Se ejecuta lo que el usuario escriba, incluidas escrituras, sin confirmación.
-
-### Historial
-
-- Cada ejecución, exitosa o fallida, queda en el historial de la conexión: SQL, cuándo, duración, filas y error si lo hubo.
-- El historial es de la conexión, no de la pestaña ni del archivo.
-- Se muestran las últimas 100 ejecuciones. Al borrar la conexión, se borra su historial.
 
 ### Queries guardadas
 
@@ -86,14 +81,14 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 - **El esquema se lee en vivo y no se guarda**: copiarlo a nuestra base lo desincroniza en cuanto el usuario cambia su esquema. React Query lo guarda en caché mientras la app está abierta.
 - **Un solo pedido para todo el árbol**: el buscador filtra todas las tablas y el árbol muestra columnas al expandir, así que el árbol completo llega en una sola consulta a `pg_catalog`. Lo pesado (índices, FKs, DDL, conteo exacto y filas) se pide al abrir la tabla.
-- **Pestañas y borradores en `localStorage`, queries guardadas e historial en la api**: las pestañas son estado de ese navegador; las queries y el historial son datos del usuario y deben verse desde cualquier navegador.
+- **Pestañas y borradores en `localStorage`, queries guardadas en la api**: las pestañas son estado de ese navegador; las queries son datos del usuario y deben verse desde cualquier navegador.
 - **Pestañas por conexión**: al cambiar de conexión se cambia el espacio de trabajo entero, así nunca hay una pestaña abierta contra la conexión equivocada.
 - **Un solo selector de conexión, en el header**: se descarta un selector en el editor (como en la captura original) porque compite con el del header.
 - **Explorer en vez de "Schema"**: el árbol del sidebar se llama Explorer para no chocar con el diagrama, que llega con el milestone 6.
 - **Pestaña provisional**: explorar tablas no llena la barra de pestañas. Mismo modelo que VS Code.
 - **Índices, FKs y DDL en Structure, no en el árbol**: el árbol queda liviano, con columnas y tipos.
 - **Sin pestaña fija de diagrama por ahora**: el diagrama es el milestone 6. Hasta entonces, sin pestañas abiertas se ve un estado vacío.
-- **Historial de la conexión**: no se pierde al cerrar una pestaña o borrar un archivo.
+- **Sin historial ni Messages**: el panel de resultados de la pestaña SQL solo tiene Results. El usuario no los necesita.
 - **Pool de conexiones por conexión en la api**: abrir un cliente por cada pedido es lento para navegar tablas.
 
 ## Fuera de alcance
@@ -105,7 +100,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Exportar resultados a CSV o JSON (milestone 5).
 - Cancelar una query en curso.
 - Confirmar escrituras o modo de solo lectura (decisión pendiente en `docs/roadmap.md`).
-- Retención del historial por plan (milestone 10).
+- Historial de ejecuciones y tab Messages.
 - Carpetas de queries y queries compartidas.
 - Editar o eliminar una conexión desde el web.
 
@@ -115,7 +110,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 2. [x] web: shell con header y selector de conexión, sidebar con Explorer y buscador; reemplaza el listado temporal.
 3. [x] api: queries `tableStructure` y `tableRows` con filtros, orden y paginación, con sus tests e2e.
 4. [x] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
-5. [ ] api: tabla `query_history`, mutation `runQuery` con límites y query `queryHistory`, con sus tests e2e.
-6. [ ] web: pestaña SQL con editor, ejecutar, Results, Messages e History, y pestaña de función en solo lectura.
+5. [ ] api: mutation `runQuery` con límites, con sus tests e2e.
+6. [ ] web: pestaña SQL con editor, ejecutar y Results, y pestaña de función en solo lectura.
 7. [ ] api: tabla `saved_query` con su CRUD, con sus tests e2e.
 8. [ ] web: tab Queries del sidebar, nueva query, guardar con ⌘S, renombrar y eliminar.
