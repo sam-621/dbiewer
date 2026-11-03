@@ -48,3 +48,4 @@
 - (web) Explorer: en las tablas, el clic en la fila la abre en la pestaña provisional y la flechita despliega las columnas. Las vistas siguen expandiéndose con clic y abriéndose con doble clic o el botón al pasar el mouse.
 - (web) Header: el perfil abre un menú con idioma (banderas), tema (Sistema, Claro, Oscuro) y cerrar sesión en rojo, ocupando todo el alto del header a la derecha. Se comparten las banderas, los íconos y las opciones de tema con el onboarding.
 - (web) Los botones (`Button`) bajan 1 px al hacer clic, con la misma animación que vendyx.
+- (web) Favicon con el logo de dbiewer.
