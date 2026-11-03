@@ -25,7 +25,10 @@ export const WorkspaceShell = () => {
         <WorkspaceSidebar connectionId={activeConnection.id} />
         <WorkspaceSidebarResizer width={width} onWidthChange={changeWidth} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <WorkspaceTabs connectionId={activeConnection.id} />
+          <WorkspaceTabs
+            connectionId={activeConnection.id}
+            connectionName={activeConnection.name}
+          />
         </div>
       </SidebarProvider>
     </WorkspaceTabsProvider>

@@ -7,6 +7,7 @@ import type { WorkspaceTabs } from '../utils/workspace-tabs.utils';
 
 type WorkspaceTabsContextValue = WorkspaceTabs & {
   openObject: OpenExplorerObject;
+  openDraft: () => void;
   activateTab: (key: string) => void;
   pinTab: (key: string) => void;
   closeTab: (key: string) => void;

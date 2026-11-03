@@ -1,10 +1,20 @@
 import { useTranslation } from 'react-i18next';
 
-import { TableIcon } from '@/shared/components/icons/icons';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from '@/shared/components/ui/empty';
+import { PlusIcon, TableIcon } from '@/shared/components/icons/icons';
+import { Button } from '@/shared/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia
+} from '@/shared/components/ui/empty';
+
+import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
 
 export const WorkspaceTabsEmpty = () => {
   const { t } = useTranslation();
+  const { openDraft } = useWorkspaceTabs();
 
   return (
     <Empty>
@@ -14,6 +24,12 @@ export const WorkspaceTabsEmpty = () => {
         </EmptyMedia>
         <EmptyDescription>{t('Open a table from the explorer to see its data.')}</EmptyDescription>
       </EmptyHeader>
+      <EmptyContent>
+        <Button variant="outline" size="sm" onClick={openDraft}>
+          <PlusIcon />
+          {t('New query')}
+        </Button>
+      </EmptyContent>
     </Empty>
   );
 };

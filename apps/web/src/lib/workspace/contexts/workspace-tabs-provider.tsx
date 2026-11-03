@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react';
 
 import type { OpenExplorerObject } from '@/lib/database-schema/components/explorer/explorer-object';
 import type { TableViewState } from '@/lib/database-schema/utils/table-view.utils';
+import { removeStoredDraftSql } from '@/lib/query/hooks/use-draft-sql';
 import { Logger } from '@/shared/utils/logger';
 
 import {
@@ -9,6 +10,8 @@ import {
   changeTabState,
   closeTab,
   EMPTY_WORKSPACE_TABS,
+  isDraftTabKey,
+  openDraftTab,
   openTab,
   pinTab,
   type WorkspaceTabs,
@@ -41,14 +44,20 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
     update(openTab(workspaceTabs, object, options));
   };
 
+  const closeWorkspaceTab = (key: string) => {
+    update(closeTab(workspaceTabs, key));
+    if (isDraftTabKey(key)) removeStoredDraftSql(connectionId, key);
+  };
+
   return (
     <WorkspaceTabsContext
       value={{
         ...workspaceTabs,
         openObject,
+        openDraft: () => update(openDraftTab(workspaceTabs, crypto.randomUUID())),
         activateTab: key => update(activateTab(workspaceTabs, key)),
         pinTab: key => update(pinTab(workspaceTabs, key)),
-        closeTab: key => update(closeTab(workspaceTabs, key)),
+        closeTab: closeWorkspaceTab,
         changeTabState: (key: string, state: TableViewState) =>
           update(changeTabState(workspaceTabs, key, state))
       }}

@@ -60,6 +60,11 @@ export type DbOrderInput = {
   direction: SortDirection;
 };
 
+export type RunQueryInput = {
+  connectionId: string | number;
+  sql: string;
+};
+
 export type ShellErrorCode =
   | 'CONNECTION_FAILED'
   | 'CONNECTION_NOT_FOUND'
@@ -160,6 +165,13 @@ export type GetTableRowsQueryVariables = Exact<{
 
 
 export type GetTableRowsQuery = { tableRows: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, tableRows: { rows: Array<Array<string | null>>, totalRows: number, columns: Array<{ name: string, type: string }> } | null } };
+
+export type RunQueryMutationVariables = Exact<{
+  input: RunQueryInput;
+}>;
+
+
+export type RunQueryMutation = { runQuery: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, execution: { rows: Array<Array<string | null>>, rowCount: number, isTruncated: boolean, durationMs: number, command: string, columns: Array<{ name: string, type: string }> } | null } };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -372,3 +384,24 @@ export const GetTableRowsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetTableRowsQuery, GetTableRowsQueryVariables>;
+export const RunQueryDocument = new TypedDocumentString(`
+    mutation RunQuery($input: RunQueryInput!) {
+  runQuery(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    execution {
+      columns {
+        name
+        type
+      }
+      rows
+      rowCount
+      isTruncated
+      durationMs
+      command
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<RunQueryMutation, RunQueryMutationVariables>;

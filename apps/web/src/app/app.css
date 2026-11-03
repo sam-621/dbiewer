@@ -9,14 +9,6 @@
   --color-pk: oklch(0.78 0.14 95);
   --color-fk: oklch(0.74 0.12 245);
 
-  --color-sql-kw: oklch(0.86 0.12 320);
-  --color-sql-fn: oklch(0.86 0.1 240);
-  --color-sql-str: oklch(0.85 0.1 60);
-  --color-sql-num: oklch(0.85 0.06 240);
-  --color-sql-tbl: oklch(0.78 0.14 95);
-  --color-sql-col: oklch(0.85 0.06 160);
-  --color-sql-date: oklch(0.82 0.06 60);
-
   --font-sans: 'Funnel Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --font-serif: 'Instrument Serif', serif;
@@ -66,10 +58,24 @@
   --sidebar-primary: var(--color-neutral-800);
   --sidebar-primary-foreground: var(--color-neutral-50);
   --sidebar-ring: var(--color-neutral-400);
+  --sql-kw: oklch(0.5 0.2 320);
+  --sql-fn: oklch(0.5 0.16 250);
+  --sql-str: oklch(0.52 0.14 55);
+  --sql-num: oklch(0.5 0.12 240);
+  --sql-tbl: oklch(0.55 0.13 85);
+  --sql-col: oklch(0.5 0.11 160);
+  --sql-date: oklch(0.52 0.1 60);
 }
 
 .dark {
   color-scheme: dark;
+  --sql-kw: oklch(0.86 0.12 320);
+  --sql-fn: oklch(0.86 0.1 240);
+  --sql-str: oklch(0.85 0.1 60);
+  --sql-num: oklch(0.85 0.06 240);
+  --sql-tbl: oklch(0.78 0.14 95);
+  --sql-col: oklch(0.85 0.06 160);
+  --sql-date: oklch(0.82 0.06 60);
   --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
   --foreground: var(--color-neutral-100);
   --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
@@ -114,6 +120,13 @@
 }
 
 @theme inline {
+  --color-sql-kw: var(--sql-kw);
+  --color-sql-fn: var(--sql-fn);
+  --color-sql-str: var(--sql-str);
+  --color-sql-num: var(--sql-num);
+  --color-sql-tbl: var(--sql-tbl);
+  --color-sql-col: var(--sql-col);
+  --color-sql-date: var(--sql-date);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

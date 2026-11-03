@@ -94,7 +94,7 @@ describe('useWorkspaceTabs', () => {
       })
     );
     expect(result.current.provisionalKey).toBeNull();
-    expect(result.current.tabs[2]?.state.view).toBe('structure');
+    expect(result.current.tabs[2]).toMatchObject({ state: { view: 'structure' } });
     expect(result.current.tabs).toHaveLength(3);
   });
 
@@ -125,6 +125,41 @@ describe('useWorkspaceTabs', () => {
     );
 
     expect(result.current.tabs).toEqual([]);
+  });
+
+  test('opens new queries as pinned draft tabs with increasing numbers', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+    act(() => result.current.openDraft());
+    act(() => result.current.openDraft());
+
+    const [, first, second] = result.current.tabs;
+    expect(first).toMatchObject({ kind: 'draft', number: 1 });
+    expect(second).toMatchObject({ kind: 'draft', number: 2 });
+    expect(first?.key).toMatch(/^draft:[\w-]+$/);
+    expect(result.current.activeKey).toBe(second?.key);
+    expect(result.current.provisionalKey).toBe('table:public.users');
+
+    act(() => result.current.openObject(ORDERS, { isPinned: false }));
+    expect(tabKeys(result.current.tabs)).toEqual(['table:public.orders', first?.key, second?.key]);
+  });
+
+  test('restores draft tabs and removes the draft SQL when closing one', () => {
+    const { result, unmount } = renderTabs();
+
+    act(() => result.current.openDraft());
+    const key = result.current.activeKey ?? '';
+    localStorage.setItem(`dbiewer:draft:connection-1:${key}`, 'select 1');
+
+    unmount();
+    const { result: restored } = renderTabs();
+    expect(restored.current.tabs).toEqual([{ key, kind: 'draft', number: 1 }]);
+
+    act(() => restored.current.closeTab(key));
+
+    expect(restored.current.tabs).toEqual([]);
+    expect(localStorage.getItem(`dbiewer:draft:connection-1:${key}`)).toBeNull();
   });
 
   test('keeps the tabs of each connection in localStorage', () => {
@@ -163,11 +198,16 @@ describe('useWorkspaceTabs', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
     });
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
 
     const { result } = renderTabs();
     expect(result.current.tabs).toEqual([]);
 
     act(() => result.current.openObject(USERS, { isPinned: false }));
+    act(() => result.current.openDraft());
+    act(() => result.current.closeTab(result.current.activeKey ?? ''));
 
     expect(tabKeys(result.current.tabs)).toEqual(['table:public.users']);
   });

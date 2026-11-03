@@ -309,4 +309,23 @@ describe('WorkspaceShell', () => {
 
     expect(getTabs()).toEqual(['users', 'orders']);
   });
+
+  test('opens new SQL tabs from the empty state and the tab bar', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await screen.findByText('users');
+
+    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
+    expect(getTabs()).toEqual(['Sin título 1']);
+    expect(screen.getByRole('textbox', { name: 'Editor SQL' })).toBeInTheDocument();
+    expect(screen.getAllByText('Acme prod').length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole('button', { name: 'users' }));
+    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
+    expect(getTabs()).toEqual(['Sin título 1', 'users', 'Sin título 2']);
+    expect(screen.getByRole('tab', { name: 'Sin título 2' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+  });
 });

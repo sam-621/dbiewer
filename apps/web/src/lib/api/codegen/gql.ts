@@ -25,6 +25,7 @@ type Documents = {
     "\n  query GetConnectionSchema($connectionId: ID!) {\n    connectionSchema(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      schemas {\n        name\n        tables {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        views {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        functions {\n          name\n          arguments\n          kind\n        }\n      }\n    }\n  }\n": typeof types.GetConnectionSchemaDocument,
     "\n  query GetTableStructure($input: DbObjectInput!) {\n    tableStructure(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      structure {\n        columns {\n          name\n          type\n          isNullable\n          default\n          isPrimaryKey\n        }\n        indexes {\n          name\n          definition\n          isUnique\n        }\n        foreignKeys {\n          columns\n          referencedSchema\n          referencedTable\n          referencedColumns\n          onDelete\n        }\n        definition\n      }\n    }\n  }\n": typeof types.GetTableStructureDocument,
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": typeof types.GetTableRowsDocument,
+    "\n  mutation RunQuery($input: RunQueryInput!) {\n    runQuery(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      execution {\n        columns {\n          name\n          type\n        }\n        rows\n        rowCount\n        isTruncated\n        durationMs\n        command\n      }\n    }\n  }\n": typeof types.RunQueryDocument,
 };
 const documents: Documents = {
     "\n  query GetMe {\n    me {\n      user {\n        id\n        name\n        email\n        image\n      }\n      workspace {\n        id\n        name\n      }\n    }\n  }\n": types.GetMeDocument,
@@ -37,6 +38,7 @@ const documents: Documents = {
     "\n  query GetConnectionSchema($connectionId: ID!) {\n    connectionSchema(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      schemas {\n        name\n        tables {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        views {\n          name\n          columns {\n            name\n            type\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        functions {\n          name\n          arguments\n          kind\n        }\n      }\n    }\n  }\n": types.GetConnectionSchemaDocument,
     "\n  query GetTableStructure($input: DbObjectInput!) {\n    tableStructure(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      structure {\n        columns {\n          name\n          type\n          isNullable\n          default\n          isPrimaryKey\n        }\n        indexes {\n          name\n          definition\n          isUnique\n        }\n        foreignKeys {\n          columns\n          referencedSchema\n          referencedTable\n          referencedColumns\n          onDelete\n        }\n        definition\n      }\n    }\n  }\n": types.GetTableStructureDocument,
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": types.GetTableRowsDocument,
+    "\n  mutation RunQuery($input: RunQueryInput!) {\n    runQuery(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      execution {\n        columns {\n          name\n          type\n        }\n        rows\n        rowCount\n        isTruncated\n        durationMs\n        command\n      }\n    }\n  }\n": types.RunQueryDocument,
 };
 
 /**
@@ -66,9 +68,6 @@ export function graphql(source: "\n  mutation CreateConnection($input: CreateCon
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  mutation TestConnection($input: TestConnectionInput!) {\n    testConnection(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n"): typeof import('./graphql').TestConnectionDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -82,6 +81,10 @@ export function graphql(source: "\n  query GetTableStructure($input: DbObjectInp
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n"): typeof import('./graphql').GetTableRowsDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RunQuery($input: RunQueryInput!) {\n    runQuery(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      execution {\n        columns {\n          name\n          type\n        }\n        rows\n        rowCount\n        isTruncated\n        durationMs\n        command\n      }\n    }\n  }\n"): typeof import('./graphql').RunQueryDocument;
 
 
 export function graphql(source: string) {

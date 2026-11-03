@@ -17,30 +17,30 @@ import type { TableOrder, TableRowsNode } from '../../../../utils/table-view.uti
 type Props = {
   columns: TableRowsNode['columns'];
   rows: (string | null)[][];
-  primaryKey: string | null;
-  firstRowNumber: number;
-  order: TableOrder | null;
-  isStale: boolean;
-  onOrderChange: (order: TableOrder) => void;
-  selectedRowIndex: number | null;
-  onRowOpen: (rowIndex: number) => void;
+  primaryKey?: string | null;
+  firstRowNumber?: number;
+  order?: TableOrder | null;
+  isStale?: boolean;
+  onOrderChange?: (order: TableOrder) => void;
+  selectedRowIndex?: number | null;
+  onRowOpen?: (rowIndex: number) => void;
 };
 
 export const TableGrid = ({
   columns,
   rows,
-  primaryKey,
-  firstRowNumber,
-  order,
-  isStale,
+  primaryKey = null,
+  firstRowNumber = 1,
+  order = null,
+  isStale = false,
   onOrderChange,
-  selectedRowIndex,
+  selectedRowIndex = null,
   onRowOpen
 }: Props) => {
   const { t } = useTranslation();
 
   const sortBy = (column: string) =>
-    onOrderChange({
+    onOrderChange?.({
       column,
       direction: order?.column === column && order.direction === 'ASC' ? 'DESC' : 'ASC'
     });
@@ -53,13 +53,36 @@ export const TableGrid = ({
       <TableHeader className="sticky top-0 z-10 bg-background">
         <TableRow>
           <TableHead className="w-px text-end">#</TableHead>
-          {columns.map(column => {
+          {columns.map((column, columnIndex) => {
             const direction = order && order.column === column.name ? order.direction : null;
             const SortIcon = direction === 'DESC' ? ArrowDownIcon : ArrowUpIcon;
 
+            const content = (
+              <>
+                {column.name === primaryKey && (
+                  <KeyIcon
+                    role="img"
+                    aria-hidden={false}
+                    aria-label={t('Primary key')}
+                    className="size-3.5 text-pk"
+                  />
+                )}
+                <span className="text-foreground">{column.name}</span>
+                <span className="font-normal">{formatColumnType(column.type)}</span>
+              </>
+            );
+
+            if (!onOrderChange) {
+              return (
+                <TableHead key={columnIndex}>
+                  <span className="flex items-center gap-1.5">{content}</span>
+                </TableHead>
+              );
+            }
+
             return (
               <TableHead
-                key={column.name}
+                key={columnIndex}
                 aria-sort={
                   direction === 'ASC' ? 'ascending' : direction === 'DESC' ? 'descending' : 'none'
                 }
@@ -70,16 +93,7 @@ export const TableGrid = ({
                   className="flex h-full w-full cursor-pointer items-center gap-1.5 px-2.5 text-start outline-none hover:text-foreground focus-visible:text-foreground"
                   onClick={() => sortBy(column.name)}
                 >
-                  {column.name === primaryKey && (
-                    <KeyIcon
-                      role="img"
-                      aria-hidden={false}
-                      aria-label={t('Primary key')}
-                      className="size-3.5 text-pk"
-                    />
-                  )}
-                  <span className="text-foreground">{column.name}</span>
-                  <span className="font-normal">{formatColumnType(column.type)}</span>
+                  {content}
                   <SortIcon
                     className={cn('size-3.5', direction ? 'text-foreground' : 'invisible')}
                   />
@@ -93,20 +107,23 @@ export const TableGrid = ({
         {rows.map((row, rowIndex) => (
           <TableRow
             key={firstRowNumber + rowIndex}
-            tabIndex={0}
+            tabIndex={onRowOpen ? 0 : undefined}
             data-state={rowIndex === selectedRowIndex ? 'selected' : undefined}
-            aria-selected={rowIndex === selectedRowIndex}
-            className="cursor-pointer outline-none focus-visible:bg-accent"
-            onClick={() => onRowOpen(rowIndex)}
-            onKeyDown={event => {
-              if (event.key === 'Enter') onRowOpen(rowIndex);
-            }}
+            aria-selected={onRowOpen ? rowIndex === selectedRowIndex : undefined}
+            className={cn(onRowOpen && 'cursor-pointer outline-none focus-visible:bg-accent')}
+            onClick={onRowOpen && (() => onRowOpen(rowIndex))}
+            onKeyDown={
+              onRowOpen &&
+              (event => {
+                if (event.key === 'Enter') onRowOpen(rowIndex);
+              })
+            }
           >
             <TableCell className="w-px py-1.5 text-end text-muted-foreground tabular-nums">
               {firstRowNumber + rowIndex}
             </TableCell>
             {row.map((value, columnIndex) => (
-              <TableCell key={columns[columnIndex]?.name ?? columnIndex} className="py-1.5">
+              <TableCell key={columnIndex} className="py-1.5">
                 <span className="flex items-center gap-1">
                   {value === null ? (
                     <span className="text-muted-foreground italic">NULL</span>

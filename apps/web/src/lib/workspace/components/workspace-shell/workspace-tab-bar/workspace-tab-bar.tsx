@@ -1,15 +1,21 @@
 import { useTranslation } from 'react-i18next';
 
-import { EyeIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
+import { EyeIcon, FileIcon, PlusIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
 
 import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
+import type { WorkspaceTab } from '../../../utils/workspace-tabs.utils';
+
+const TAB_ICONS = { table: TableIcon, view: EyeIcon, draft: FileIcon };
 
 export const WorkspaceTabBar = () => {
   const { t } = useTranslation();
-  const { tabs, activeKey, provisionalKey, pinTab, closeTab } = useWorkspaceTabs();
+  const { tabs, activeKey, provisionalKey, pinTab, closeTab, openDraft } = useWorkspaceTabs();
+
+  const getTabName = (tab: WorkspaceTab) =>
+    tab.kind === 'draft' ? t('Untitled {{number}}', { number: tab.number }) : tab.name;
 
   return (
     <TabsList
@@ -19,7 +25,8 @@ export const WorkspaceTabBar = () => {
     >
       {tabs.map(tab => {
         const isActive = tab.key === activeKey;
-        const Icon = tab.kind === 'table' ? TableIcon : EyeIcon;
+        const Icon = TAB_ICONS[tab.kind];
+        const name = getTabName(tab);
 
         return (
           <div
@@ -31,7 +38,7 @@ export const WorkspaceTabBar = () => {
           >
             <TabsTab
               value={tab.key}
-              title={`${tab.schema}.${tab.name}`}
+              title={tab.kind === 'draft' ? name : `${tab.schema}.${tab.name}`}
               className="h-full grow-0 gap-1.5 rounded-none border-0 ps-3 pe-8 hover:bg-transparent sm:h-full"
               onDoubleClick={() => pinTab(tab.key)}
             >
@@ -42,13 +49,13 @@ export const WorkspaceTabBar = () => {
                   tab.key === provisionalKey && 'italic'
                 )}
               >
-                {tab.name}
+                {name}
               </span>
             </TabsTab>
             <Button
               variant="ghost"
               size="icon-xs"
-              aria-label={t('Close {{name}}', { name: tab.name })}
+              aria-label={t('Close {{name}}', { name })}
               className={cn(
                 'absolute end-1.5 size-5 text-muted-foreground sm:size-5',
                 !isActive && 'opacity-0 group-hover/tab:opacity-100 focus-visible:opacity-100'
@@ -60,6 +67,15 @@ export const WorkspaceTabBar = () => {
           </div>
         );
       })}
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t('New query')}
+        className="mx-1 self-center"
+        onClick={openDraft}
+      >
+        <PlusIcon />
+      </Button>
     </TabsList>
   );
 };
