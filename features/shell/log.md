@@ -37,3 +37,8 @@
 - (web) Las pestañas Data y Structure tienen el mismo ancho.
 - (web) Detalle de fila: clic en una fila abre un panel a la derecha con un campo de solo lectura por columna, con copiar. Se quita el botón de copiar de las celdas de la grilla.
 - (web) Explorer: clic despliega la tabla o vista y doble clic la abre en la pestaña provisional. La pestaña se fija con doble clic en la barra o al actuar en ella.
+
+## 2026-11-03 — samuel.corrales621
+
+**Hecho:**
+- (web) Se quita eliminar conexión del selector del header, junto con su diálogo y la mutation. Eliminar una conexión queda fuera de alcance en el web. El check de la conexión activa pasa a la derecha, separado del texto.

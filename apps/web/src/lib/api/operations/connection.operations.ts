@@ -37,18 +37,6 @@ export const CREATE_CONNECTION_MUTATION = graphql(`
   }
 `);
 
-export const REMOVE_CONNECTION_MUTATION = graphql(`
-  mutation RemoveConnection($connectionId: ID!) {
-    removeConnection(id: $connectionId) {
-      apiErrors {
-        code
-        message
-      }
-      success
-    }
-  }
-`);
-
 export const TEST_CONNECTION_MUTATION = graphql(`
   mutation TestConnection($input: TestConnectionInput!) {
     testConnection(input: $input) {

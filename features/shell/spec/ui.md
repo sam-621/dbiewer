@@ -17,11 +17,10 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Selector de conexión
 
 - **Ubicación:** header del workspace, a la derecha de la marca.
-- **Muestra:** minimalista: la conexión activa con un indicador y su nombre, sin el motor ni el host. Al abrirlo, la lista de conexiones con el ícono del motor, su nombre y host, la activa marcada, y la acción "New connection".
+- **Muestra:** minimalista: la conexión activa con un indicador y su nombre, sin el motor ni el host. Al abrirlo, la lista de conexiones con el ícono del motor, su nombre y host, la activa marcada con un check a la derecha, y la acción "New connection".
 - **Permite:**
   - Cambiar la conexión activa. Cambian el sidebar y las pestañas.
   - Abrir el modal de nueva conexión de `connections`. Al guardar, la nueva pasa a ser la activa.
-  - Eliminar una conexión, con confirmación, desde el submenú "Remove connection".
 
 ### Sidebar
 
@@ -113,4 +112,4 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 
 ### Listado temporal de conexiones
 
-- **Cambia:** se elimina. Crear y eliminar conexiones pasa al selector del header.
+- **Cambia:** se elimina. Crear conexiones pasa al selector del header.

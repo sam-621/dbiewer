@@ -31,7 +31,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 
 - Siempre hay una conexión activa mientras el workspace tenga conexiones. Es la única de la que se muestra algo.
 - Todo corre contra la conexión activa: el esquema, las tablas, las queries y el historial. No hay otro selector de conexión.
-- Desde el selector del header también se crea una conexión nueva y se elimina una existente (con confirmación). Al eliminar la conexión activa, pasa a ser activa la más reciente que quede. Al eliminar la última, se vuelve al estado vacío.
+- Desde el selector del header también se crea una conexión nueva. Eliminar una conexión no se hace desde el web por ahora.
 
 ### Esquema
 
@@ -107,7 +107,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Confirmar escrituras o modo de solo lectura (decisión pendiente en `docs/roadmap.md`).
 - Retención del historial por plan (milestone 10).
 - Carpetas de queries y queries compartidas.
-- Editar una conexión desde el web.
+- Editar o eliminar una conexión desde el web.
 
 ## Plan de trabajo recomendado
 

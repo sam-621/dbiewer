@@ -133,13 +133,6 @@ export type CreateConnectionMutationVariables = Exact<{
 
 export type CreateConnectionMutation = { createConnection: { apiErrors: Array<{ code: ConnectionErrorCode, message: string }>, connection: { ' $fragmentRefs'?: { 'CommonConnectionFragment': CommonConnectionFragment } } | null } };
 
-export type RemoveConnectionMutationVariables = Exact<{
-  connectionId: string | number;
-}>;
-
-
-export type RemoveConnectionMutation = { removeConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
-
 export type TestConnectionMutationVariables = Exact<{
   input: TestConnectionInput;
 }>;
@@ -282,17 +275,6 @@ export const CreateConnectionDocument = new TypedDocumentString(`
   hasPassword
   sslMode
 }`) as unknown as TypedDocumentString<CreateConnectionMutation, CreateConnectionMutationVariables>;
-export const RemoveConnectionDocument = new TypedDocumentString(`
-    mutation RemoveConnection($connectionId: ID!) {
-  removeConnection(id: $connectionId) {
-    apiErrors {
-      code
-      message
-    }
-    success
-  }
-}
-    `) as unknown as TypedDocumentString<RemoveConnectionMutation, RemoveConnectionMutationVariables>;
 export const TestConnectionDocument = new TypedDocumentString(`
     mutation TestConnection($input: TestConnectionInput!) {
   testConnection(input: $input) {

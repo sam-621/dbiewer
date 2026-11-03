@@ -1,5 +1,5 @@
 import { Route, Routes } from 'react-router';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -45,14 +45,9 @@ const createSchema = (table: string) => ({
 type Connections = (typeof CONNECTION)[] | Error | Promise<never>;
 type Schemas = Record<string, ReturnType<typeof createSchema>[]>;
 
-const mockApi = (
-  connections: Connections = [],
-  removeConnection: unknown = null,
-  schemas: Schemas = {}
-) => {
+const mockApi = (connections: Connections = [], schemas: Schemas = {}) => {
   vi.mocked(gqlFetcher).mockImplementation(async (document, variables) => {
     if (document.toString().includes('query GetMe')) return { me: ME };
-    if (document.toString().includes('mutation RemoveConnection')) return { removeConnection };
 
     const connectionId = (variables as { connectionId?: string } | undefined)?.connectionId;
     if (connectionId) {
@@ -156,7 +151,7 @@ describe('WorkspacePage', () => {
   });
 
   test('shows the shell without tabs when there are connections', async () => {
-    mockApi([CONNECTION], null, { [CONNECTION.id]: [createSchema('users')] });
+    mockApi([CONNECTION], { [CONNECTION.id]: [createSchema('users')] });
 
     renderPage();
 
@@ -170,29 +165,8 @@ describe('WorkspacePage', () => {
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
   });
 
-  test('removes the last connection from the header and shows the empty state', async () => {
-    mockApi([CONNECTION], null, { [CONNECTION.id]: [createSchema('users')] });
-
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(
-      await within(await screen.findByRole('banner')).findByRole('button', { name: /Acme prod/ })
-    );
-    await user.hover(await screen.findByRole('menuitem', { name: 'Eliminar conexión' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Acme prod' }));
-    const dialog = await screen.findByRole('alertdialog');
-
-    mockApi([], { apiErrors: [], success: true });
-    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
-
-    expect(
-      await screen.findByRole('heading', { name: 'Conecta tu primera base de datos' })
-    ).toBeInTheDocument();
-    expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), { connectionId: 'connection-1' });
-  });
-
   test('shows the schema of the connection selected in the header', async () => {
-    mockApi([CONNECTION, STAGING], null, {
+    mockApi([CONNECTION, STAGING], {
       [CONNECTION.id]: [createSchema('users')],
       [STAGING.id]: [createSchema('events')]
     });
