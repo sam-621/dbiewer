@@ -1,11 +1,10 @@
-import type z from 'zod';
+import z from 'zod';
 
 import { ConnectionNotFoundError } from '@/modules/connection/connection-errors';
 import {
   ConnectionFailedError,
   QueryFailedError
 } from '@/modules/database-schema/database-schema-errors';
-import { RunQuerySchema } from '@/modules/query/query-schemas';
 import type { UowContext } from '@/persistence/unit-of-work';
 import type { EncryptionService } from '@/services/encryption';
 import type { PostgresQueryExecution, PostgresService } from '@/services/postgres';
@@ -14,6 +13,11 @@ import {
   PostgresQueryFailedError
 } from '@/services/postgres/postgres-errors';
 import { UseCase } from '@/shared/use-case';
+
+const RunQuerySchema = z.object({
+  connectionId: z.string(),
+  sql: z.string().trim().min(1).max(100_000)
+});
 
 export class QueryRunner extends UseCase<typeof RunQuerySchema> {
   constructor(

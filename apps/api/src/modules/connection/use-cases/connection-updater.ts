@@ -1,15 +1,29 @@
-import type z from 'zod';
+import z from 'zod';
 
 import {
   ConnectionNameAlreadyExistsError,
   ConnectionNotFoundError
 } from '@/modules/connection/connection-errors';
-import { UpdateConnectionSchema } from '@/modules/connection/connection-schemas';
 import type { Connection } from '@/persistence/repositories/connection';
+import { connection } from '@/persistence/schema';
 import type { UowContext } from '@/persistence/unit-of-work';
 import type { EncryptionService } from '@/services/encryption';
 import type { PostgresService } from '@/services/postgres';
 import { UseCase } from '@/shared/use-case';
+
+const UpdateConnectionSchema = z.object({
+  id: z.string(),
+  name: z.string().trim().min(1).max(50),
+  host: z.string().trim().min(1),
+  port: z.number().int().min(1).max(65535),
+  database: z.string().trim().min(1),
+  username: z.string().trim().min(1),
+  password: z
+    .string()
+    .nullish()
+    .transform(password => password || null),
+  sslMode: z.enum(connection.sslMode.enumValues)
+});
 
 export class ConnectionUpdater extends UseCase<typeof UpdateConnectionSchema> {
   constructor(

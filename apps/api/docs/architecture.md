@@ -34,7 +34,7 @@ src/
 │   ├── plugins/<nombre>.ts            plugins de Yoga (useErrorLogger)
 │   ├── utils/api-response.ts          apiResponse: arma el payload { apiErrors, <key> } de las mutations y queries
 │   └── codegen.ts                     tipos generados por `yarn gen:types`, no se edita
-├── modules/<modulo>/                 un módulo por dominio (workspace, connection...): use-cases/, <modulo>-schemas.ts y <modulo>-errors.ts
+├── modules/<modulo>/                 un módulo por dominio (workspace, connection...): use-cases/ y <modulo>-errors.ts
 │   ├── use-cases/<caso-de-uso>.ts    un archivo por caso de uso; si tiene test, va en use-cases/<caso-de-uso>/ con su test e index.ts
 │   └── <modulo>-errors.ts            errores de negocio del módulo
 ├── persistence/
@@ -127,7 +127,7 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 
 - Una clase por caso de uso, con un solo método `execute` (`WorkspaceForUserCreator.execute`). Naming en `code-style.md` > Naming.
 - Extienden `UseCase` (`src/shared/use-case.ts`) con su schema zod (`super(CreateConnectionSchema)`) y escriben su lógica en `run(input)`. `execute` recibe el input crudo, lo valida con el schema y, si falla, devuelve `InvalidInputError` sin llamar a `run`; si pasa, llama a `run` con el input ya parseado (recortado, con defaults).
-- Los schemas van en `modules/<modulo>/<modulo>-schemas.ts`. Validan solo forma (obligatorios, largos, rangos); las reglas que necesitan la DB (nombre repetido, no existe) siguen en `run` con su error propio.
+- Cada use-case define su schema en su propio archivo, arriba de la clase y sin exportar. No se comparten entre use-cases: si se repite, se duplica. Validan solo forma (obligatorios, largos, rangos); las reglas que necesitan la DB (nombre repetido, no existe) siguen en `run` con su error propio.
 - Reciben por constructor el `UowContext` completo, no solo lo que usan (ver "Unit of work y RLS").
 - Las reglas de negocio viven aquí. Si una regla la usan varios use-cases, se mueve a `src/shared/` o a un use-case propio.
 - No saben de RLS ni de transacciones: eso lo manejan el `UnitOfWork` y los repositorios.

@@ -1,4 +1,4 @@
-import type z from 'zod';
+import z from 'zod';
 
 import { ConnectionNotFoundError } from '@/modules/connection/connection-errors';
 import {
@@ -6,7 +6,6 @@ import {
   DbObjectNotFoundError,
   QueryFailedError
 } from '@/modules/database-schema/database-schema-errors';
-import { ReadTableStructureSchema } from '@/modules/database-schema/database-schema-schemas';
 import type { UowContext } from '@/persistence/unit-of-work';
 import type { EncryptionService } from '@/services/encryption';
 import type { PostgresService, PostgresTableStructure } from '@/services/postgres';
@@ -15,6 +14,12 @@ import {
   PostgresQueryFailedError
 } from '@/services/postgres/postgres-errors';
 import { UseCase } from '@/shared/use-case';
+
+const ReadTableStructureSchema = z.object({
+  connectionId: z.string(),
+  schema: z.string(),
+  name: z.string()
+});
 
 export class TableStructureReader extends UseCase<typeof ReadTableStructureSchema> {
   constructor(
