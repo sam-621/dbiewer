@@ -36,6 +36,20 @@
       "when": 1793036817159,
       "tag": "0004_connection_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793763598323,
+      "tag": "0005_create_saved_query",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793763604622,
+      "tag": "0006_saved_query_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -58,3 +58,4 @@
 - (api) Query `functionDefinition` con `pg_get_functiondef`: recibe `arguments` para distinguir funciones sobrecargadas y devuelve `OBJECT_NOT_FOUND` si no existe. Con e2e e integración. Parte del paso 6; la pestaña de función en el web sigue pendiente.
 - (web) Pestaña de función: doble clic en el Explorer la abre en la pestaña provisional, con el aviso de solo lectura, la definición en CodeMirror sin editar ni ejecutar y un botón de copiar. Cierra el paso 6.
 - (web) Explorer: las funciones se abren en la pestaña provisional con un clic.
+- (api) Tabla `saved_query` con RLS, FK a `connection` con cascade e índice único por `(connection_id, lower(name))`, con su migración generada y la custom. Parte del paso 7; falta el CRUD.
