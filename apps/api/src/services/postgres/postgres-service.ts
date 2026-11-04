@@ -80,18 +80,9 @@ type PostgresRelationRow = {
   viewDefinition: string | null;
 };
 
-type PostgresFilterOperator =
-  'EQ' | 'NEQ' | 'GT' | 'GTE' | 'LT' | 'LTE' | 'CONTAINS' | 'IS_NULL' | 'IS_NOT_NULL';
-
-type PostgresFilter = { column: string; operator: PostgresFilterOperator; value?: string | null };
-
-type PostgresSortDirection = 'ASC' | 'DESC';
-
-type PostgresOrder = { column: string; direction: PostgresSortDirection };
-
 type PostgresRowsQuery = PostgresObject & {
-  filters: PostgresFilter[];
-  orderBy: PostgresOrder | null;
+  where: string | null;
+  orderBy: string | null;
   primaryKeyColumns: string[];
   page: number;
 };
@@ -308,10 +299,6 @@ export class PostgresService {
     from unnest($1::oid[], $2::int[]) with ordinality as t (oid, modifier, position)
     order by t.position
   `;
-  private static readonly COMPARISON_OPERATORS: Record<
-    Exclude<PostgresFilterOperator, 'CONTAINS' | 'IS_NULL' | 'IS_NOT_NULL'>,
-    string
-  > = { EQ: '=', NEQ: '<>', GT: '>', GTE: '>=', LT: '<', LTE: '<=' };
 
   private readonly pools = new Map<string, Pool>();
   private readonly sslByMode: Record<PostgresSslMode, ClientConfig['ssl']>;
@@ -399,27 +386,26 @@ export class PostgresService {
     connection: PostgresConnection,
     rowsQuery: PostgresRowsQuery
   ): Promise<PostgresTableRows> {
-    const values: unknown[] = [];
-    const where = this.toWhereClause(rowsQuery.filters, values);
-    const from = `from ${escapeIdentifier(rowsQuery.schema)}.${escapeIdentifier(rowsQuery.name)}${where}`;
+    const table = `${escapeIdentifier(rowsQuery.schema)}.${escapeIdentifier(rowsQuery.name)}`;
+    const from = `from ${table}${this.toWhereClause(rowsQuery.where)}`;
     const orderBy = this.toOrderByClause(rowsQuery.orderBy, rowsQuery.primaryKeyColumns);
-    const limit = `limit $${values.length + 1} offset $${values.length + 2}`;
     const offset = (rowsQuery.page - 1) * PostgresService.PAGE_SIZE;
 
-    return this.withClient(connection, async client => {
-      const rows = await client.query<Array<string | null>>({
-        text: `select * ${from}${orderBy} ${limit}`,
-        values: [...values, PostgresService.PAGE_SIZE, offset],
-        rowMode: 'array',
-        types: { getTypeParser: () => (value: string) => value }
-      });
-      const count = await client.query<{ total: string }>(
-        `select count(*) as total ${from}`,
-        values
-      );
+    return this.withClient(
+      connection,
+      async client => {
+        const rows = await client.query<Array<string | null>>({
+          text: `select * ${from}${orderBy}\nlimit $1 offset $2`,
+          values: [PostgresService.PAGE_SIZE, offset],
+          rowMode: 'array',
+          types: { getTypeParser: () => (value: string) => value }
+        });
+        const count = await client.query<{ total: string }>(`select count(*) as total ${from}`);
 
-      return { rows: rows.rows, totalRows: Number(count.rows[0]?.total) };
-    });
+        return { rows: rows.rows, totalRows: Number(count.rows[0]?.total) };
+      },
+      { discardClient: true }
+    );
   }
 
   async runQuery(connection: PostgresConnection, sql: string): Promise<PostgresQueryExecution> {
@@ -561,40 +547,17 @@ export class PostgresService {
     return `CREATE TABLE ${escapeIdentifier(object.schema)}.${escapeIdentifier(object.name)} (\n${lines}\n);`;
   }
 
-  private toOrderByClause(orderBy: PostgresOrder | null, primaryKeyColumns: string[]) {
-    const tieBreakers = primaryKeyColumns
-      .filter(column => column !== orderBy?.column)
-      .map(column => ({ column, direction: 'ASC' as const }));
-    const orders = [...(orderBy ? [orderBy] : []), ...tieBreakers];
-
-    if (!orders.length) return '';
-
-    const columns = orders.map(
-      order => `${escapeIdentifier(order.column)} ${order.direction.toLowerCase()}`
-    );
-
-    return ` order by ${columns.join(', ')}`;
+  private toWhereClause(where: string | null) {
+    return where ? `\nwhere (\n${where}\n)` : '';
   }
 
-  private toWhereClause(filters: PostgresFilter[], values: unknown[]) {
-    if (!filters.length) return '';
+  private toOrderByClause(orderBy: string | null, primaryKeyColumns: string[]) {
+    const terms = [
+      ...(orderBy ? [orderBy] : []),
+      ...primaryKeyColumns.map(column => escapeIdentifier(column))
+    ];
 
-    const conditions = filters.map(filter => {
-      const column = escapeIdentifier(filter.column);
-
-      if (filter.operator === 'IS_NULL') return `${column} is null`;
-      if (filter.operator === 'IS_NOT_NULL') return `${column} is not null`;
-
-      values.push(filter.value);
-
-      if (filter.operator === 'CONTAINS') {
-        return `${column}::text ilike '%' || $${values.length} || '%'`;
-      }
-
-      return `${column} ${PostgresService.COMPARISON_OPERATORS[filter.operator]} $${values.length}`;
-    });
-
-    return ` where ${conditions.join(' and ')}`;
+    return terms.length ? `\norder by\n${terms.join('\n, ')}` : '';
   }
 
   private toClientConfig(credentials: PostgresCredentials): ClientConfig {

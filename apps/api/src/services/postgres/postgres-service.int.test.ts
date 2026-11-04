@@ -317,8 +317,8 @@ describe('PostgresService', () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [],
-        orderBy: { column: 'id', direction: 'ASC' },
+        where: null,
+        orderBy: null,
         primaryKeyColumns: ['id'],
         page: 1
       });
@@ -333,21 +333,21 @@ describe('PostgresService', () => {
       });
     });
 
-    test('returns the rows ordered by the given column', async () => {
+    test('returns the rows ordered by the given expression', async () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [],
-        orderBy: { column: 'title', direction: 'DESC' },
+        where: null,
+        orderBy: 'author_id desc, lower(title)',
         primaryKeyColumns: ['id'],
         page: 1
       });
 
       expect(tableRows).toEqual({
         rows: [
-          ['1', '1', 'Notes on the Analytical Engine', '12.50', '1843-10-01'],
+          ['2', '2', 'COBOL Manual', '8.00', null],
           ['3', '1', "It's; drop table library.books; --", '5.25', null],
-          ['2', '2', 'COBOL Manual', '8.00', null]
+          ['1', '1', 'Notes on the Analytical Engine', '12.50', '1843-10-01']
         ],
         totalRows: 3
       });
@@ -357,7 +357,7 @@ describe('PostgresService', () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'loans',
-        filters: [],
+        where: null,
         orderBy: null,
         primaryKeyColumns: ['id'],
         page: 2
@@ -380,12 +380,12 @@ describe('PostgresService', () => {
       });
     });
 
-    test('breaks ties of the given column by the primary key', async () => {
+    test('breaks ties of the given order by the primary key', async () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'loans',
-        filters: [],
-        orderBy: { column: 'status', direction: 'ASC' },
+        where: null,
+        orderBy: 'status',
         primaryKeyColumns: ['id'],
         page: 2
       });
@@ -407,14 +407,44 @@ describe('PostgresService', () => {
       });
     });
 
-    test('returns the rows that match all the filters', async () => {
+    test('returns the rows when the order already uses the primary key', async () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [
-          { column: 'author_id', operator: 'EQ', value: '1' },
-          { column: 'price', operator: 'GTE', value: '10' }
+        where: null,
+        orderBy: 'id desc',
+        primaryKeyColumns: ['id'],
+        page: 1
+      });
+
+      expect(tableRows).toEqual({
+        rows: [
+          ['3', '1', "It's; drop table library.books; --", '5.25', null],
+          ['2', '2', 'COBOL Manual', '8.00', null],
+          ['1', '1', 'Notes on the Analytical Engine', '12.50', '1843-10-01']
         ],
+        totalRows: 3
+      });
+    });
+
+    test('returns the rows of a view without primary key', async () => {
+      const tableRows = await postgresService.readTableRows(getTestConnection(), {
+        schema: 'library',
+        name: 'cheap_books',
+        where: 'id = 2',
+        orderBy: null,
+        primaryKeyColumns: [],
+        page: 1
+      });
+
+      expect(tableRows).toEqual({ rows: [['2', 'COBOL Manual']], totalRows: 1 });
+    });
+
+    test('returns the rows that match the condition with their total', async () => {
+      const tableRows = await postgresService.readTableRows(getTestConnection(), {
+        schema: 'library',
+        name: 'books',
+        where: 'author_id = 1 and price >= 10',
         orderBy: null,
         primaryKeyColumns: ['id'],
         page: 1
@@ -426,28 +456,34 @@ describe('PostgresService', () => {
       });
     });
 
-    test('returns the rows whose column contains the value ignoring case', async () => {
+    test('counts every row of the condition and not only those of the page', async () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
-        name: 'books',
-        filters: [{ column: 'title', operator: 'CONTAINS', value: 'cobol' }],
+        name: 'loans',
+        where: 'id > 5',
         orderBy: null,
         primaryKeyColumns: ['id'],
-        page: 1
+        page: 2
       });
 
       expect(tableRows).toEqual({
-        rows: [['2', '2', 'COBOL Manual', '8.00', null]],
-        totalRows: 1
+        rows: [
+          ['56', 'open'],
+          ['57', 'closed'],
+          ['58', 'open'],
+          ['59', 'closed'],
+          ['60', 'open']
+        ],
+        totalRows: 55
       });
     });
 
-    test('returns the rows whose column is null', async () => {
+    test('does not let a line comment swallow what follows the fragments', async () => {
       const tableRows = await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [{ column: 'published_on', operator: 'IS_NULL' }],
-        orderBy: { column: 'id', direction: 'ASC' },
+        where: 'price > 6 -- not the cheapest',
+        orderBy: 'price -- from cheap to expensive',
         primaryKeyColumns: ['id'],
         page: 1
       });
@@ -455,30 +491,35 @@ describe('PostgresService', () => {
       expect(tableRows).toEqual({
         rows: [
           ['2', '2', 'COBOL Manual', '8.00', null],
-          ['3', '1', "It's; drop table library.books; --", '5.25', null]
+          ['1', '1', 'Notes on the Analytical Engine', '12.50', '1843-10-01']
         ],
         totalRows: 2
       });
     });
 
-    test('does not run the value of a filter as SQL', async () => {
-      const tableRows = await postgresService.readTableRows(getTestConnection(), {
+    test('does not keep the session state of the fragments for the next query', async () => {
+      await postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [{ column: 'title', operator: 'EQ', value: "x' or '1'='1" }],
+        where: "set_config('search_path', 'library', false) is not null",
         orderBy: null,
         primaryKeyColumns: ['id'],
         page: 1
       });
 
-      expect(tableRows).toEqual({ rows: [], totalRows: 0 });
+      const result = await postgresService.query<{ searchPath: string }>(
+        getTestConnection(),
+        'select current_setting(\'search_path\') as "searchPath"'
+      );
+
+      expect(result.rows[0]?.searchPath).toBe('"$user", public');
     });
 
-    test('throws PostgresQueryFailedError when a filter value is invalid for the column type', async () => {
+    test('throws PostgresQueryFailedError when the where fragment is invalid', async () => {
       const tableRows = postgresService.readTableRows(getTestConnection(), {
         schema: 'library',
         name: 'books',
-        filters: [{ column: 'id', operator: 'EQ', value: 'abc' }],
+        where: "id = 'abc'",
         orderBy: null,
         primaryKeyColumns: ['id'],
         page: 1
@@ -486,6 +527,20 @@ describe('PostgresService', () => {
 
       await expect(tableRows).rejects.toThrow(PostgresQueryFailedError);
       await expect(tableRows).rejects.toThrow('invalid input syntax for type integer: "abc"');
+    });
+
+    test('throws PostgresQueryFailedError when the order fragment is invalid', async () => {
+      const tableRows = postgresService.readTableRows(getTestConnection(), {
+        schema: 'library',
+        name: 'books',
+        where: null,
+        orderBy: 'missing_column',
+        primaryKeyColumns: ['id'],
+        page: 1
+      });
+
+      await expect(tableRows).rejects.toThrow(PostgresQueryFailedError);
+      await expect(tableRows).rejects.toThrow('column "missing_column" does not exist');
     });
   });
 

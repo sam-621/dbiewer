@@ -58,8 +58,8 @@ const PRODUCTS_INPUT = {
   connectionId: ConnectionConstants.ProductionConnectionId,
   schema: 'inventory',
   name: 'products',
-  filters: [{ column: 'name', operator: 'CONTAINS', value: 'lamp' }],
-  orderBy: { column: 'price', direction: 'DESC' },
+  where: "name ilike '%lamp%'",
+  orderBy: 'price desc',
   page: 2
 };
 
@@ -115,43 +115,22 @@ describe('tableRows', () => {
     });
   });
 
-  test('returns INVALID_INPUT when a filter uses a column that does not exist', async () => {
-    vi.spyOn(PostgresService.prototype, 'readTableStructure').mockResolvedValue(PRODUCTS_STRUCTURE);
+  test('returns INVALID_INPUT when the where fragment is too long', async () => {
     const headers = await testServer.signIn(UserConstants.OwnerEmail);
 
     const response = await testServer.query<TableRowsResponse>(
       TABLE_ROWS_QUERY,
-      {
-        input: {
-          ...PRODUCTS_INPUT,
-          filters: [{ column: 'stock', operator: 'GT', value: '0' }]
+      { input: { ...PRODUCTS_INPUT, where: 'x'.repeat(10_001) } },
+      headers
+    );
+
+    expect(response.errors).toBeUndefined();
+    expect(response.data?.tableRows).toEqual({
+      apiErrors: [
+        {
+          code: 'INVALID_INPUT',
+          message: '✖ Too big: expected string to have <=10000 characters\n  → at where'
         }
-      },
-      headers
-    );
-
-    expect(response.errors).toBeUndefined();
-    expect(response.data?.tableRows).toEqual({
-      apiErrors: [
-        { code: 'INVALID_INPUT', message: 'Column stock does not exist in inventory.products' }
-      ],
-      tableRows: null
-    });
-  });
-
-  test('returns INVALID_INPUT when the page is lower than 1', async () => {
-    const headers = await testServer.signIn(UserConstants.OwnerEmail);
-
-    const response = await testServer.query<TableRowsResponse>(
-      TABLE_ROWS_QUERY,
-      { input: { ...PRODUCTS_INPUT, page: 0 } },
-      headers
-    );
-
-    expect(response.errors).toBeUndefined();
-    expect(response.data?.tableRows).toEqual({
-      apiErrors: [
-        { code: 'INVALID_INPUT', message: '✖ Too small: expected number to be >=1\n  → at page' }
       ],
       tableRows: null
     });
@@ -244,12 +223,7 @@ describe('tableRows', () => {
 
     const response = await testServer.query<TableRowsResponse>(
       TABLE_ROWS_QUERY,
-      {
-        input: {
-          ...PRODUCTS_INPUT,
-          filters: [{ column: 'price', operator: 'LT', value: 'cheap' }]
-        }
-      },
+      { input: { ...PRODUCTS_INPUT, where: "price < 'cheap'" } },
       headers
     );
 

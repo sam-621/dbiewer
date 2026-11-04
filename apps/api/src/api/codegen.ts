@@ -83,15 +83,6 @@ export type DbColumnDetail = {
   type: Scalars['String']['output'];
 };
 
-export type DbFilterInput = {
-  column: Scalars['String']['input'];
-  operator: DbFilterOperator;
-  value?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type DbFilterOperator =
-  'CONTAINS' | 'EQ' | 'GT' | 'GTE' | 'IS_NOT_NULL' | 'IS_NULL' | 'LT' | 'LTE' | 'NEQ';
-
 export type DbForeignKey = {
   __typename?: 'DbForeignKey';
   columns: Array<Scalars['String']['output']>;
@@ -121,11 +112,6 @@ export type DbObjectInput = {
   connectionId: Scalars['ID']['input'];
   name: Scalars['String']['input'];
   schema: Scalars['String']['input'];
-};
-
-export type DbOrderInput = {
-  column: Scalars['String']['input'];
-  direction: SortDirection;
 };
 
 export type DbResultColumn = {
@@ -293,8 +279,6 @@ export type ShellErrorResult = {
   message: Scalars['String']['output'];
 };
 
-export type SortDirection = 'ASC' | 'DESC';
-
 export type TableRows = {
   __typename?: 'TableRows';
   columns: Array<DbResultColumn>;
@@ -304,11 +288,11 @@ export type TableRows = {
 
 export type TableRowsInput = {
   connectionId: Scalars['ID']['input'];
-  filters?: InputMaybe<Array<DbFilterInput>>;
   name: Scalars['String']['input'];
-  orderBy?: InputMaybe<DbOrderInput>;
+  orderBy?: InputMaybe<Scalars['String']['input']>;
   page: Scalars['Int']['input'];
   schema: Scalars['String']['input'];
+  where?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type TableRowsResult = {
@@ -504,14 +488,11 @@ export type ResolversTypes = {
   CreateWorkspaceInput: CreateWorkspaceInput;
   DbColumn: ResolverTypeWrapper<DbColumn>;
   DbColumnDetail: ResolverTypeWrapper<DbColumnDetail>;
-  DbFilterInput: DbFilterInput;
-  DbFilterOperator: DbFilterOperator;
   DbForeignKey: ResolverTypeWrapper<DbForeignKey>;
   DbFunction: ResolverTypeWrapper<DbFunction>;
   DbFunctionKind: null;
   DbIndex: ResolverTypeWrapper<DbIndex>;
   DbObjectInput: DbObjectInput;
-  DbOrderInput: DbOrderInput;
   DbResultColumn: ResolverTypeWrapper<DbResultColumn>;
   DbSchema: ResolverTypeWrapper<DbSchema>;
   DbTable: ResolverTypeWrapper<DbTable>;
@@ -530,7 +511,6 @@ export type ResolversTypes = {
   RunQueryResult: ResolverTypeWrapper<RunQueryResult>;
   ShellErrorCode: ShellErrorCode;
   ShellErrorResult: ResolverTypeWrapper<ShellErrorResult>;
-  SortDirection: SortDirection;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   TableRows: ResolverTypeWrapper<TableRows>;
   TableRowsInput: TableRowsInput;
@@ -562,12 +542,10 @@ export type ResolversParentTypes = {
   CreateWorkspaceInput: CreateWorkspaceInput;
   DbColumn: DbColumn;
   DbColumnDetail: DbColumnDetail;
-  DbFilterInput: DbFilterInput;
   DbForeignKey: DbForeignKey;
   DbFunction: DbFunction;
   DbIndex: DbIndex;
   DbObjectInput: DbObjectInput;
-  DbOrderInput: DbOrderInput;
   DbResultColumn: DbResultColumn;
   DbSchema: DbSchema;
   DbTable: DbTable;

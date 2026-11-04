@@ -13,31 +13,21 @@ import {
   PostgresConnectionFailedError,
   PostgresQueryFailedError
 } from '@/services/postgres/postgres-errors';
-import { InvalidInputError } from '@/shared/errors/invalid-input-error';
 import { UseCase } from '@/shared/use-case';
 
-const VALUELESS_OPERATORS = ['IS_NULL', 'IS_NOT_NULL'];
-
-const FilterSchema = z
-  .object({
-    column: z.string(),
-    operator: z.enum(['EQ', 'NEQ', 'GT', 'GTE', 'LT', 'LTE', 'CONTAINS', 'IS_NULL', 'IS_NOT_NULL']),
-    value: z.string().nullish()
-  })
-  .refine(filter => VALUELESS_OPERATORS.includes(filter.operator) || filter.value != null, {
-    message: 'Value is required for this operator',
-    path: ['value']
-  });
+const SqlFragmentSchema = z
+  .string()
+  .trim()
+  .max(10_000)
+  .nullish()
+  .transform(fragment => fragment || null);
 
 const ReadTableRowsSchema = z.object({
   connectionId: z.string(),
   schema: z.string(),
   name: z.string(),
-  filters: z
-    .array(FilterSchema)
-    .nullish()
-    .transform(filters => filters ?? []),
-  orderBy: z.object({ column: z.string(), direction: z.enum(['ASC', 'DESC']) }).nullish(),
+  where: SqlFragmentSchema,
+  orderBy: SqlFragmentSchema,
   page: z.number().int().min(1)
 });
 
@@ -59,7 +49,6 @@ export class TableRowsReader extends UseCase<typeof ReadTableRowsSchema> {
     | ConnectionNotFoundError
     | ConnectionFailedError
     | DbObjectNotFoundError
-    | InvalidInputError
     | QueryFailedError
   > {
     const connection = await this.ctx.repositories.connection.findOne({ id: input.connectionId });
@@ -81,23 +70,11 @@ export class TableRowsReader extends UseCase<typeof ReadTableRowsSchema> {
 
       if (!structure) return new DbObjectNotFoundError(input.schema, input.name);
 
-      const columnNames = structure.columns.map(column => column.name);
-      const unknownColumn = [
-        ...input.filters.map(filter => filter.column),
-        ...(input.orderBy ? [input.orderBy.column] : [])
-      ].find(column => !columnNames.includes(column));
-
-      if (unknownColumn !== undefined) {
-        return new InvalidInputError(
-          `Column ${unknownColumn} does not exist in ${input.schema}.${input.name}`
-        );
-      }
-
       const tableRows = await this.postgresService.readTableRows(credentials, {
         schema: input.schema,
         name: input.name,
-        filters: input.filters,
-        orderBy: input.orderBy ?? null,
+        where: input.where,
+        orderBy: input.orderBy,
         primaryKeyColumns: structure.columns
           .filter(column => column.isPrimaryKey)
           .map(column => column.name),
