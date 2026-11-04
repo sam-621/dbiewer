@@ -63,7 +63,7 @@ describe('UserMenu', () => {
 
     const trigger = await screen.findByRole('button', { name: 'Abrir el menú de la cuenta' });
     expect(trigger).toHaveTextContent('Ana');
-    expect(trigger).toHaveTextContent('ana@acme.dev');
+    expect(trigger).not.toHaveTextContent('ana@acme.dev');
 
     await openMenu();
 

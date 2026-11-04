@@ -19,10 +19,20 @@ type Props = {
   object: TableTabObject;
   state: TableViewState;
   onStateChange: (state: TableViewState) => void;
+  hiddenColumns: string[];
+  onHiddenColumnsChange: (hiddenColumns: string[]) => void;
   onPin: () => void;
 };
 
-export const TableTab = ({ connectionId, object, state, onStateChange, onPin }: Props) => {
+export const TableTab = ({
+  connectionId,
+  object,
+  state,
+  onStateChange,
+  hiddenColumns,
+  onHiddenColumnsChange,
+  onPin
+}: Props) => {
   const { t } = useTranslation();
   const input = { connectionId, schema: object.schema, name: object.name };
   const structureResult = useGetTableStructure(input);
@@ -68,6 +78,7 @@ export const TableTab = ({ connectionId, object, state, onStateChange, onPin }: 
             rowsResult={rowsResult}
             state={state}
             onStateChange={onStateChange}
+            hiddenColumns={hiddenColumns}
             connectionId={connectionId}
             object={object}
             onPin={onPin}
@@ -87,10 +98,12 @@ export const TableTab = ({ connectionId, object, state, onStateChange, onPin }: 
       className="h-full min-h-0 gap-0"
     >
       <TableTabHeader
-        connectionId={connectionId}
         object={object}
+        view={state.view}
         totalRows={rowsResult.tableRows?.totalRows ?? null}
-        totalColumns={structure?.columns.length ?? null}
+        columns={structure?.columns ?? null}
+        hiddenColumns={hiddenColumns}
+        onHiddenColumnsChange={onHiddenColumnsChange}
         isReloading={structureResult.isFetching || rowsResult.isFetching}
         onReload={reload}
       />

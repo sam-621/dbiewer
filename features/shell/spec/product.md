@@ -48,6 +48,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Filtro: un campo de texto con la condición `WHERE` en SQL de Postgres (`plan = 'pro' and age > 30`), con autocompletado. Vacío, no filtra.
 - Orden: un campo de texto con la expresión `ORDER BY` en SQL de Postgres (`created_at desc, name`), con autocompletado. Vacío, ordena por la PK si existe. Siempre se desempata por la PK para que las páginas no repitan ni pierdan filas.
 - El filtro y el orden tienen cada uno su historial por tabla: lo aplicado con Enter, del más reciente al más antiguo y sin repetidos. Dura lo que la sesión del navegador. Elegir uno lo escribe en el campo y lo aplica.
+- El usuario elige qué columnas ve en Data, al menos una. Es solo visual: no cambia lo que se pide a la api y el detalle de fila sigue mostrando todas. La elección vive en memoria mientras la pestaña esté abierta: se mantiene al cambiar de pestaña o de conexión y se pierde al cerrar la pestaña o recargar el navegador.
 - Si el filtro o el orden no son válidos, se muestra el mensaje de error de Postgres y los campos siguen editables para corregirlos.
 
 ### Funciones
@@ -92,6 +93,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - **Sin pestaña fija de diagrama por ahora**: el diagrama es el milestone 6. Hasta entonces, sin pestañas abiertas se ve un estado vacío.
 - **Sin historial ni Messages**: el panel de resultados de la pestaña SQL solo tiene Results. El usuario no los necesita.
 - **`WHERE` y `ORDER BY` como texto libre**: escribir es más rápido que armar condiciones con menús y permite cualquier expresión de Postgres (`or`, funciones, casts). La api los pega tal cual en la consulta: no abre nada nuevo, porque el usuario ya puede ejecutar cualquier SQL contra esa conexión desde la pestaña SQL.
+- **Layout en paneles flotantes**: dos paneles redondeados sobre un fondo más oscuro, con header y barra de estado sobre el fondo. Le da a dbiewer una identidad propia frente a los clientes web con sidebar y bordes.
 - **Pool de conexiones por conexión en la api**: abrir un cliente por cada pedido es lento para navegar tablas.
 
 ## Fuera de alcance

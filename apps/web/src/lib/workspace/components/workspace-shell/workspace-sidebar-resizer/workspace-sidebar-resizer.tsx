@@ -55,7 +55,7 @@ export const WorkspaceSidebarResizer = ({ width, onWidthChange }: Props) => {
       onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}
       onDoubleClick={() => onWidthChange(SIDEBAR_DEFAULT_WIDTH)}
-      className="relative -ms-px w-px shrink-0 cursor-col-resize bg-border outline-none after:absolute after:inset-y-0 after:-inset-x-1.5 hover:bg-ring focus-visible:bg-ring"
+      className="relative w-1.5 shrink-0 cursor-col-resize outline-none before:absolute before:inset-x-0.5 before:inset-y-3 before:rounded-full hover:before:bg-ring focus-visible:before:bg-ring"
     />
   );
 };

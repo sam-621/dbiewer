@@ -16,6 +16,7 @@ const REFRESH = {
   arguments: 'since date'
 } as const;
 const REFRESH_KEY = 'function:public.refresh_stats(since date)';
+const USERS_KEY = 'table:public.users';
 
 const renderTabsFor = (initialConnectionId: string) => {
   let connectionId = initialConnectionId;
@@ -237,6 +238,68 @@ describe('useWorkspaceTabs', () => {
     expect(JSON.parse(localStorage.getItem('dbiewer:tabs:connection-1') ?? '')).toMatchObject({
       activeKey: 'table:public.users'
     });
+  });
+
+  test('pins the provisional tab when choosing its columns', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+    act(() => result.current.changeHiddenColumns(USERS_KEY, ['email']));
+
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual(['email']);
+    expect(result.current.provisionalKey).toBeNull();
+  });
+
+  test('keeps the hidden columns when changing tabs and connections', () => {
+    const { result, changeConnection } = renderTabsFor('connection-1');
+
+    act(() => result.current.openObject(USERS, { isPinned: true }));
+    act(() => result.current.openObject(ORDERS, { isPinned: true }));
+    act(() => result.current.changeHiddenColumns(USERS_KEY, ['email']));
+    act(() => result.current.activateTab('table:public.orders'));
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual(['email']);
+    expect(result.current.getHiddenColumns('table:public.orders')).toEqual([]);
+
+    changeConnection('connection-2');
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual([]);
+
+    act(() => result.current.openObject(USERS, { isPinned: true }));
+    act(() => result.current.changeHiddenColumns(USERS_KEY, ['plan']));
+
+    changeConnection('connection-1');
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual(['email']);
+
+    changeConnection('connection-2');
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual(['plan']);
+  });
+
+  test('forgets the hidden columns when closing the tab', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(USERS, { isPinned: true }));
+    act(() => result.current.openObject(ORDERS, { isPinned: true }));
+    act(() => result.current.changeHiddenColumns(USERS_KEY, ['email']));
+    act(() => result.current.changeHiddenColumns('table:public.orders', ['total']));
+    act(() => result.current.closeTab(USERS_KEY));
+    act(() => result.current.openObject(USERS, { isPinned: true }));
+
+    expect(result.current.getHiddenColumns(USERS_KEY)).toEqual([]);
+    expect(result.current.getHiddenColumns('table:public.orders')).toEqual(['total']);
+  });
+
+  test('does not keep the hidden columns in localStorage', () => {
+    const { result, unmount } = renderTabs();
+
+    act(() => result.current.openObject(USERS, { isPinned: true }));
+    act(() => result.current.changeHiddenColumns(USERS_KEY, ['secret_column']));
+
+    expect(JSON.stringify({ ...localStorage })).not.toContain('secret_column');
+    expect(JSON.stringify({ ...sessionStorage })).not.toContain('secret_column');
+
+    unmount();
+    const { result: restored } = renderTabs();
+    expect(tabKeys(restored.current.tabs)).toEqual([USERS_KEY]);
+    expect(restored.current.getHiddenColumns(USERS_KEY)).toEqual([]);
   });
 
   test('starts without tabs when the stored value is not valid', () => {

@@ -28,32 +28,32 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
   });
 
   return (
-    <Sidebar collapsible="none" className="border-e">
+    <Sidebar collapsible="none" className="overflow-hidden rounded-shell bg-background">
       <Tabs
         value={tab}
         onValueChange={(value: SidebarTab) => setTab(value)}
         className="min-h-0 flex-1 gap-0"
       >
         <SidebarHeader>
-          <TabsList className="w-full">
-            <TabsTab value="explorer">{t('Explorer')}</TabsTab>
-            <TabsTab value="queries">{t('Queries')}</TabsTab>
-          </TabsList>
-          <div className="flex items-center gap-1">
-            <InputGroup>
-              <InputGroupAddon>
-                <MagnifyingGlassIcon />
-              </InputGroupAddon>
-              <InputGroupInput
-                type="search"
-                size="sm"
-                placeholder={t(SEARCH_PLACEHOLDERS[tab])}
-                value={searches[tab]}
-                onChange={event => setSearches({ ...searches, [tab]: event.target.value })}
-              />
-            </InputGroup>
+          <div className="flex items-center justify-between gap-1">
+            <TabsList className="grid grid-cols-2">
+              <TabsTab value="explorer">{t('Explorer')}</TabsTab>
+              <TabsTab value="queries">{t('Queries')}</TabsTab>
+            </TabsList>
             {tab === 'explorer' && <ExplorerReloadButton connectionId={connectionId} />}
           </div>
+          <InputGroup>
+            <InputGroupAddon>
+              <MagnifyingGlassIcon />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="search"
+              size="sm"
+              placeholder={t(SEARCH_PLACEHOLDERS[tab])}
+              value={searches[tab]}
+              onChange={event => setSearches({ ...searches, [tab]: event.target.value })}
+            />
+          </InputGroup>
         </SidebarHeader>
         <SidebarContent>
           <TabsPanel value="explorer" className="px-2 pb-2">

@@ -12,25 +12,21 @@ import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
 
+import { useTabName } from '../../../hooks/use-tab-name';
 import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
-import type { WorkspaceTab } from '../../../utils/workspace-tabs.utils';
 
 const TAB_ICONS = { table: TableIcon, view: EyeIcon, function: CodeIcon, draft: FileIcon };
 
 export const WorkspaceTabBar = () => {
   const { t } = useTranslation();
   const { tabs, activeKey, provisionalKey, pinTab, closeTab, openDraft } = useWorkspaceTabs();
-
-  const getTabName = (tab: WorkspaceTab) => {
-    if (tab.kind === 'draft') return t('Untitled {{number}}', { number: tab.number });
-    return tab.kind === 'function' ? `${tab.name}(${tab.arguments})` : tab.name;
-  };
+  const getTabName = useTabName();
 
   return (
     <TabsList
       variant="underline"
       aria-label={t('Open tabs')}
-      className="h-9 w-full shrink-0 items-stretch justify-start gap-x-0 overflow-x-auto border-b data-[orientation=horizontal]:py-0 [scrollbar-width:none]"
+      className="h-11.5 w-full shrink-0 justify-start overflow-x-auto border-b px-2 data-[orientation=horizontal]:py-0 [scrollbar-width:none] *:data-[slot=tab-indicator]:hidden"
     >
       {tabs.map(tab => {
         const isActive = tab.key === activeKey;
@@ -41,14 +37,14 @@ export const WorkspaceTabBar = () => {
           <div
             key={tab.key}
             className={cn(
-              'group/tab relative flex shrink-0 items-center border-e hover:bg-accent/50',
-              isActive && 'bg-background'
+              'group/tab relative flex h-7.5 shrink-0 items-center rounded-md',
+              isActive ? 'bg-input' : 'hover:bg-accent'
             )}
           >
             <TabsTab
               value={tab.key}
               title={tab.kind === 'draft' ? name : `${tab.schema}.${name}`}
-              className="h-full grow-0 gap-1.5 rounded-none border-0 ps-3 pe-8 hover:bg-transparent sm:h-full"
+              className="h-full grow-0 gap-1.5 border-0 ps-2.5 pe-8 hover:bg-transparent sm:h-full"
               onDoubleClick={() => pinTab(tab.key)}
             >
               <Icon className="size-3.5" />
@@ -80,7 +76,7 @@ export const WorkspaceTabBar = () => {
         variant="ghost"
         size="icon-sm"
         aria-label={t('New query')}
-        className="mx-1 self-center"
+        className="ms-1 shrink-0"
         onClick={openDraft}
       >
         <PlusIcon />

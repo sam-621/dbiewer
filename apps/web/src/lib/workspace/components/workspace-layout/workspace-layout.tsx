@@ -11,15 +11,21 @@ type Props = { hasConnections?: boolean; children: ReactNode };
 
 export const WorkspaceLayout = ({ hasConnections = false, children }: Props) => (
   <ActiveConnectionProvider>
-    <main className="flex h-svh flex-col">
-      <header className="flex h-14 shrink-0 items-stretch justify-between gap-4 border-b ps-4">
-        <div className="flex min-w-0 items-center gap-4">
+    <main className="flex h-svh flex-col bg-shell">
+      <header className="flex h-11 shrink-0 items-center justify-between gap-3 px-3">
+        <div className="flex min-w-0 items-center gap-3.5">
           <Brand />
           {hasConnections && <ConnectionSelector />}
         </div>
         <UserMenu />
       </header>
-      <div className="flex min-h-0 flex-1 flex-col overflow-auto">{children}</div>
+      {hasConnections ? (
+        children
+      ) : (
+        <div className="mx-1.5 mb-1.5 flex min-h-0 flex-1 flex-col overflow-auto rounded-shell bg-background">
+          {children}
+        </div>
+      )}
     </main>
   </ActiveConnectionProvider>
 );

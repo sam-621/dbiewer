@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
-import { formatTableOrder, parseTableOrder, TableViewStateSchema } from './table-view.utils';
+import {
+  formatTableOrder,
+  getVisibleTableRows,
+  parseTableOrder,
+  TableViewStateSchema
+} from './table-view.utils';
 
 describe('parseTableOrder', () => {
   test('reads a column with or without direction', () => {
@@ -41,5 +46,36 @@ describe('TableViewStateSchema', () => {
     });
 
     expect(state).toEqual({ view: 'structure', where: '', orderBy: '', page: 2 });
+  });
+});
+
+describe('getVisibleTableRows', () => {
+  const tableRows = {
+    columns: [
+      { name: 'id', type: 'uuid' },
+      { name: 'email', type: 'text' },
+      { name: 'plan', type: 'text' }
+    ],
+    rows: [
+      ['1', 'ana@acme.dev', null],
+      ['2', 'bo@acme.dev', 'pro']
+    ]
+  };
+
+  test('removes the hidden columns and their cells', () => {
+    expect(getVisibleTableRows(tableRows, ['email'])).toEqual({
+      columns: [
+        { name: 'id', type: 'uuid' },
+        { name: 'plan', type: 'text' }
+      ],
+      rows: [
+        ['1', null],
+        ['2', 'pro']
+      ]
+    });
+  });
+
+  test('ignores a hidden column that no longer exists', () => {
+    expect(getVisibleTableRows(tableRows, ['deleted'])).toEqual(tableRows);
   });
 });

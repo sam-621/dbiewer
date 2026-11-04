@@ -24,6 +24,7 @@ type Props = {
   onOrderChange?: (order: TableOrder) => void;
   selectedRowIndex?: number | null;
   onRowOpen?: (rowIndex: number) => void;
+  className?: string;
 };
 
 export const TableGrid = ({
@@ -35,7 +36,8 @@ export const TableGrid = ({
   isStale = false,
   onOrderChange,
   selectedRowIndex = null,
-  onRowOpen
+  onRowOpen,
+  className
 }: Props) => {
   const { t } = useTranslation();
 
@@ -47,8 +49,10 @@ export const TableGrid = ({
 
   return (
     <Table
-      render={<div className={cn('min-h-0 flex-1 overflow-auto', isStale && 'opacity-64')} />}
-      className="font-mono text-xs"
+      render={
+        <div className={cn('min-h-0 flex-1 overflow-auto', isStale && 'opacity-64', className)} />
+      }
+      className="border-separate border-spacing-0 font-mono text-xs [&_td]:border-e [&_td]:border-b [&_th]:border-e [&_th]:border-b"
     >
       <TableHeader className="sticky top-0 z-10 bg-background">
         <TableRow>
@@ -126,9 +130,9 @@ export const TableGrid = ({
               <TableCell key={columnIndex} className="py-1.5">
                 <span className="flex items-center gap-1">
                   {value === null ? (
-                    <span className="text-muted-foreground italic">NULL</span>
+                    <span className="text-muted-foreground/70 italic">NULL</span>
                   ) : (
-                    <span title={value} className="max-w-80 truncate">
+                    <span title={value} className="max-w-80 truncate text-foreground/70">
                       {value}
                     </span>
                   )}

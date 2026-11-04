@@ -123,6 +123,11 @@ export const closeTab = (current: WorkspaceTabs, key: string): WorkspaceTabs => 
   };
 };
 
+export const getRemovedTabKeys = (current: WorkspaceTabs, next: WorkspaceTabs) =>
+  current.tabs
+    .filter(tab => !next.tabs.some(nextTab => nextTab.key === tab.key))
+    .map(tab => tab.key);
+
 export const changeTabState = (
   current: WorkspaceTabs,
   key: string,

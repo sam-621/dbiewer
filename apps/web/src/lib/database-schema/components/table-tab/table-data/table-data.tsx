@@ -7,6 +7,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import type { useGetTableRows } from '../../../hooks/use-get-table-rows';
 import {
   formatTableOrder,
+  getVisibleTableRows,
   parseTableOrder,
   TABLE_PAGE_SIZE,
   type TableOrder,
@@ -25,6 +26,7 @@ type Props = {
   rowsResult: ReturnType<typeof useGetTableRows>;
   state: TableViewState;
   onStateChange: (state: TableViewState) => void;
+  hiddenColumns: string[];
   connectionId: string;
   object: { schema: string; name: string };
   onPin: () => void;
@@ -34,6 +36,7 @@ export const TableData = ({
   structure,
   rowsResult,
   state,
+  hiddenColumns,
   connectionId,
   object,
   onStateChange,
@@ -95,8 +98,7 @@ export const TableData = ({
 
     return (
       <TableGrid
-        columns={tableRows.columns}
-        rows={tableRows.rows}
+        {...getVisibleTableRows(tableRows, hiddenColumns)}
         primaryKey={primaryKey}
         firstRowNumber={firstRowNumber}
         order={order}
@@ -104,6 +106,7 @@ export const TableData = ({
         onOrderChange={changeOrder}
         selectedRowIndex={isRowOpen && shownRow ? shownRow.index : null}
         onRowOpen={openRow}
+        className="pb-14"
       />
     );
   };
@@ -119,16 +122,19 @@ export const TableData = ({
         onOrderByChange={orderBy => onStateChange({ ...state, orderBy, page: 1 })}
         onPin={onPin}
       />
-      {renderGrid()}
-      {tableRows && !rowsError && (
-        <TablePagination
-          shownRows={tableRows.rows.length}
-          totalRows={tableRows.totalRows}
-          durationMs={durationMs}
-          page={state.page}
-          onPageChange={page => onStateChange({ ...state, page })}
-        />
-      )}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {renderGrid()}
+        {tableRows && !rowsError && (
+          <TablePagination
+            firstRowNumber={firstRowNumber}
+            shownRows={tableRows.rows.length}
+            totalRows={tableRows.totalRows}
+            durationMs={durationMs}
+            page={state.page}
+            onPageChange={page => onStateChange({ ...state, page })}
+          />
+        )}
+      </div>
       {tableRows && (
         <TableRowSheet
           objectName={object.name}

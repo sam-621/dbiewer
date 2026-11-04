@@ -29,6 +29,7 @@ Viven en `src/app/app.css` (Tailwind v4, sin `tailwind.config.js`).
 
 - **Colores de coss, sin cambios:** `background`, `foreground`, `card`, `popover`, `secondary`, `muted`, `accent`, `border`, `input`, `ring`, `destructive`, `info`, `success`, `warning` (cada uno con su `-foreground`), `chart-1..5`, `code` y `sidebar-*`, en `:root` y `.dark`.
 - **Marca:** `--color-brand` (amarillo, `oklch(0.88 0.18 95)`) y `--color-brand-ink` (texto sobre el amarillo). `primary` y `primary-foreground` apuntan a ellos en los dos temas. Es el único cambio sobre los colores de coss, igual que en `apps/www`.
+- **Shell:** `shell`, el fondo detrás de los paneles, más oscuro que `background`, en `:root` y `.dark`.
 - **SQL:** `--color-pk`, `--color-fk` y `--color-sql-{kw,fn,str,num,tbl,col,date}` para el editor, el esquema y la grilla.
 - **Fuentes:** `font-sans` (Funnel Sans), `font-mono` (JetBrains Mono, para SQL y cualquier valor de la base), `font-serif` (Instrument Serif) y `font-heading`. Se cargan en `index.html`.
 - **Tema oscuro:** clase `.dark` en un ancestro (`@custom-variant dark (&:where(.dark, .dark *))`). El usuario elige oscuro, claro o sistema: `src/shared/utils/theme.utils.ts` lo guarda en `localStorage` (default oscuro) y pone o quita `.dark` en el `<html>`; `main.tsx` lo aplica al arrancar y `useTheme` lo cambia. El idioma se guarda igual en `localStorage` desde `src/shared/i18n/i18n.ts`.

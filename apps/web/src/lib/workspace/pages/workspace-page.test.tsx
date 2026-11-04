@@ -91,6 +91,7 @@ describe('WorkspacePage', () => {
         'Necesitas una conexión Postgres para explorar su esquema y ejecutar consultas.'
       )
     ).toBeInTheDocument();
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
   });
 
   test('shows the brand and the account menu in the header without connection actions', async () => {
@@ -101,7 +102,7 @@ describe('WorkspacePage', () => {
     const header = await screen.findByRole('banner');
     expect(await within(header).findByText('Ana')).toBeInTheDocument();
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
-    expect(within(header).getByText('ana@acme.dev')).toBeInTheDocument();
+    expect(within(header).queryByText('ana@acme.dev')).not.toBeInTheDocument();
     expect(within(header).getAllByRole('button')).toEqual([
       within(header).getByRole('button', { name: 'Abrir el menú de la cuenta' })
     ]);
@@ -164,6 +165,7 @@ describe('WorkspacePage', () => {
     const header = screen.getByRole('banner');
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
     expect(within(header).getByRole('button', { name: /Acme prod/ })).toBeInTheDocument();
+    expect(within(screen.getByRole('contentinfo')).getByText('Acme prod')).toBeInTheDocument();
     expect(screen.queryByText('Conecta tu primera base de datos')).not.toBeInTheDocument();
   });
 

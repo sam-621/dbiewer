@@ -21,7 +21,7 @@ export const WorkspacePage = () => {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-svh items-center justify-center">
+      <main className="flex min-h-svh items-center justify-center bg-shell">
         <Spinner className="size-6 text-muted-foreground" />
       </main>
     );

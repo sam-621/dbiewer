@@ -64,3 +64,8 @@
 - (web) Pestaña de tabla: la barra de filtros pasa a dos campos de texto libre, `WHERE` y `ORDER BY`, con CodeMirror de una línea y autocompletado de columnas y palabras clave. Enter aplica, cada campo se puede quitar, el encabezado de la grilla escribe en `ORDER BY` y el error de Postgres se muestra con la barra editable. Se borran los chips y menús de filtros.
 - (web) Historial de `WHERE` y `ORDER BY` por tabla en `sessionStorage`: se abre desde el ícono del campo, con 5 visibles y scroll, y elegir uno lo aplica.
 - (web) Historial de `WHERE` y `ORDER BY`: la lista usa el mismo degradado del Explorer para indicar que hay más arriba o abajo.
+- (web) Layout en paneles flotantes: fondo `shell`, header bajo sin borde, sidebar y área de pestañas en dos paneles redondeados con el resize en el espacio entre ellos, barra de estado con la ruta y el host, pestaña activa como píldora y paginación en una pastilla flotante. Token `shell` en `design-system.md`. Maqueta en https://claude.ai/artifact/WaVAVXDDdQY5fTMu5i14zN.
+- (web) Encabezado de la tabla como la maqueta: solo el nombre, en sans, sin ícono ni esquema. Header del sidebar con tabs de igual ancho, Reload a la derecha y buscador a todo el ancho. Ícono de Reload más chico.
+- (web) Grilla: los valores bajan de tono frente a los encabezados y `NULL` baja aún más. Aplica también a Results de la pestaña SQL.
+- (web) Grilla: suma líneas verticales para marcar la cuadrícula. Aplica también a Results de la pestaña SQL.
+- (web) Pestaña de tabla: botón "Columns" a la izquierda de Data / Structure para elegir las columnas visibles, con buscador y "Show all". La elección vive en memoria por pestaña: sobrevive a cambiar de pestaña o de conexión y se pierde al cerrarla o recargar.

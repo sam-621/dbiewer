@@ -11,7 +11,15 @@ import { WorkspaceTabsEmpty } from '../workspace-tabs-empty/workspace-tabs-empty
 type Props = { connectionId: string; connectionName: string };
 
 export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
-  const { tabs, activeKey, activateTab, pinTab, changeTabState } = useWorkspaceTabs();
+  const {
+    tabs,
+    activeKey,
+    activateTab,
+    pinTab,
+    changeTabState,
+    getHiddenColumns,
+    changeHiddenColumns
+  } = useWorkspaceTabs();
   const activeTab = tabs.find(tab => tab.key === activeKey);
 
   if (!tabs.length) return <WorkspaceTabsEmpty />;
@@ -41,6 +49,8 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
         object={tab}
         state={tab.state}
         onStateChange={state => changeTabState(tab.key, state)}
+        hiddenColumns={getHiddenColumns(tab.key)}
+        onHiddenColumnsChange={columns => changeHiddenColumns(tab.key, columns)}
         onPin={() => pinTab(tab.key)}
       />
     );

@@ -5,13 +5,10 @@ import { useGqlQuery } from '@/shared/hooks/use-gql-query';
 
 import { DatabaseSchemaCacheKeys } from '../constants/cache-keys';
 
-type Options = { enabled?: boolean };
-
-export const useGetConnectionSchema = (connectionId: string, { enabled }: Options = {}) => {
+export const useGetConnectionSchema = (connectionId: string) => {
   const result = useGqlQuery(GET_CONNECTION_SCHEMA_QUERY, {
     key: [DatabaseSchemaCacheKeys.ConnectionSchema],
-    variables: { connectionId },
-    enabled
+    variables: { connectionId }
   });
 
   const [apiError] = result.data?.connectionSchema.apiErrors ?? [];

@@ -29,7 +29,7 @@ export const TableFilterBar = ({
   onPin
 }: Props) => {
   const { t } = useTranslation();
-  const { data } = useGetConnectionSchema(connectionId, { enabled: false });
+  const { data } = useGetConnectionSchema(connectionId);
   const columns = useMemo(
     () => getObjectColumnNames(data?.connectionSchema.schemas ?? [], { schema, name }),
     [data, schema, name]

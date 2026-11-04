@@ -41,13 +41,23 @@ const SCHEMAS = [
 ];
 
 const STRUCTURE = {
-  columns: [{ name: 'id', type: 'uuid', isNullable: false, default: null, isPrimaryKey: true }],
+  columns: [
+    { name: 'id', type: 'uuid', isNullable: false, default: null, isPrimaryKey: true },
+    { name: 'email', type: 'text', isNullable: false, default: null, isPrimaryKey: false }
+  ],
   indexes: [],
   foreignKeys: [],
   definition: 'CREATE TABLE users ();'
 };
 
-const ROWS = { columns: [{ name: 'id', type: 'uuid' }], rows: [['user-1']], totalRows: 1 };
+const ROWS = {
+  columns: [
+    { name: 'id', type: 'uuid' },
+    { name: 'email', type: 'text' }
+  ],
+  rows: [['user-1', 'ana@acme.dev']],
+  totalRows: 1
+};
 
 const getSchemaCalls = () =>
   vi
@@ -58,6 +68,11 @@ const getTabs = () =>
   within(screen.getByRole('tablist', { name: 'Pestañas abiertas' }))
     .getAllByRole('tab')
     .map(tab => tab.textContent);
+
+const getLocation = () =>
+  within(screen.getByRole('navigation', { name: 'Ubicación' }))
+    .getAllByRole('listitem')
+    .map(item => item.textContent);
 
 const renderShell = () =>
   render(
@@ -134,6 +149,30 @@ describe('WorkspaceShell', () => {
     await user.type(screen.getByPlaceholderText('Buscar tablas, vistas…'), 'payments');
 
     expect(screen.getByText('Sin resultados para “payments”')).toBeInTheDocument();
+  });
+
+  test('keeps the chosen columns between tabs and forgets them when closing the tab', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'users' }));
+    await user.click(await screen.findByRole('button', { name: /^Columnas$/ }));
+    await user.click(await screen.findByRole('checkbox', { name: /^email/ }));
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'orders' }));
+    expect(getTabs()).toEqual(['users', 'orders']);
+    await screen.findByRole('heading', { name: 'orders' });
+
+    await user.click(screen.getByRole('tab', { name: 'users' }));
+    expect(await screen.findByRole('button', { name: /^Columnas\s*1\/2$/ })).toBeInTheDocument();
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar users' }));
+    await user.click(screen.getByRole('button', { name: 'users' }));
+
+    expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
   });
 
   test('reloads the schema', async () => {
@@ -337,6 +376,35 @@ describe('WorkspaceShell', () => {
     await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(getTabs()).toEqual(['users', 'orders']);
+  });
+
+  test('shows only the connection and its address in the status bar without tabs', async () => {
+    renderShell();
+    await screen.findByText('users');
+
+    expect(getLocation()).toEqual(['Acme prod']);
+    expect(
+      within(screen.getByRole('contentinfo')).getByText('db.acme.dev:5432')
+    ).toBeInTheDocument();
+  });
+
+  test('shows the path of the active table in the status bar', async () => {
+    renderShell();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'users' }));
+
+    expect(getLocation()).toEqual(['Acme prod', 'public', 'users']);
+  });
+
+  test('shows the file name of the active query in the status bar', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await screen.findByText('users');
+
+    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
+
+    expect(getLocation()).toEqual(['Acme prod', 'Sin título 1.sql']);
   });
 
   test('opens new SQL tabs from the empty state and the tab bar', async () => {

@@ -25,15 +25,10 @@ export const UserMenu = () => {
     <Menu>
       <MenuTrigger
         aria-label={t('Open account menu')}
-        className="flex min-w-0 shrink-0 cursor-pointer items-center gap-3 px-4 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-popup-open:bg-accent"
+        className="flex h-8 min-w-0 shrink-0 cursor-pointer items-center gap-2 rounded-md ps-1 pe-2 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent"
       >
-        <UserAvatar id={user?.id} image={user?.image} className="size-7.5" />
-        <div className="grid min-w-0">
-          <span className="truncate text-sm font-medium text-foreground">
-            {name || user?.email}
-          </span>
-          {name && <span className="truncate text-xs text-muted-foreground">{user?.email}</span>}
-        </div>
+        <UserAvatar id={user?.id} image={user?.image} />
+        <span className="truncate text-sm text-foreground">{name || user?.email}</span>
       </MenuTrigger>
       <MenuPopup className="w-58" side="bottom" align="end" sideOffset={4}>
         <PreferenceRow

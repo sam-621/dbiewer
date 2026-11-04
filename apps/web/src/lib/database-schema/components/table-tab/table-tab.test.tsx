@@ -116,6 +116,7 @@ const lastState = () => onStateChange.mock.calls.at(-1)?.[0];
 
 const Harness = ({ object }: { object: TableTabObject }) => {
   const [state, setState] = useState(DEFAULT_TABLE_VIEW_STATE);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
   const changeState = (nextState: TableViewState) => {
     onStateChange(nextState);
@@ -129,6 +130,8 @@ const Harness = ({ object }: { object: TableTabObject }) => {
         object={object}
         state={state}
         onStateChange={changeState}
+        hiddenColumns={hiddenColumns}
+        onHiddenColumnsChange={setHiddenColumns}
         onPin={onPin}
       />
     </div>
@@ -149,6 +152,14 @@ const getSuggestions = () =>
 const WHERE_HISTORY_KEY = 'dbiewer:table-history:connection-1:public.users:where';
 
 const ORDER_BY_HISTORY_KEY = 'dbiewer:table-history:connection-1:public.users:order-by';
+
+const openColumnsMenu = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(await screen.findByRole('button', { name: /^Columnas/ }));
+  return screen.findByRole('dialog');
+};
+
+const getColumnHeaders = () =>
+  screen.getAllByRole('columnheader', { hidden: true }).map(header => header.textContent);
 
 const getSchemaCalls = () =>
   vi
@@ -183,7 +194,7 @@ describe('TableTab', () => {
     expect(firstRow).toHaveTextContent('NULL');
     expect(secondRow).not.toHaveTextContent('NULL');
     expect(screen.getByRole('img', { name: 'Llave primaria' })).toBeInTheDocument();
-    expect(screen.getByText(/2 de 120 filas · \d+ ms/)).toBeInTheDocument();
+    expect(screen.getByText(/1–2 de 120 · \d+ ms/)).toBeInTheDocument();
     expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
     expect(lastRowsInput()).toEqual({
       connectionId: 'connection-1',
@@ -422,6 +433,7 @@ describe('TableTab', () => {
     await waitFor(() => expect(lastRowsInput()?.page).toBe(2));
     expect(await screen.findByText('Página 2 de 3')).toBeInTheDocument();
     expect(screen.getByText('51')).toBeInTheDocument();
+    expect(screen.getByText(/51–52 de 120/)).toBeInTheDocument();
   });
 
   test('shows the structure with columns, indexes, foreign keys and the DDL', async () => {
@@ -587,6 +599,111 @@ describe('TableTab', () => {
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  test('hides a column from the grid without closing the menu or changing the query', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    const rowsCalls = getRowsInputs().length;
+
+    const menu = await openColumnsMenu(user);
+    expect(within(menu).getByRole('checkbox', { name: /^email/ })).toBeChecked();
+    expect(within(menu).getByText('varchar(255)')).toBeInTheDocument();
+
+    await user.click(within(menu).getByRole('checkbox', { name: /^email/ }));
+
+    expect(within(menu).getByRole('checkbox', { name: /^email/ })).not.toBeChecked();
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
+    expect(getColumnHeaders().some(header => header.startsWith('email'))).toBe(false);
+    expect(screen.getByRole('button', { name: /^Columnas/, hidden: true })).toHaveTextContent(
+      '2/3'
+    );
+    expect(screen.getByText('120 filas · 3 columnas')).toBeInTheDocument();
+    expect(getRowsInputs()).toHaveLength(rowsCalls);
+  });
+
+  test('does not let the last visible column be hidden', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    const menu = await openColumnsMenu(user);
+
+    await user.click(within(menu).getByRole('checkbox', { name: /^email/ }));
+    await user.click(within(menu).getByRole('checkbox', { name: /^plan/ }));
+
+    expect(within(menu).getByRole('checkbox', { name: /^id/ })).toBeChecked();
+    expect(within(menu).getByRole('checkbox', { name: /^id/ })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+  });
+
+  test('searches columns by name and shows them all again', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    const menu = await openColumnsMenu(user);
+    expect(within(menu).getByRole('button', { name: 'Mostrar todas' })).toBeDisabled();
+
+    await user.type(within(menu).getByRole('searchbox'), 'EMA');
+
+    expect(within(menu).getAllByRole('checkbox')).toHaveLength(1);
+    await user.click(within(menu).getByRole('checkbox', { name: /^email/ }));
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
+
+    await user.type(within(menu).getByRole('searchbox'), 'nope');
+    expect(within(menu).getByText('Sin resultados para “EMAnope”')).toBeInTheDocument();
+
+    await user.click(within(menu).getByRole('button', { name: 'Mostrar todas' }));
+
+    expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Columnas/, hidden: true })).not.toHaveTextContent(
+      '/'
+    );
+  });
+
+  test('keeps the row detail and the header order working with hidden columns', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await openColumnsMenu(user);
+    await user.click(screen.getByRole('checkbox', { name: /^id/ }));
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: /^email/ }));
+    await waitFor(() => expect(lastRowsInput()?.orderBy).toBe('email asc'));
+
+    await user.click(screen.getByRole('cell', { name: /bo@acme\.dev/ }));
+
+    const sheet = await screen.findByRole('dialog');
+    expect(within(sheet).getByLabelText(/^id/)).toHaveValue('2');
+    expect(within(sheet).getByLabelText(/^email/)).toHaveValue('bo@acme.dev');
+    expect(within(sheet).getByLabelText(/^plan/)).toHaveValue('');
+  });
+
+  test('shows the columns button only on Data and keeps the choice on Structure', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    const menu = await openColumnsMenu(user);
+    await user.click(within(menu).getByRole('checkbox', { name: /^email/ }));
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('tab', { name: 'Estructura' }));
+    expect(screen.queryByRole('button', { name: /^Columnas/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Datos' }));
+    expect(screen.getByRole('button', { name: /^Columnas/ })).toHaveTextContent('2/3');
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
   });
 
   test('shows NULL distinct from an empty text in the row detail', async () => {

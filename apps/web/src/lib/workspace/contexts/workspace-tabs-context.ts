@@ -12,6 +12,8 @@ type WorkspaceTabsContextValue = WorkspaceTabs & {
   pinTab: (key: string) => void;
   closeTab: (key: string) => void;
   changeTabState: (key: string, state: TableViewState) => void;
+  getHiddenColumns: (key: string) => string[];
+  changeHiddenColumns: (key: string, hiddenColumns: string[]) => void;
 };
 
 export const WorkspaceTabsContext = createContext<WorkspaceTabsContextValue | null>(null);

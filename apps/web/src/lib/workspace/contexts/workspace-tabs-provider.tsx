@@ -10,6 +10,7 @@ import {
   changeTabState,
   closeTab,
   EMPTY_WORKSPACE_TABS,
+  getRemovedTabKeys,
   isDraftTabKey,
   openDraftTab,
   openTab,
@@ -22,6 +23,8 @@ import { WorkspaceTabsContext } from './workspace-tabs-context';
 
 type Props = { connectionId: string; children: ReactNode };
 
+type HiddenColumns = Record<string, string[]>;
+
 export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   const [stored, setStored] = useState(() => ({
     connectionId,
@@ -32,11 +35,18 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
     setStored({ connectionId, workspaceTabs: getStoredTabs(connectionId) });
   }
 
+  const [hiddenColumns, setHiddenColumns] = useState<HiddenColumns>({});
+
   const { workspaceTabs } = stored;
 
   const update = (next: WorkspaceTabs) => {
     setStored({ connectionId, workspaceTabs: next });
     storeTabs(connectionId, next);
+
+    const removedKeys = getRemovedTabKeys(workspaceTabs, next);
+    if (removedKeys.length) {
+      setHiddenColumns(current => removeHiddenColumns(current, connectionId, removedKeys));
+    }
   };
 
   const openObject: OpenExplorerObject = (object, options) =>
@@ -57,12 +67,28 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
         pinTab: key => update(pinTab(workspaceTabs, key)),
         closeTab: closeWorkspaceTab,
         changeTabState: (key: string, state: TableViewState) =>
-          update(changeTabState(workspaceTabs, key, state))
+          update(changeTabState(workspaceTabs, key, state)),
+        getHiddenColumns: key => hiddenColumns[getHiddenColumnsKey(connectionId, key)] ?? [],
+        changeHiddenColumns: (key, columns) => {
+          setHiddenColumns(current => ({
+            ...current,
+            [getHiddenColumnsKey(connectionId, key)]: columns
+          }));
+          update(pinTab(workspaceTabs, key));
+        }
       }}
     >
       {children}
     </WorkspaceTabsContext>
   );
+};
+
+const getHiddenColumnsKey = (connectionId: string, key: string) => `${connectionId}:${key}`;
+
+const removeHiddenColumns = (current: HiddenColumns, connectionId: string, keys: string[]) => {
+  const removed = keys.map(key => getHiddenColumnsKey(connectionId, key));
+
+  return Object.fromEntries(Object.entries(current).filter(([key]) => !removed.includes(key)));
 };
 
 const getStorageKey = (connectionId: string) => `dbiewer:tabs:${connectionId}`;

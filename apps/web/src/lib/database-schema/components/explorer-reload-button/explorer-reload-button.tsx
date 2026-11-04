@@ -17,13 +17,14 @@ export const ExplorerReloadButton = ({ connectionId }: { connectionId: string })
           <Button
             variant="ghost"
             size="icon-sm"
+            className="text-muted-foreground"
             aria-label={t('Reload')}
             loading={isFetching}
             onClick={() => refetch()}
           />
         }
       >
-        <ReloadIcon />
+        <ReloadIcon className="size-3.5" />
       </TooltipTrigger>
       <TooltipPopup>{t('Reload')}</TooltipPopup>
     </Tooltip>

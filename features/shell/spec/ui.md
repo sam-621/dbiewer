@@ -4,14 +4,14 @@ Capacidades que debe tener la UI, sin estilos ni componentes concretos: como si 
 
 Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma (diálogo, página, ruta, posición) es una propuesta: si el diseño la resuelve distinto, se actualiza este archivo para reflejar lo construido.
 
-Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una idea, no un diseño literal.
+Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una idea, no un diseño literal. La maqueta del layout en paneles es https://claude.ai/artifact/WaVAVXDDdQY5fTMu5i14zN y manda sobre la anterior en layout.
 
 ## Pantallas nuevas
 
 ### Shell
 
 - **Ubicación:** ruta `/`, cuando el workspace tiene conexiones. Reemplaza el listado temporal de `connections`.
-- **Muestra:** el header del workspace arriba; debajo, el sidebar a la izquierda y el área de pestañas a la derecha, ocupando toda la altura.
+- **Muestra:** un fondo más oscuro que ocupa toda la ventana y, sobre él, el header arriba, dos paneles redondeados separados por un espacio chico (sidebar a la izquierda, área de pestañas a la derecha) y una barra de estado abajo. Header y barra de estado van sobre el fondo, sin borde ni panel propio.
 - **Estados:** carga mientras se leen las conexiones; error al leerlas, con reintento.
 
 ### Selector de conexión
@@ -25,8 +25,8 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Sidebar
 
 - **Ubicación:** a la izquierda del shell.
-- **Muestra:** dos tabs, "Explorer" y "Queries", y un buscador debajo ("Search tables, views…" o "Filter queries…").
-- **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo; cambiar el ancho arrastrando el borde (también con las flechas, y doble clic vuelve al ancho por defecto), entre 200 y 520 px. El ancho se recuerda en el navegador.
+- **Muestra:** arriba, dos tabs del mismo ancho, "Explorer" y "Queries", sin abarcar toda la fila, con "Reload" a la derecha en Explorer; debajo, un buscador a todo el ancho ("Search tables, views…" o "Filter queries…").
+- **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo; cambiar el ancho arrastrando el espacio entre los paneles (también con las flechas, y doble clic vuelve al ancho por defecto), entre 200 y 520 px. El ancho se recuerda en el navegador.
 
 ### Explorer
 
@@ -56,21 +56,27 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Barra de pestañas
 
 - **Ubicación:** arriba del área de pestañas.
-- **Muestra:** una pestaña por objeto o query abierta, con un ícono por tipo (tabla, vista, función, SQL) y el nombre. La provisional se distingue (por ejemplo, en cursiva). Una con cambios sin guardar muestra un indicador en lugar de cerrar. Al final, una acción "New query".
+- **Muestra:** una pestaña por objeto o query abierta, con un ícono por tipo (tabla, vista, función, SQL) y el nombre. La activa es una píldora con fondo, sin subrayado. La provisional se distingue (por ejemplo, en cursiva). Una con cambios sin guardar muestra un indicador en lugar de cerrar. Al final, una acción "New query".
 - **Permite:** activar una pestaña; cerrarla; fijar la provisional con doble clic; crear una query nueva.
 - **Estados:** sin pestañas, un estado vacío en el área con las acciones "New query" y una línea que invita a abrir una tabla desde el explorador. Cerrar una con cambios sin guardar pide confirmación.
+
+### Barra de estado
+
+- **Ubicación:** abajo del shell, sobre el fondo.
+- **Muestra:** a la izquierda, la ruta de lo que está abierto (`conexión › esquema › objeto`, o solo la conexión sin pestañas); a la derecha, el host y el puerto de la conexión activa, que se ocultan en pantallas angostas.
 
 ### Pestaña de tabla o vista
 
 - **Ubicación:** área de pestañas, al abrir una tabla o vista.
-- **Muestra:** arriba, el nombre (con el esquema si hay más de uno), las filas exactas y la cantidad de columnas, un aviso "View · read only" si es una vista, el selector "Data" / "Structure" y "Reload".
+- **Muestra:** arriba, el nombre (el esquema se ve en la barra de estado), las filas exactas y la cantidad de columnas, un aviso "View · read only" si es una vista, el selector "Data" / "Structure" y "Reload".
 - **Data:**
   - Barra de filtros: dos campos de texto discretos, sin borde, en la misma fila y separados por una línea: `WHERE` a la izquierda y `ORDER BY` a la derecha, cada uno con su ícono y su etiqueta como prefijo. El ícono es un botón que abre el historial de ese campo: un menú con lo aplicado antes, con 5 visibles y scroll para el resto, con un degradado arriba o abajo si hay más. Con texto, muestran una acción para quitarlo.
-  - Grilla: número de fila y una columna por campo con su nombre y tipo, la PK marcada. `NULL` se ve distinto de un texto vacío. Los valores largos se cortan.
-  - Pie: `14 of 14,823 rows · 38 ms`, página actual y total, anterior y siguiente.
+  - Grilla: cuadrícula con líneas horizontales y verticales, número de fila y una columna por campo con su nombre y tipo, la PK marcada. Los valores van en un tono más bajo que los encabezados, y `NULL` en uno aún más bajo, distinto de un texto vacío. Los valores largos se cortan.
+  - Paginación: una pastilla flotante sobre la grilla, abajo al centro, con `1–50 of 14,823 · 38 ms`, página actual y total, anterior y siguiente. La grilla deja espacio al final para que no tape la última fila.
+- **Columnas:** en la fila del nombre, a la izquierda de "Data" / "Structure", un botón "Columns" que solo se ve en Data. Si hay columnas ocultas muestra cuántas se ven (`4/25`). Abre un menú con un buscador, "Show all" y una casilla por columna con su nombre y tipo, con scroll y el degradado del Explorer. La última columna visible no se puede ocultar.
 - **Detalle de fila:** al hacer clic en una fila de la grilla se abre un panel a la derecha con un campo por columna (nombre, tipo, PK) y su valor en un input de solo lectura, con copiar. `NULL` se ve distinto del texto vacío. La fila abierta queda marcada. Más adelante será un form para editar la fila (milestone 9).
 - **Structure:** columnas (nombre, tipo, si admite null, default), índices (nombre, definición, si es único), FKs (columnas, referencia, acción al borrar) y el DDL o la definición de la vista, con copiar.
-- **Permite:** escribir el `WHERE` y el `ORDER BY` con autocompletado de columnas y palabras clave; aplicarlos con Enter (con sugerencias abiertas, Enter acepta la sugerencia); volver a aplicar uno del historial; quitarlos con su acción o vaciando el campo; ordenar por una columna desde el encabezado de la grilla, que escribe en el campo `ORDER BY`; paginar; abrir el detalle de una fila (desde ahí se copia cada valor); pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
+- **Permite:** escribir el `WHERE` y el `ORDER BY` con autocompletado de columnas y palabras clave; aplicarlos con Enter (con sugerencias abiertas, Enter acepta la sugerencia); volver a aplicar uno del historial; quitarlos con su acción o vaciando el campo; ordenar por una columna desde el encabezado de la grilla, que escribe en el campo `ORDER BY`; paginar; elegir las columnas visibles; abrir el detalle de una fila (desde ahí se copia cada valor); pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
 - **Estados:** cargando; error de conexión o de query, con reintento; `WHERE` u `ORDER BY` inválido, con el mensaje de Postgres en lugar de la grilla y la barra de filtros visible; la tabla ya no existe; sin filas, o sin filas con esos filtros.
 
 ### Pestaña SQL
@@ -101,7 +107,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Header del workspace
 
 - **Ubicación:** `WorkspaceLayout`, arriba de `/`.
-- **Cambia:** suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil (avatar, nombre y email) ocupa todo el alto del header pegado a la derecha y abre un menú: fila Idioma (banderas), fila Tema (Sistema, Claro, Oscuro, con sus íconos), separador y Cerrar sesión en rojo.
+- **Cambia:** header bajo, sin borde, sobre el fondo del shell. Suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil (avatar y nombre) va pegado a la derecha y abre un menú: fila Idioma (banderas), fila Tema (Sistema, Claro, Oscuro, con sus íconos), separador y Cerrar sesión en rojo.
 
 ### Workspace (inicio)
 

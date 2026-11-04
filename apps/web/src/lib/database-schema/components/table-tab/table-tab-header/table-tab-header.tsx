@@ -1,56 +1,64 @@
 import { useTranslation } from 'react-i18next';
 
-import { EyeIcon, ReloadIcon, TableIcon } from '@/shared/components/icons/icons';
+import { ReloadIcon } from '@/shared/components/icons/icons';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { Tooltip, TooltipPopup, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
-import { useGetConnectionSchema } from '../../../hooks/use-get-connection-schema';
+import type { TableColumnNode, TableViewState } from '../../../utils/table-view.utils';
 import type { TableTabObject } from '../table-tab';
 
+import { TableColumnsMenu } from './table-columns-menu/table-columns-menu';
+
 type Props = {
-  connectionId: string;
   object: TableTabObject;
+  view: TableViewState['view'];
   totalRows: number | null;
-  totalColumns: number | null;
+  columns: TableColumnNode[] | null;
+  hiddenColumns: string[];
+  onHiddenColumnsChange: (hiddenColumns: string[]) => void;
   isReloading: boolean;
   onReload: () => void;
 };
 
 export const TableTabHeader = ({
-  connectionId,
   object,
+  view,
   totalRows,
-  totalColumns,
+  columns,
+  hiddenColumns,
+  onHiddenColumnsChange,
   isReloading,
   onReload
 }: Props) => {
   const { t } = useTranslation();
-  const { schemas } = useGetConnectionSchema(connectionId);
-  const Icon = object.kind === 'table' ? TableIcon : EyeIcon;
+  const totalColumns = columns?.length ?? null;
 
   return (
-    <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon className="size-4 shrink-0 text-muted-foreground" />
-        <h2 className="truncate font-mono text-sm font-semibold">
-          {schemas.length > 1 && (
-            <span className="font-normal text-muted-foreground">{object.schema}.</span>
-          )}
-          {object.name}
-        </h2>
-      </div>
-      <p className="font-mono text-xs text-muted-foreground">
+    <header className="flex min-h-10.5 shrink-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1 ps-3.5 pe-2">
+      <h2 className="min-w-0 truncate text-sm font-semibold">{object.name}</h2>
+      <p className="text-xs text-muted-foreground">
         {totalRows !== null && t('{{count, number}} rows', { count: totalRows })}
         {totalRows !== null && totalColumns !== null && ' · '}
         {totalColumns !== null && t('{{count, number}} columns', { count: totalColumns })}
       </p>
       {object.kind === 'view' && <Badge variant="warning">{t('View · read only')}</Badge>}
       <div className="ms-auto flex items-center gap-1">
+        {view === 'data' && columns && (
+          <TableColumnsMenu
+            columns={columns}
+            hiddenColumns={hiddenColumns}
+            onHiddenColumnsChange={onHiddenColumnsChange}
+          />
+        )}
         <TabsList size="sm" className="grid grid-cols-2">
-          <TabsTab value="data">{t('Data')}</TabsTab>
-          <TabsTab value="structure">{t('Structure')}</TabsTab>
+          <TabsTab value="data" className="font-normal">
+            {t('Data')}
+          </TabsTab>
+          <TabsTab value="structure" className="font-normal">
+            {t('Structure')}
+          </TabsTab>
         </TabsList>
         <Tooltip>
           <TooltipTrigger
@@ -58,13 +66,14 @@ export const TableTabHeader = ({
               <Button
                 variant="ghost"
                 size="icon-sm"
+                className="text-muted-foreground"
                 aria-label={t('Reload')}
                 loading={isReloading}
                 onClick={onReload}
               />
             }
           >
-            <ReloadIcon />
+            <ReloadIcon className="size-3.5" />
           </TooltipTrigger>
           <TooltipPopup>{t('Reload')}</TooltipPopup>
         </Tooltip>
