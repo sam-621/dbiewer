@@ -97,7 +97,7 @@ describe('FileRepository', () => {
         repository =>
           repository.findMany({
             where: { connectionId: ConnectionConstants.ProductionConnectionId },
-            orderBy: { updatedAt: OrderByKey.DESC, id: OrderByKey.ASC }
+            orderBy: { updatedAt: OrderByKey.Desc, id: OrderByKey.Asc }
           }),
         ownerRlsContext
       );

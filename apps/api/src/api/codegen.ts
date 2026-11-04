@@ -1,4 +1,4 @@
-import type { GraphQLResolveInfo } from 'graphql';
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import type { RequestContext } from '@/context';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -10,6 +10,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  DateTime: { input: string; output: Date };
 };
 
 export type Connection = {
@@ -149,8 +150,36 @@ export type DbView = {
   name: Scalars['String']['output'];
 };
 
+export type File = {
+  __typename?: 'File';
+  content: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  type: FileType;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type FileErrorCode =
   'CONNECTION_NOT_FOUND' | 'FILE_NAME_ALREADY_EXISTS' | 'FILE_NOT_FOUND' | 'INVALID_INPUT';
+
+export type FileErrorResult = {
+  __typename?: 'FileErrorResult';
+  code: FileErrorCode;
+  message: Scalars['String']['output'];
+};
+
+export type FileList = {
+  __typename?: 'FileList';
+  items: Array<File>;
+};
+
+export type FileResult = {
+  __typename?: 'FileResult';
+  apiErrors: Array<FileErrorResult>;
+  file?: Maybe<File>;
+};
+
+export type FileType = 'sql' | 'txt';
 
 export type FunctionDefinitionInput = {
   arguments: Scalars['String']['input'];
@@ -176,7 +205,9 @@ export type Mutation = {
   createConnection: ConnectionResult;
   createWorkspace: WorkspaceResult;
   removeConnection: RemoveConnectionResult;
+  removeFile: RemoveFileResult;
   runQuery: RunQueryResult;
+  saveFile: FileResult;
   testConnection: TestConnectionResult;
   updateConnection: ConnectionResult;
   updateUserProfile: UserResult;
@@ -194,8 +225,16 @@ export type MutationRemoveConnectionArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationRemoveFileArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationRunQueryArgs = {
   input: RunQueryInput;
+};
+
+export type MutationSaveFileArgs = {
+  input: SaveFileInput;
 };
 
 export type MutationTestConnectionArgs = {
@@ -215,6 +254,8 @@ export type Query = {
   connection?: Maybe<Connection>;
   connectionSchema: ConnectionSchemaResult;
   connections: ConnectionList;
+  file?: Maybe<File>;
+  files: FileList;
   functionDefinition: FunctionDefinitionResult;
   health: Scalars['Boolean']['output'];
   me?: Maybe<Me>;
@@ -227,6 +268,14 @@ export type QueryConnectionArgs = {
 };
 
 export type QueryConnectionSchemaArgs = {
+  connectionId: Scalars['ID']['input'];
+};
+
+export type QueryFileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryFilesArgs = {
   connectionId: Scalars['ID']['input'];
 };
 
@@ -258,6 +307,12 @@ export type RemoveConnectionResult = {
   success?: Maybe<Scalars['Boolean']['output']>;
 };
 
+export type RemoveFileResult = {
+  __typename?: 'RemoveFileResult';
+  apiErrors: Array<FileErrorResult>;
+  success?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type RunQueryInput = {
   connectionId: Scalars['ID']['input'];
   sql: Scalars['String']['input'];
@@ -267,6 +322,14 @@ export type RunQueryResult = {
   __typename?: 'RunQueryResult';
   apiErrors: Array<ShellErrorResult>;
   execution?: Maybe<QueryExecution>;
+};
+
+export type SaveFileInput = {
+  connectionId: Scalars['ID']['input'];
+  content: Scalars['String']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  type: FileType;
 };
 
 export type ShellErrorCode =
@@ -489,6 +552,7 @@ export type ResolversTypes = {
   ConnectionSslMode: null;
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
+  DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   DbColumn: ResolverTypeWrapper<DbColumn>;
   DbColumnDetail: ResolverTypeWrapper<DbColumnDetail>;
   DbForeignKey: ResolverTypeWrapper<DbForeignKey>;
@@ -501,7 +565,12 @@ export type ResolversTypes = {
   DbTable: ResolverTypeWrapper<DbTable>;
   DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
+  File: ResolverTypeWrapper<File>;
   FileErrorCode: FileErrorCode;
+  FileErrorResult: ResolverTypeWrapper<FileErrorResult>;
+  FileList: ResolverTypeWrapper<FileList>;
+  FileResult: ResolverTypeWrapper<FileResult>;
+  FileType: null;
   FunctionDefinitionInput: FunctionDefinitionInput;
   FunctionDefinitionResult: ResolverTypeWrapper<FunctionDefinitionResult>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
@@ -511,8 +580,10 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   QueryExecution: ResolverTypeWrapper<QueryExecution>;
   RemoveConnectionResult: ResolverTypeWrapper<RemoveConnectionResult>;
+  RemoveFileResult: ResolverTypeWrapper<RemoveFileResult>;
   RunQueryInput: RunQueryInput;
   RunQueryResult: ResolverTypeWrapper<RunQueryResult>;
+  SaveFileInput: SaveFileInput;
   ShellErrorCode: ShellErrorCode;
   ShellErrorResult: ResolverTypeWrapper<ShellErrorResult>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -544,6 +615,7 @@ export type ResolversParentTypes = {
   ConnectionSchemaResult: ConnectionSchemaResult;
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
+  DateTime: Scalars['DateTime']['output'];
   DbColumn: DbColumn;
   DbColumnDetail: DbColumnDetail;
   DbForeignKey: DbForeignKey;
@@ -555,6 +627,10 @@ export type ResolversParentTypes = {
   DbTable: DbTable;
   DbTableStructure: DbTableStructure;
   DbView: DbView;
+  File: File;
+  FileErrorResult: FileErrorResult;
+  FileList: FileList;
+  FileResult: FileResult;
   FunctionDefinitionInput: FunctionDefinitionInput;
   FunctionDefinitionResult: FunctionDefinitionResult;
   ID: Scalars['ID']['output'];
@@ -564,8 +640,10 @@ export type ResolversParentTypes = {
   Query: Record<PropertyKey, never>;
   QueryExecution: QueryExecution;
   RemoveConnectionResult: RemoveConnectionResult;
+  RemoveFileResult: RemoveFileResult;
   RunQueryInput: RunQueryInput;
   RunQueryResult: RunQueryResult;
+  SaveFileInput: SaveFileInput;
   ShellErrorResult: ShellErrorResult;
   String: Scalars['String']['output'];
   TableRows: TableRows;
@@ -637,6 +715,13 @@ export type ConnectionSslModeResolvers = {
   REQUIRE: 'require';
   VERIFY_FULL: 'verify-full';
 };
+
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<
+  ResolversTypes['DateTime'],
+  any
+> {
+  name: 'DateTime';
+}
 
 export type DbColumnResolvers<
   ContextType = RequestContext,
@@ -736,6 +821,43 @@ export type DbViewResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type FileResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['File'] = ResolversParentTypes['File']
+> = {
+  content?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['FileType'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+};
+
+export type FileErrorResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['FileErrorResult'] =
+    ResolversParentTypes['FileErrorResult']
+> = {
+  code?: Resolver<ResolversTypes['FileErrorCode'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type FileListResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['FileList'] = ResolversParentTypes['FileList']
+> = {
+  items?: Resolver<Array<ResolversTypes['File']>, ParentType, ContextType>;
+};
+
+export type FileResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['FileResult'] = ResolversParentTypes['FileResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['FileErrorResult']>, ParentType, ContextType>;
+  file?: Resolver<Maybe<ResolversTypes['File']>, ParentType, ContextType>;
+};
+
+export type FileTypeResolvers = { SQL: 'sql'; TXT: 'txt' };
+
 export type FunctionDefinitionResultResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['FunctionDefinitionResult'] =
@@ -775,11 +897,23 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationRemoveConnectionArgs, 'id'>
   >;
+  removeFile?: Resolver<
+    ResolversTypes['RemoveFileResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRemoveFileArgs, 'id'>
+  >;
   runQuery?: Resolver<
     ResolversTypes['RunQueryResult'],
     ParentType,
     ContextType,
     RequireFields<MutationRunQueryArgs, 'input'>
+  >;
+  saveFile?: Resolver<
+    ResolversTypes['FileResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSaveFileArgs, 'input'>
   >;
   testConnection?: Resolver<
     ResolversTypes['TestConnectionResult'],
@@ -818,6 +952,18 @@ export type QueryResolvers<
     RequireFields<QueryConnectionSchemaArgs, 'connectionId'>
   >;
   connections?: Resolver<ResolversTypes['ConnectionList'], ParentType, ContextType>;
+  file?: Resolver<
+    Maybe<ResolversTypes['File']>,
+    ParentType,
+    ContextType,
+    RequireFields<QueryFileArgs, 'id'>
+  >;
+  files?: Resolver<
+    ResolversTypes['FileList'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryFilesArgs, 'connectionId'>
+  >;
   functionDefinition?: Resolver<
     ResolversTypes['FunctionDefinitionResult'],
     ParentType,
@@ -858,6 +1004,15 @@ export type RemoveConnectionResultResolvers<
     ResolversParentTypes['RemoveConnectionResult']
 > = {
   apiErrors?: Resolver<Array<ResolversTypes['ConnectionErrorResult']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+};
+
+export type RemoveFileResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['RemoveFileResult'] =
+    ResolversParentTypes['RemoveFileResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['FileErrorResult']>, ParentType, ContextType>;
   success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
 };
 
@@ -974,6 +1129,7 @@ export type Resolvers<ContextType = RequestContext> = {
   ConnectionResult?: ConnectionResultResolvers<ContextType>;
   ConnectionSchemaResult?: ConnectionSchemaResultResolvers<ContextType>;
   ConnectionSslMode?: ConnectionSslModeResolvers;
+  DateTime?: GraphQLScalarType;
   DbColumn?: DbColumnResolvers<ContextType>;
   DbColumnDetail?: DbColumnDetailResolvers<ContextType>;
   DbForeignKey?: DbForeignKeyResolvers<ContextType>;
@@ -985,12 +1141,18 @@ export type Resolvers<ContextType = RequestContext> = {
   DbTable?: DbTableResolvers<ContextType>;
   DbTableStructure?: DbTableStructureResolvers<ContextType>;
   DbView?: DbViewResolvers<ContextType>;
+  File?: FileResolvers<ContextType>;
+  FileErrorResult?: FileErrorResultResolvers<ContextType>;
+  FileList?: FileListResolvers<ContextType>;
+  FileResult?: FileResultResolvers<ContextType>;
+  FileType?: FileTypeResolvers;
   FunctionDefinitionResult?: FunctionDefinitionResultResolvers<ContextType>;
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   QueryExecution?: QueryExecutionResolvers<ContextType>;
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
+  RemoveFileResult?: RemoveFileResultResolvers<ContextType>;
   RunQueryResult?: RunQueryResultResolvers<ContextType>;
   ShellErrorResult?: ShellErrorResultResolvers<ContextType>;
   TableRows?: TableRowsResolvers<ContextType>;

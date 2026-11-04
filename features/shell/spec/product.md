@@ -119,5 +119,5 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 4. [x] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
 5. [x] api: mutation `runQuery` con límites, con sus tests e2e.
 6. [x] web: pestaña SQL con editor, ejecutar y Results, y pestaña de función en solo lectura.
-7. [ ] api: tabla `file` con su CRUD, con sus tests e2e.
+7. [x] api: tabla `file` con su CRUD, con sus tests e2e.
 8. [ ] web: tab Queries del sidebar, nueva query, guardar con ⌘S, renombrar y eliminar.

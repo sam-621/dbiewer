@@ -87,7 +87,7 @@ export abstract class Repository<TTable extends TableWithId> {
 
         if (!column || !direction) return [];
 
-        return [direction === OrderByKey.DESC ? desc(column) : asc(column)];
+        return [direction === OrderByKey.Desc ? desc(column) : asc(column)];
       }
     );
   }

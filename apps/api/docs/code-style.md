@@ -36,6 +36,16 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Templates de email | `<email>-template.tsx` | `magic-link-template.tsx` |
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
 | Error | describe el caso + `Error` | `ConnectionNotFoundError` |
+| Conjuntos de valores | objeto `as const` con un tipo del mismo nombre, de preferencia en vez de `enum`; llaves en PascalCase y valores en minúsculas | `OrderByKey.Asc`, con valor `'asc'` |
+
+```ts
+export const OrderByKey = {
+  Asc: 'asc',
+  Desc: 'desc'
+} as const;
+
+export type OrderByKey = (typeof OrderByKey)[keyof typeof OrderByKey];
+```
 
 Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int.test.ts`, `.e2e.test.ts`, `.gql`, `*.config.ts`) y los fixtures de los tests (`<recurso>.fixtures.ts`, p. ej. `verification.fixtures.ts`).
 

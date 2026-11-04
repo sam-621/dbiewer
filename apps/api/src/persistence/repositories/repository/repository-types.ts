@@ -4,10 +4,12 @@ export type TableWithId = PgTable & { id: AnyPgColumn };
 
 export type Where<TTable extends TableWithId> = Partial<TTable['$inferSelect']>;
 
-export enum OrderByKey {
-  ASC = 'asc',
-  DESC = 'desc'
-}
+export const OrderByKey = {
+  Asc: 'asc',
+  Desc: 'desc'
+} as const;
+
+export type OrderByKey = (typeof OrderByKey)[keyof typeof OrderByKey];
 
 export type OrderBy<TTable extends TableWithId> = Partial<
   Record<keyof TTable['$inferSelect'], OrderByKey>

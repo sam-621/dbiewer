@@ -84,3 +84,5 @@
 - (api) Repositorio base: `findOne({ where })` y `findMany({ where, orderBy })`, con `orderBy` tipado por columna y el enum `OrderByKey`. `update` y `remove` no cambian. Se actualizan todos los usos.
 - (api) Los tipos del repositorio base y `OrderByKey` pasan a `repository-types.ts`.
 - (api) `architecture.md` y `code-style.md` usan la firma nueva de `findOne` y `findMany`.
+- (api) Operaciones de archivos en GraphQL: `files` y `file` leen del repositorio, `saveFile` y `removeFile` usan sus use-cases. Scalar `DateTime` para `updatedAt`. Con e2e. Cierra el paso 7.
+- (api) `OrderByKey` pasa de `enum` a objeto `as const`, con llaves en PascalCase (`Asc`, `Desc`). Regla en `code-style.md`.

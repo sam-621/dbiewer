@@ -9,6 +9,9 @@ const config: CodegenConfig = {
         contextType: '@/context#RequestContext',
         useTypeImports: true,
         enumsAsTypes: true,
+        scalars: {
+          DateTime: { input: 'string', output: 'Date' }
+        },
         enumValues: {
           ConnectionSslMode: {
             DISABLE: 'disable',
@@ -18,6 +21,10 @@ const config: CodegenConfig = {
           DbFunctionKind: {
             FUNCTION: 'function',
             PROCEDURE: 'procedure'
+          },
+          FileType: {
+            SQL: 'sql',
+            TXT: 'txt'
           }
         }
       }
