@@ -71,3 +71,4 @@
 - (web) Pestaña de tabla: botón "Columns" a la izquierda de Data / Structure para elegir las columnas visibles, con buscador y "Show all". La elección vive en memoria por pestaña: sobrevive a cambiar de pestaña o de conexión y se pierde al cerrarla o recargar.
 - (web) El botón "Columns" siempre muestra cuántas columnas se ven del total.
 - (web) El encabezado de la tabla ya no muestra la cantidad de columnas: esa información queda en el botón "Columns".
+- (api) La tabla `saved_query` se reemplaza por `file`, genérica para archivos `sql` y `txt`: `content` en vez de `sql`, columna `type` (texto en la base, enum en el código) e índice único por `(connection_id, type, lower(name))`. Con su migración generada y la custom, sin backfill. Spec actualizado; el CRUD del paso 7 pasa a `File`.

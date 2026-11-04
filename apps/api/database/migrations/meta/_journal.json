@@ -50,6 +50,20 @@
       "when": 1793763604622,
       "tag": "0006_saved_query_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793768630801,
+      "tag": "0007_replace_saved_query_with_file",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793768634361,
+      "tag": "0008_file_rls",
+      "breakpoints": true
     }
   ]
 }

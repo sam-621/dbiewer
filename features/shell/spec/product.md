@@ -66,12 +66,13 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Las ejecuciones no se guardan: no hay historial.
 - Se ejecuta lo que el usuario escriba, incluidas escrituras, sin confirmación.
 
-### Queries guardadas
+### Archivos
 
-- Una query guardada pertenece a una conexión. Al borrar la conexión, se borran sus queries.
-- Nombre: obligatorio, sin espacios a los lados, de 100 caracteres como máximo y único en la conexión sin distinguir mayúsculas. Se muestra con `.sql` al final.
-- Se puede crear, renombrar, editar el SQL y eliminar (con confirmación).
-- Una query nueva no se guarda hasta que el usuario la guarda y le pone nombre.
+- Un archivo es de tipo `sql` o `txt`. Una query guardada es un archivo `sql`.
+- Un archivo pertenece a una conexión. Al borrar la conexión, se borran sus archivos.
+- Nombre: obligatorio, sin espacios a los lados, de 100 caracteres como máximo y único en la conexión por tipo, sin distinguir mayúsculas. Se muestra con su extensión al final (`.sql`, `.txt`).
+- Se puede crear, renombrar, editar el contenido y eliminar (con confirmación).
+- Un archivo nuevo no se guarda hasta que el usuario lo guarda y le pone nombre.
 
 ### Pestañas
 
@@ -94,6 +95,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - **Sin historial ni Messages**: el panel de resultados de la pestaña SQL solo tiene Results. El usuario no los necesita.
 - **`WHERE` y `ORDER BY` como texto libre**: escribir es más rápido que armar condiciones con menús y permite cualquier expresión de Postgres (`or`, funciones, casts). La api los pega tal cual en la consulta: no abre nada nuevo, porque el usuario ya puede ejecutar cualquier SQL contra esa conexión desde la pestaña SQL.
 - **Layout en paneles flotantes**: dos paneles redondeados sobre un fondo más oscuro, con header y barra de estado sobre el fondo. Le da a dbiewer una identidad propia frente a los clientes web con sidebar y bordes.
+- **Tabla genérica `file` en vez de `saved_query`**: además de queries se guardan archivos de texto. El tipo (`sql`, `txt`) coincide con la extensión que se muestra en el nombre.
 - **Pool de conexiones por conexión en la api**: abrir un cliente por cada pedido es lento para navegar tablas.
 
 ## Fuera de alcance
@@ -117,5 +119,5 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 4. [x] web: barra de pestañas (provisional, por conexión, en `localStorage`) y pestaña de tabla o vista con Data y Structure.
 5. [x] api: mutation `runQuery` con límites, con sus tests e2e.
 6. [x] web: pestaña SQL con editor, ejecutar y Results, y pestaña de función en solo lectura.
-7. [ ] api: tabla `saved_query` con su CRUD, con sus tests e2e.
+7. [ ] api: tabla `file` con su CRUD, con sus tests e2e.
 8. [ ] web: tab Queries del sidebar, nueva query, guardar con ⌘S, renombrar y eliminar.

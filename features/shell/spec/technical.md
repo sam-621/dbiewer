@@ -14,10 +14,10 @@ Reglas de negocio y decisiones en `product.md`.
 
 | Tabla | Columnas | Notas |
 |-------|----------|-------|
-| `saved_query` | `id uuid`, `tenant_id uuid`, `connection_id uuid`, `name text`, `sql text`, `created_at`, `updated_at` | Tenant con RLS. |
+| `file` | `id uuid`, `tenant_id uuid`, `connection_id uuid`, `name text`, `type text`, `content text`, `created_at`, `updated_at` | Tenant con RLS. `type` es `text` en la base y enum (`sql`, `txt`) en el código. |
 
 - Lleva `tenant_id` con el default, la policy, `ENABLE` y `FORCE` de `database.md`, y FK a `connection(id)` con `ON DELETE CASCADE`.
-- Índice único `saved_query_connection_id_name_idx` sobre `(connection_id, lower(name))`.
+- Índice único `file_connection_id_type_name_idx` sobre `(connection_id, type, lower(name))`.
 
 ## API GraphQL
 
@@ -30,8 +30,8 @@ Errores nuevos en `ConnectionErrorCode` o en un enum propio del módulo:
 | `CONNECTION_FAILED` | No se pudo conectar a la base del usuario. |
 | `QUERY_FAILED` | Postgres devolvió un error. El `message` es el de Postgres. |
 | `OBJECT_NOT_FOUND` | La tabla, vista o función ya no existe. |
-| `SAVED_QUERY_NOT_FOUND` | La query guardada no existe o es de otra conexión. |
-| `SAVED_QUERY_NAME_ALREADY_EXISTS` | Nombre repetido en la conexión. |
+| `FILE_NOT_FOUND` | El archivo no existe o es de otra conexión. |
+| `FILE_NAME_ALREADY_EXISTS` | Nombre repetido en la conexión para ese tipo. |
 
 ### Esquema
 
@@ -213,65 +213,73 @@ type Mutation {
 - `sql` tiene como máximo 100,000 caracteres, validado con zod en el use-case.
 - No guarda nada en la base de la api. Si falla, responde `QUERY_FAILED` con el mensaje de Postgres.
 
-### Queries guardadas
+### Archivos
 
 ```graphql
-type SavedQuery {
+enum FileType {
+  SQL
+  TXT
+}
+
+type File {
   id: ID!
   name: String!
-  sql: String!
+  type: FileType!
+  content: String!
   updatedAt: DateTime!
 }
 
-type SavedQueryList {
-  items: [SavedQuery!]!
+type FileList {
+  items: [File!]!
 }
 
-input CreateSavedQueryInput {
+input CreateFileInput {
   connectionId: ID!
   name: String!
-  sql: String!
+  type: FileType!
+  content: String!
 }
 
-input UpdateSavedQueryInput {
+input UpdateFileInput {
   id: ID!
   name: String!
-  sql: String!
+  content: String!
 }
 
-type SavedQueryResult {
+type FileResult {
   apiErrors: [ShellErrorResult!]!
-  savedQuery: SavedQuery
+  file: File
 }
 
-type RemoveSavedQueryResult {
+type RemoveFileResult {
   apiErrors: [ShellErrorResult!]!
   success: Boolean
 }
 
 type Query {
-  savedQueries(connectionId: ID!): SavedQueryList!
+  files(connectionId: ID!): FileList!
 }
 
 type Mutation {
-  createSavedQuery(input: CreateSavedQueryInput!): SavedQueryResult!
-  updateSavedQuery(input: UpdateSavedQueryInput!): SavedQueryResult!
-  removeSavedQuery(id: ID!): RemoveSavedQueryResult!
+  createFile(input: CreateFileInput!): FileResult!
+  updateFile(input: UpdateFileInput!): FileResult!
+  removeFile(id: ID!): RemoveFileResult!
 }
 ```
 
-- `savedQueries` ordena por `updated_at desc, id`.
-- Nombre según `product.md`, validado con zod en el use-case. El nombre se guarda sin `.sql`; si el usuario lo escribe, se quita.
+- `files` ordena por `updated_at desc, id`.
+- El tipo no cambia después de crear el archivo.
+- Nombre según `product.md`, validado con zod en el use-case. El nombre se guarda sin extensión; si el usuario escribe la de su tipo, se quita.
 
 ### Capas
 
 | Capa | Archivo |
 |------|---------|
-| Schema | `src/api/schema/database-schema.gql`, `query.gql`, `saved-query.gql` |
+| Schema | `src/api/schema/database-schema.gql`, `query.gql`, `file.gql` |
 | Resolvers | uno por archivo de schema en `src/api/resolvers/` |
-| Use-cases | `src/modules/database-schema/use-cases/` (lectura del esquema, estructura, filas, definición), `src/modules/query/use-cases/` (`query-runner.ts`), `src/modules/saved-query/use-cases/` (creator, updater, remover) |
+| Use-cases | `src/modules/database-schema/use-cases/` (lectura del esquema, estructura, filas, definición), `src/modules/query/use-cases/` (`query-runner.ts`), `src/modules/file/use-cases/` (creator, updater, remover) |
 | Services | `src/services/postgres/`: pool, introspección y ejecución |
-| Repositorios | `src/persistence/repositories/saved-query/` |
+| Repositorios | `src/persistence/repositories/file/` |
 
 Las operaciones que leen la base del usuario sí llevan use-case: tienen que leer la conexión, descifrar la contraseña y llamar al service.
 
@@ -280,7 +288,7 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 - **Conexión activa:** `useActiveConnection` en `src/lib/workspace/hooks/`, con el id en `localStorage` (`dbiewer:active-connection`). Si el id guardado ya no existe, usa la conexión más reciente.
 - **Ancho del sidebar:** en `localStorage` (`dbiewer:sidebar-width`), con `try/catch`.
 - **Pestañas:** estado por conexión en `localStorage` (`dbiewer:tabs:<connectionId>`): lista de pestañas, activa y cuál es provisional. Los borradores sin guardar van en `dbiewer:draft:<connectionId>:<tabKey>`. Todo leído y escrito con `try/catch`: si falla, el shell arranca sin pestañas.
-- **Clave de pestaña:** `table:<schema>.<name>`, `view:<schema>.<name>`, `function:<schema>.<name>(<args>)`, `query:<savedQueryId>` y `draft:<uuid>` para una query sin guardar.
+- **Clave de pestaña:** `table:<schema>.<name>`, `view:<schema>.<name>`, `function:<schema>.<name>(<args>)`, `query:<fileId>` y `draft:<uuid>` para una query sin guardar.
 - **Módulos:**
   - `src/lib/workspace/`: `WorkspaceLayout` con el selector de conexión, el shell (sidebar y área de pestañas) y el estado de pestañas.
   - `src/lib/database-schema/`: explorador, pestaña de tabla o vista (Data y Structure) y pestaña de función.
@@ -291,13 +299,13 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 - **Columnas visibles:** en memoria, por conexión y clave de pestaña, fuera de `localStorage`. Se borra al cerrar la pestaña o al reemplazar la provisional. Guarda las columnas ocultas, así una columna nueva aparece visible.
 - **Grilla:** el componente `table` de coss, con encabezado fijo y scroll horizontal. Sin virtualización: el máximo es 1,000 filas.
 - **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página; la definición de una función por `connectionId`, esquema, nombre y argumentos. "Reload" en el explorador o en la tabla los vuelve a pedir.
-- Después de crear, editar o eliminar una query guardada, `savedQueries`.
+- Después de crear, editar o eliminar un archivo, `files`.
 
 ## Impacto en código existente
 
 - `apps/api/src/services/postgres/postgres-service.ts`: pool, introspección y ejecución, además de `testConnection`.
 - `apps/api/src/modules/connection/use-cases/connection-updater.ts` y `connection-remover.ts`: descartan el pool de la conexión.
-- `apps/api/src/persistence/schema/`: tabla `saved_query`, con sus migraciones generada y custom.
+- `apps/api/src/persistence/schema/`: tabla `file`, que reemplaza a `saved_query`, con sus migraciones generada y custom.
 - `apps/web/src/lib/workspace/components/workspace-layout/workspace-layout.tsx`: suma el selector de conexión en el header.
 - `apps/web/src/lib/workspace/pages/workspace-page.tsx`: muestra el shell en lugar del listado temporal.
 - `apps/web/src/lib/connection/components/connections-dev-list/`: se borra.
@@ -306,6 +314,6 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 
 ## Tests
 
-- **api, integración:** repositorio de `saved_query`, incluido el índice único por nombre.
-- **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (`where`, `orderBy`, paginación, fragmento inválido, fragmento demasiado largo, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
+- **api, integración:** repositorio de `file`, incluido el índice único por tipo y nombre.
+- **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (`where`, `orderBy`, paginación, fragmento inválido, fragmento demasiado largo, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `file` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
 - **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla y pestaña SQL con el fetcher mockeado.

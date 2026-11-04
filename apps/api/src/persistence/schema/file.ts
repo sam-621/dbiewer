@@ -6,8 +6,8 @@ import { workspace } from './workspace';
 
 const currentTenantId = sql`nullif(current_setting('app.current_tenant_id', true), '')::uuid`;
 
-export const savedQuery = pgTable(
-  'saved_query',
+export const file = pgTable(
+  'file',
   {
     id: uuid('id').primaryKey(),
     tenantId: uuid('tenant_id')
@@ -18,7 +18,8 @@ export const savedQuery = pgTable(
       .notNull()
       .references(() => connection.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
-    sql: text('sql').notNull(),
+    type: text('type', { enum: ['sql', 'txt'] }).notNull(),
+    content: text('content').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .defaultNow()
@@ -26,11 +27,12 @@ export const savedQuery = pgTable(
       .notNull()
   },
   table => [
-    uniqueIndex('saved_query_connection_id_name_idx').on(
+    uniqueIndex('file_connection_id_type_name_idx').on(
       table.connectionId,
+      table.type,
       sql`lower(${table.name})`
     ),
-    pgPolicy('saved_query_tenant_isolation', {
+    pgPolicy('file_tenant_isolation', {
       as: 'permissive',
       for: 'all',
       using: sql`${table.tenantId} = ${currentTenantId}`,
