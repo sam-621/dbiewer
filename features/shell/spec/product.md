@@ -21,8 +21,8 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 1. El usuario entra a `/`. Si no tiene conexiones, ve el estado vacío de `connections`. Si tiene, entra al shell con la última conexión que usó o, si no hay una, con la más reciente.
 2. En el sidebar, el tab Explorer muestra el esquema de la conexión: tablas, vistas y funciones, agrupadas por esquema de Postgres.
 3. Con un clic en una tabla, se abre una pestaña provisional con sus datos; con la flechita, ve sus columnas. Puede filtrar, ordenar, paginar o pasar a Structure para ver columnas, índices, FKs y DDL. En cuanto hace algo en ella, o con doble clic en la pestaña, se fija.
-4. En el tab Queries ve sus queries guardadas de esa conexión. Puede abrir una o crear una nueva.
-5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados. Guarda con ⌘S.
+4. En el tab Files ve los archivos de esa conexión. Puede abrir uno o crear uno nuevo, eligiendo si es SQL o texto.
+5. En una pestaña SQL escribe la query y la ejecuta. Abajo ve los resultados. En una pestaña de texto solo escribe. En las dos guarda con ⌘S.
 6. Desde el header cambia de conexión. Todo el espacio de trabajo cambia, y al volver encuentra sus pestañas como las dejó.
 
 ## Reglas de negocio
@@ -39,6 +39,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - Se muestran los esquemas de la base que tienen objetos, menos los del sistema (`pg_catalog`, `information_schema`, `pg_toast` y los temporales).
 - Si la base tiene un solo esquema con objetos, el explorador no muestra ese nivel.
 - El explorador no muestra el número de filas de las tablas.
+- El explorador arranca con todo contraído. Lo que el usuario expande se recuerda en ese navegador, por conexión.
 - Dentro de la tabla, el número de filas es exacto y respeta los filtros aplicados.
 
 ### Tablas y vistas
@@ -69,10 +70,12 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 ### Archivos
 
 - Un archivo es de tipo `sql` o `txt`. Una query guardada es un archivo `sql`.
+- Los archivos se crean solo desde el tab Files, eligiendo el tipo al crearlos.
+- Un archivo `txt` es texto plano: no se ejecuta ni se formatea.
 - Un archivo pertenece a una conexión. Al borrar la conexión, se borran sus archivos.
 - Nombre: obligatorio, sin espacios a los lados, de 100 caracteres como máximo y único en la conexión por tipo, sin distinguir mayúsculas. Se muestra con su extensión al final (`.sql`, `.txt`).
 - Se puede crear, renombrar, editar el contenido y eliminar (con confirmación).
-- Un archivo nuevo no se guarda hasta que el usuario lo guarda y le pone nombre.
+- Un archivo nuevo se abre en una pestaña fija y no se guarda hasta que el usuario lo guarda y le pone nombre.
 
 ### Pestañas
 
@@ -96,6 +99,7 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 - **`WHERE` y `ORDER BY` como texto libre**: escribir es más rápido que armar condiciones con menús y permite cualquier expresión de Postgres (`or`, funciones, casts). La api los pega tal cual en la consulta: no abre nada nuevo, porque el usuario ya puede ejecutar cualquier SQL contra esa conexión desde la pestaña SQL.
 - **Layout en paneles flotantes**: dos paneles redondeados sobre un fondo más oscuro, con header y barra de estado sobre el fondo. Le da a dbiewer una identidad propia frente a los clientes web con sidebar y bordes.
 - **Tabla genérica `file` en vez de `saved_query`**: además de queries se guardan archivos de texto. El tipo (`sql`, `txt`) coincide con la extensión que se muestra en el nombre.
+- **Archivos solo desde el tab Files**: un único punto de creación, donde se elige el tipo. Se quita el "+" de la barra de pestañas.
 - **Pool de conexiones por conexión en la api**: abrir un cliente por cada pedido es lento para navegar tablas.
 
 ## Fuera de alcance
@@ -120,4 +124,4 @@ Como usuario con una base Postgres conectada, quiero explorar sus tablas, ver su
 5. [x] api: mutation `runQuery` con límites, con sus tests e2e.
 6. [x] web: pestaña SQL con editor, ejecutar y Results, y pestaña de función en solo lectura.
 7. [x] api: tabla `file` con su CRUD, con sus tests e2e.
-8. [ ] web: tab Queries del sidebar, nueva query, guardar con ⌘S, renombrar y eliminar.
+8. [x] web: tab Files del sidebar, nuevo archivo (SQL o texto), pestaña de texto, guardar con ⌘S, renombrar y eliminar.

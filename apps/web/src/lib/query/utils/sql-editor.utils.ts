@@ -40,7 +40,7 @@ const sqlEditorTheme = EditorView.theme({
     color: 'var(--muted-foreground)',
     border: 'none'
   },
-  '.cm-lineNumbers .cm-gutterElement': { paddingInline: '12px 8px' },
+  '.cm-lineNumbers .cm-gutterElement': { minWidth: 'calc(3ch + 20px)', paddingInline: '12px 8px' },
   '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: 'var(--accent)' },
   '.cm-activeLineGutter': { color: 'var(--foreground)' },
   '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':

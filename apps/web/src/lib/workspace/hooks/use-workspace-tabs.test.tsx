@@ -17,6 +17,7 @@ const REFRESH = {
 } as const;
 const REFRESH_KEY = 'function:public.refresh_stats(since date)';
 const USERS_KEY = 'table:public.users';
+const NOTES = { id: 'file-1', name: 'notes', type: 'txt' } as const;
 
 const renderTabsFor = (initialConnectionId: string) => {
   let connectionId = initialConnectionId;
@@ -35,6 +36,16 @@ const renderTabsFor = (initialConnectionId: string) => {
 };
 
 const renderTabs = (connectionId = 'connection-1') => renderTabsFor(connectionId);
+
+const storeDraftTab = (fields: Record<string, unknown> = {}) =>
+  localStorage.setItem(
+    'dbiewer:tabs:connection-1',
+    JSON.stringify({
+      tabs: [{ key: 'draft:1', kind: 'draft', number: 1, ...fields }],
+      activeKey: 'draft:1',
+      provisionalKey: null
+    })
+  );
 
 const tabKeys = (tabs: { key: string }[]) => tabs.map(tab => tab.key);
 
@@ -185,16 +196,16 @@ describe('useWorkspaceTabs', () => {
     expect(restored.current.provisionalKey).toBe(REFRESH_KEY);
   });
 
-  test('opens new queries as pinned draft tabs with increasing numbers', () => {
+  test('opens new files as pinned draft tabs with increasing numbers', () => {
     const { result } = renderTabs();
 
     act(() => result.current.openObject(USERS, { isPinned: false }));
-    act(() => result.current.openDraft());
-    act(() => result.current.openDraft());
+    act(() => result.current.openDraft('sql'));
+    act(() => result.current.openDraft('txt'));
 
     const [, first, second] = result.current.tabs;
-    expect(first).toMatchObject({ kind: 'draft', number: 1 });
-    expect(second).toMatchObject({ kind: 'draft', number: 2 });
+    expect(first).toMatchObject({ kind: 'draft', number: 1, type: 'sql' });
+    expect(second).toMatchObject({ kind: 'draft', number: 2, type: 'txt' });
     expect(first?.key).toMatch(/^draft:[\w-]+$/);
     expect(result.current.activeKey).toBe(second?.key);
     expect(result.current.provisionalKey).toBe('table:public.users');
@@ -204,20 +215,103 @@ describe('useWorkspaceTabs', () => {
   });
 
   test('restores draft tabs and removes the draft SQL when closing one', () => {
-    const { result, unmount } = renderTabs();
-
-    act(() => result.current.openDraft());
-    const key = result.current.activeKey ?? '';
+    const key = 'draft:1';
+    storeDraftTab();
     localStorage.setItem(`dbiewer:draft:connection-1:${key}`, 'select 1');
 
-    unmount();
-    const { result: restored } = renderTabs();
-    expect(restored.current.tabs).toEqual([{ key, kind: 'draft', number: 1 }]);
+    const { result } = renderTabs();
+    expect(result.current.tabs).toEqual([
+      { key, kind: 'draft', number: 1, type: 'sql', isDirty: false }
+    ]);
 
-    act(() => restored.current.closeTab(key));
+    act(() => result.current.closeTab(key));
 
-    expect(restored.current.tabs).toEqual([]);
+    expect(result.current.tabs).toEqual([]);
     expect(localStorage.getItem(`dbiewer:draft:connection-1:${key}`)).toBeNull();
+  });
+
+  test('counts a stored draft without a type as sql', () => {
+    localStorage.setItem(
+      'dbiewer:tabs:connection-1',
+      JSON.stringify({
+        tabs: [{ key: 'draft:1', kind: 'draft', number: 1 }],
+        activeKey: 'draft:1',
+        provisionalKey: null
+      })
+    );
+
+    const { result } = renderTabs();
+
+    expect(result.current.tabs).toEqual([
+      { key: 'draft:1', kind: 'draft', number: 1, type: 'sql', isDirty: false }
+    ]);
+  });
+
+  test('opens a file once in a pinned tab', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+    act(() => result.current.openFile(NOTES));
+    act(() => result.current.activateTab(USERS_KEY));
+    act(() => result.current.openFile(NOTES));
+
+    expect(tabKeys(result.current.tabs)).toEqual([USERS_KEY, 'file:file-1']);
+    expect(result.current.activeKey).toBe('file:file-1');
+    expect(result.current.provisionalKey).toBe(USERS_KEY);
+  });
+
+  test('turns a draft into a file tab keeping its type', () => {
+    const draftKey = 'draft:1';
+    storeDraftTab({ type: 'txt' });
+
+    const { result } = renderTabs();
+    act(() => result.current.changeTabDirty(draftKey, true));
+    act(() => result.current.replaceDraftTab(draftKey, { id: 'file-1', name: 'notes' }));
+
+    expect(result.current.tabs).toEqual([
+      {
+        key: 'file:file-1',
+        kind: 'file',
+        fileId: 'file-1',
+        name: 'notes',
+        type: 'txt',
+        isDirty: false,
+        draftKey
+      }
+    ]);
+    expect(result.current.activeKey).toBe('file:file-1');
+  });
+
+  test('renames a file tab and keeps the change after restoring it', () => {
+    const { result, unmount } = renderTabs();
+
+    act(() => result.current.openFile(NOTES));
+    act(() => result.current.renameFileTab('file:file-1', 'ideas'));
+    unmount();
+
+    const { result: restored } = renderTabs();
+    expect(restored.current.tabs[0]).toMatchObject({ name: 'ideas' });
+  });
+
+  test('marks a tab with unsaved changes and restores the mark', () => {
+    const { result, unmount } = renderTabs();
+
+    act(() => result.current.openFile(NOTES));
+    act(() => result.current.changeTabDirty('file:file-1', true));
+    unmount();
+
+    const { result: restored } = renderTabs();
+    expect(restored.current.tabs[0]).toMatchObject({ isDirty: true });
+  });
+
+  test('removes the unsaved content when closing a file tab', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openFile(NOTES));
+    localStorage.setItem('dbiewer:draft:connection-1:file:file-1', 'unsaved');
+    act(() => result.current.closeTab('file:file-1'));
+
+    expect(localStorage.getItem('dbiewer:draft:connection-1:file:file-1')).toBeNull();
   });
 
   test('keeps the tabs of each connection in localStorage', () => {
@@ -326,7 +420,7 @@ describe('useWorkspaceTabs', () => {
     expect(result.current.tabs).toEqual([]);
 
     act(() => result.current.openObject(USERS, { isPinned: false }));
-    act(() => result.current.openDraft());
+    act(() => result.current.openFile(NOTES));
     act(() => result.current.closeTab(result.current.activeKey ?? ''));
 
     expect(tabKeys(result.current.tabs)).toEqual(['table:public.users']);

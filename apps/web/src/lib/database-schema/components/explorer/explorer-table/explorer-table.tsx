@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { getTabKey } from '@/lib/workspace/utils/workspace-tabs.utils';
 import { TableIcon } from '@/shared/components/icons/icons';
 import {
   Collapsible,
@@ -12,30 +13,41 @@ import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerChevron } from '../explorer-chevron/explorer-chevron';
 import { ExplorerColumns } from '../explorer-columns/explorer-columns';
 import { ExplorerName } from '../explorer-name/explorer-name';
-import type { OpenExplorerObject } from '../explorer-object';
+import type { ChangeExplorerExpanded, OpenExplorerObject } from '../explorer-object';
 
 type Props = {
   schemaName: string;
   table: DbSchemaNode['tables'][number];
+  expandedIds: string[];
+  onExpandedChange: ChangeExplorerExpanded;
+  activeTabKey?: string | null;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const ExplorerTable = ({ schemaName, table, onOpenObject }: Props) => {
+export const ExplorerTable = ({
+  schemaName,
+  table,
+  expandedIds,
+  onExpandedChange,
+  activeTabKey,
+  onOpenObject
+}: Props) => {
   const { t } = useTranslation();
+  const object = { kind: 'table' as const, schema: schemaName, name: table.name };
+  const id = getTabKey(object);
 
   return (
     <SidebarMenuItem>
-      <Collapsible>
+      <Collapsible
+        open={expandedIds.includes(id)}
+        onOpenChange={isOpen => onExpandedChange(id, isOpen)}
+      >
         <div className="relative">
           <SidebarMenuButton
             size="sm"
-            className="ps-8"
-            onClick={() =>
-              onOpenObject?.(
-                { kind: 'table', schema: schemaName, name: table.name },
-                { isPinned: false }
-              )
-            }
+            className="ps-8 data-[active=true]:font-normal"
+            isActive={activeTabKey === id}
+            onClick={() => onOpenObject?.(object, { isPinned: false })}
           >
             <TableIcon className="text-muted-foreground" />
             <ExplorerName name={table.name} />

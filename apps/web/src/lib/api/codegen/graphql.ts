@@ -38,6 +38,16 @@ export type DbObjectInput = {
   schema: string;
 };
 
+export type FileErrorCode =
+  | 'CONNECTION_NOT_FOUND'
+  | 'FILE_NAME_ALREADY_EXISTS'
+  | 'FILE_NOT_FOUND'
+  | 'INVALID_INPUT';
+
+export type FileType =
+  | 'SQL'
+  | 'TXT';
+
 export type FunctionDefinitionInput = {
   arguments: string;
   connectionId: string | number;
@@ -48,6 +58,14 @@ export type FunctionDefinitionInput = {
 export type RunQueryInput = {
   connectionId: string | number;
   sql: string;
+};
+
+export type SaveFileInput = {
+  connectionId: string | number;
+  content: string;
+  id?: string | number | null | undefined;
+  name: string;
+  type: FileType;
 };
 
 export type ShellErrorCode =
@@ -154,6 +172,36 @@ export type GetFunctionDefinitionQueryVariables = Exact<{
 
 export type GetFunctionDefinitionQuery = { functionDefinition: { definition: string | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
 
+export type CommonFileFragment = { id: string, name: string, type: FileType, content: string, updatedAt: string } & { ' $fragmentName'?: 'CommonFileFragment' };
+
+export type GetFilesQueryVariables = Exact<{
+  connectionId: string | number;
+}>;
+
+
+export type GetFilesQuery = { files: { items: Array<{ ' $fragmentRefs'?: { 'CommonFileFragment': CommonFileFragment } }> } };
+
+export type GetFileQueryVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type GetFileQuery = { file: { ' $fragmentRefs'?: { 'CommonFileFragment': CommonFileFragment } } | null };
+
+export type SaveFileMutationVariables = Exact<{
+  input: SaveFileInput;
+}>;
+
+
+export type SaveFileMutation = { saveFile: { apiErrors: Array<{ code: FileErrorCode, message: string }>, file: { ' $fragmentRefs'?: { 'CommonFileFragment': CommonFileFragment } } | null } };
+
+export type RemoveFileMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type RemoveFileMutation = { removeFile: { success: boolean | null, apiErrors: Array<{ code: FileErrorCode, message: string }> } };
+
 export type RunQueryMutationVariables = Exact<{
   input: RunQueryInput;
 }>;
@@ -191,6 +239,15 @@ export const CommonConnectionFragmentDoc = new TypedDocumentString(`
   sslMode
 }
     `, {"fragmentName":"CommonConnection"}) as unknown as TypedDocumentString<CommonConnectionFragment, unknown>;
+export const CommonFileFragmentDoc = new TypedDocumentString(`
+    fragment CommonFile on File {
+  id
+  name
+  type
+  content
+  updatedAt
+}
+    `, {"fragmentName":"CommonFile"}) as unknown as TypedDocumentString<CommonFileFragment, unknown>;
 export const GetMeDocument = new TypedDocumentString(`
     query GetMe {
   me {
@@ -383,6 +440,64 @@ export const GetFunctionDefinitionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetFunctionDefinitionQuery, GetFunctionDefinitionQueryVariables>;
+export const GetFilesDocument = new TypedDocumentString(`
+    query GetFiles($connectionId: ID!) {
+  files(connectionId: $connectionId) {
+    items {
+      ...CommonFile
+    }
+  }
+}
+    fragment CommonFile on File {
+  id
+  name
+  type
+  content
+  updatedAt
+}`) as unknown as TypedDocumentString<GetFilesQuery, GetFilesQueryVariables>;
+export const GetFileDocument = new TypedDocumentString(`
+    query GetFile($id: ID!) {
+  file(id: $id) {
+    ...CommonFile
+  }
+}
+    fragment CommonFile on File {
+  id
+  name
+  type
+  content
+  updatedAt
+}`) as unknown as TypedDocumentString<GetFileQuery, GetFileQueryVariables>;
+export const SaveFileDocument = new TypedDocumentString(`
+    mutation SaveFile($input: SaveFileInput!) {
+  saveFile(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    file {
+      ...CommonFile
+    }
+  }
+}
+    fragment CommonFile on File {
+  id
+  name
+  type
+  content
+  updatedAt
+}`) as unknown as TypedDocumentString<SaveFileMutation, SaveFileMutationVariables>;
+export const RemoveFileDocument = new TypedDocumentString(`
+    mutation RemoveFile($id: ID!) {
+  removeFile(id: $id) {
+    apiErrors {
+      code
+      message
+    }
+    success
+  }
+}
+    `) as unknown as TypedDocumentString<RemoveFileMutation, RemoveFileMutationVariables>;
 export const RunQueryDocument = new TypedDocumentString(`
     mutation RunQuery($input: RunQueryInput!) {
   runQuery(input: $input) {

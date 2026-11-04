@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { getTabKey } from '@/lib/workspace/utils/workspace-tabs.utils';
 import { EyeIcon, OpenIcon } from '@/shared/components/icons/icons';
 import {
   Collapsible,
@@ -16,23 +17,43 @@ import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerChevron } from '../explorer-chevron/explorer-chevron';
 import { ExplorerColumns } from '../explorer-columns/explorer-columns';
 import { ExplorerName } from '../explorer-name/explorer-name';
-import type { OpenExplorerObject } from '../explorer-object';
+import type { ChangeExplorerExpanded, OpenExplorerObject } from '../explorer-object';
 
 type Props = {
   schemaName: string;
   view: DbSchemaNode['views'][number];
+  expandedIds: string[];
+  onExpandedChange: ChangeExplorerExpanded;
+  activeTabKey?: string | null;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const ExplorerView = ({ schemaName, view, onOpenObject }: Props) => {
+export const ExplorerView = ({
+  schemaName,
+  view,
+  expandedIds,
+  onExpandedChange,
+  activeTabKey,
+  onOpenObject
+}: Props) => {
   const { t } = useTranslation();
   const object = { kind: 'view' as const, schema: schemaName, name: view.name };
+  const id = getTabKey(object);
 
   return (
     <SidebarMenuItem>
-      <Collapsible>
+      <Collapsible
+        open={expandedIds.includes(id)}
+        onOpenChange={isOpen => onExpandedChange(id, isOpen)}
+      >
         <CollapsibleTrigger
-          render={<SidebarMenuButton size="sm" />}
+          render={
+            <SidebarMenuButton
+              size="sm"
+              className="data-[active=true]:font-normal"
+              isActive={activeTabKey === id}
+            />
+          }
           onClick={event => {
             if (event.detail > 1) event.preventBaseUIHandler();
           }}

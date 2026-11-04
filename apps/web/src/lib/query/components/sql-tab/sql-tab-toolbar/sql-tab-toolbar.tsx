@@ -9,11 +9,20 @@ import { useRunShortcutLabel } from '../../../hooks/use-run-shortcut-label';
 type Props = {
   connectionName: string;
   isRunning: boolean;
+  isSaving: boolean;
   onRun: () => void;
+  onSave: () => void;
   onFormat: () => void;
 };
 
-export const SqlTabToolbar = ({ connectionName, isRunning, onRun, onFormat }: Props) => {
+export const SqlTabToolbar = ({
+  connectionName,
+  isRunning,
+  isSaving,
+  onRun,
+  onSave,
+  onFormat
+}: Props) => {
   const { t } = useTranslation();
   const runShortcutLabel = useRunShortcutLabel();
 
@@ -23,6 +32,9 @@ export const SqlTabToolbar = ({ connectionName, isRunning, onRun, onFormat }: Pr
         <PlayIcon variant="solid" />
         {t('Run')}
         <Kbd className="bg-primary-foreground/10 text-primary-foreground">{runShortcutLabel}</Kbd>
+      </Button>
+      <Button variant="ghost" size="sm" loading={isSaving} onClick={onSave}>
+        {t('Save')}
       </Button>
       <Button variant="ghost" size="sm" onClick={onFormat}>
         <MagicWandIcon />

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Explorer } from '@/lib/database-schema/components/explorer/explorer';
 import { ExplorerCollapseButton } from '@/lib/database-schema/components/explorer-collapse-button/explorer-collapse-button';
 import { ExplorerReloadButton } from '@/lib/database-schema/components/explorer-reload-button/explorer-reload-button';
-import { SavedQueriesEmpty } from '@/lib/query/components/saved-queries-empty/saved-queries-empty';
+import { useExplorerExpanded } from '@/lib/database-schema/hooks/use-explorer-expanded';
+import { FilesTab } from '@/lib/file/components/files-tab/files-tab';
 import { MagnifyingGlassIcon } from '@/shared/components/icons/icons';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shared/components/ui/input-group';
 import { Sidebar, SidebarContent, SidebarHeader } from '@/shared/components/ui/sidebar';
@@ -12,23 +13,22 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from '@/shared/components/ui/tabs'
 
 import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
 
-type SidebarTab = 'explorer' | 'queries';
+type SidebarTab = 'explorer' | 'files';
 
 const SEARCH_PLACEHOLDERS: Record<SidebarTab, string> = {
   explorer: 'Search tables, views…',
-  queries: 'Filter queries…'
+  files: 'Filter files…'
 };
 
 export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => {
   const { t } = useTranslation();
-  const { openObject } = useWorkspaceTabs();
+  const { activeKey, openObject } = useWorkspaceTabs();
   const [tab, setTab] = useState<SidebarTab>('explorer');
   const [searches, setSearches] = useState<Record<SidebarTab, string>>({
     explorer: '',
-    queries: ''
+    files: ''
   });
-  const [collapseCounts, setCollapseCounts] = useState<Record<string, number>>({});
-  const collapseCount = collapseCounts[connectionId] ?? 0;
+  const { expandedIds, changeExpanded, collapseAll } = useExplorerExpanded(connectionId);
 
   return (
     <Sidebar collapsible="none" className="overflow-hidden rounded-shell bg-background">
@@ -43,17 +43,13 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
               <TabsTab value="explorer" className="min-w-0 shrink">
                 <span className="truncate">{t('Explorer')}</span>
               </TabsTab>
-              <TabsTab value="queries" className="min-w-0 shrink">
-                <span className="truncate">{t('Queries')}</span>
+              <TabsTab value="files" className="min-w-0 shrink">
+                <span className="truncate">{t('Files')}</span>
               </TabsTab>
             </TabsList>
             {tab === 'explorer' && (
               <div className="flex shrink-0 items-center gap-1">
-                <ExplorerCollapseButton
-                  onCollapse={() =>
-                    setCollapseCounts({ ...collapseCounts, [connectionId]: collapseCount + 1 })
-                  }
-                />
+                <ExplorerCollapseButton onCollapse={collapseAll} />
                 <ExplorerReloadButton connectionId={connectionId} />
               </div>
             )}
@@ -77,12 +73,14 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
               key={connectionId}
               connectionId={connectionId}
               search={searches.explorer}
-              collapseCount={collapseCount}
+              expandedIds={expandedIds}
+              onExpandedChange={changeExpanded}
+              activeTabKey={activeKey}
               onOpenObject={openObject}
             />
           </TabsPanel>
-          <TabsPanel value="queries">
-            <SavedQueriesEmpty />
+          <TabsPanel value="files" className="px-2 pb-2">
+            <FilesTab key={connectionId} connectionId={connectionId} search={searches.files} />
           </TabsPanel>
         </SidebarContent>
       </Tabs>

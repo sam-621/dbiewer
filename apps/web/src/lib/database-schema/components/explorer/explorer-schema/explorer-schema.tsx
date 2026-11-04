@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   Collapsible,
   CollapsiblePanel,
@@ -10,21 +8,35 @@ import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub } from '@/shared/com
 import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerChevron } from '../explorer-chevron/explorer-chevron';
 import { ExplorerGroups } from '../explorer-groups/explorer-groups';
-import type { OpenExplorerObject } from '../explorer-object';
+import type { ChangeExplorerExpanded, OpenExplorerObject } from '../explorer-object';
 
 type Props = {
   schema: DbSchemaNode;
   isSearching: boolean;
-  defaultOpen: boolean;
+  expandedIds: string[];
+  onExpandedChange: ChangeExplorerExpanded;
+  activeTabKey?: string | null;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const ExplorerSchema = ({ schema, isSearching, defaultOpen, onOpenObject }: Props) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+export const ExplorerSchema = ({
+  schema,
+  isSearching,
+  expandedIds,
+  onExpandedChange,
+  activeTabKey,
+  onOpenObject
+}: Props) => {
+  const id = `schema:${schema.name}`;
 
   return (
     <SidebarMenuItem>
-      <Collapsible open={isSearching || isOpen} onOpenChange={setIsOpen}>
+      <Collapsible
+        open={isSearching || expandedIds.includes(id)}
+        onOpenChange={isOpen => {
+          if (!isSearching) onExpandedChange(id, isOpen);
+        }}
+      >
         <CollapsibleTrigger render={<SidebarMenuButton size="sm" />}>
           <ExplorerChevron />
           <span>{schema.name}</span>
@@ -34,7 +46,9 @@ export const ExplorerSchema = ({ schema, isSearching, defaultOpen, onOpenObject 
             <ExplorerGroups
               schema={schema}
               isSearching={isSearching}
-              defaultOpen={defaultOpen}
+              expandedIds={expandedIds}
+              onExpandedChange={onExpandedChange}
+              activeTabKey={activeTabKey}
               onOpenObject={onOpenObject}
             />
           </SidebarMenuSub>

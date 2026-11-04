@@ -8,17 +8,26 @@ import { useGetConnectionSchema } from '../../hooks/use-get-connection-schema';
 import { filterSchemas } from '../../utils/database-schema.utils';
 
 import { ExplorerGroups } from './explorer-groups/explorer-groups';
-import type { OpenExplorerObject } from './explorer-object';
+import type { ChangeExplorerExpanded, OpenExplorerObject } from './explorer-object';
 import { ExplorerSchema } from './explorer-schema/explorer-schema';
 
 type Props = {
   connectionId: string;
   search: string;
-  collapseCount?: number;
+  expandedIds: string[];
+  onExpandedChange: ChangeExplorerExpanded;
+  activeTabKey?: string | null;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const Explorer = ({ connectionId, search, collapseCount = 0, onOpenObject }: Props) => {
+export const Explorer = ({
+  connectionId,
+  search,
+  expandedIds,
+  onExpandedChange,
+  activeTabKey,
+  onOpenObject
+}: Props) => {
   const { t } = useTranslation();
   const { schemas, schemaError, isLoading, isFetching, refetch } =
     useGetConnectionSchema(connectionId);
@@ -64,17 +73,18 @@ export const Explorer = ({ connectionId, search, collapseCount = 0, onOpenObject
   }
 
   const isSearching = query.length > 0;
-  const defaultOpen = collapseCount === 0;
 
   return (
-    <SidebarMenu key={collapseCount} className="gap-0">
+    <SidebarMenu className="gap-0">
       {visibleSchemas.map(schema =>
         schemas.length > 1 ? (
           <ExplorerSchema
             key={schema.name}
             schema={schema}
             isSearching={isSearching}
-            defaultOpen={defaultOpen}
+            expandedIds={expandedIds}
+            onExpandedChange={onExpandedChange}
+            activeTabKey={activeTabKey}
             onOpenObject={onOpenObject}
           />
         ) : (
@@ -82,7 +92,9 @@ export const Explorer = ({ connectionId, search, collapseCount = 0, onOpenObject
             key={schema.name}
             schema={schema}
             isSearching={isSearching}
-            defaultOpen={defaultOpen}
+            expandedIds={expandedIds}
+            onExpandedChange={onExpandedChange}
+            activeTabKey={activeTabKey}
             onOpenObject={onOpenObject}
           />
         )

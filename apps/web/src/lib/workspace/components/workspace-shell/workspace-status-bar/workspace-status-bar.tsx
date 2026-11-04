@@ -23,8 +23,10 @@ export const WorkspaceStatusBar = ({ connection }: Props) => {
   const getTabName = useTabName();
   const activeTab = tabs.find(tab => tab.key === activeKey);
 
-  const getTabPath = (tab: WorkspaceTab) =>
-    tab.kind === 'draft' ? [`${getTabName(tab)}.sql`] : [tab.schema, getTabName(tab)];
+  const getTabPath = (tab: WorkspaceTab) => {
+    if (tab.kind === 'draft') return [`${getTabName(tab)}.${tab.type}`];
+    return tab.kind === 'file' ? [getTabName(tab)] : [tab.schema, getTabName(tab)];
+  };
 
   const path = [connection.name, ...(activeTab ? getTabPath(activeTab) : [])];
 

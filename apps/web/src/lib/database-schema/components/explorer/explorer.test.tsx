@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { gqlFetcher } from '@/lib/api/fetcher';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 
 import { render } from '../../../../../tests/render';
+import { useExplorerExpanded } from '../../hooks/use-explorer-expanded';
 import { ExplorerCollapseButton } from '../explorer-collapse-button/explorer-collapse-button';
 
 import { Explorer } from './explorer';
@@ -57,34 +58,66 @@ const schemaResult = (schemas: unknown[]) => ({ connectionSchema: { apiErrors: [
 
 const onOpenObject = vi.fn<OpenExplorerObject>();
 
-const renderExplorer = (search = '') =>
-  render(
-    <SidebarProvider>
-      <Explorer connectionId="connection-1" search={search} onOpenObject={onOpenObject} />
-    </SidebarProvider>
-  );
+const STORAGE_KEY = 'dbiewer:explorer-expanded:connection-1';
 
-const CollapsibleExplorer = ({ search }: { search: string }) => {
-  const [collapseCount, setCollapseCount] = useState(0);
+const storeExpanded = (ids: string[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+
+const getStoredExpanded = () => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+
+type TestExplorerProps = {
+  connectionId?: string;
+  search?: string;
+  activeTabKey?: string;
+};
+
+const TestExplorer = ({
+  connectionId = 'connection-1',
+  search = '',
+  activeTabKey
+}: TestExplorerProps) => {
+  const { expandedIds, changeExpanded, collapseAll } = useExplorerExpanded(connectionId);
 
   return (
     <SidebarProvider>
-      <ExplorerCollapseButton onCollapse={() => setCollapseCount(collapseCount + 1)} />
+      <ExplorerCollapseButton onCollapse={collapseAll} />
       <Explorer
-        connectionId="connection-1"
+        connectionId={connectionId}
         search={search}
-        collapseCount={collapseCount}
+        expandedIds={expandedIds}
+        onExpandedChange={changeExpanded}
+        activeTabKey={activeTabKey}
         onOpenObject={onOpenObject}
       />
     </SidebarProvider>
   );
 };
 
+const SwitchableExplorer = ({ initialSearch = '' }: { initialSearch?: string }) => {
+  const [connectionId, setConnectionId] = useState('connection-1');
+  const [search, setSearch] = useState(initialSearch);
+
+  return (
+    <>
+      <button onClick={() => setConnectionId('connection-1')}>First connection</button>
+      <button onClick={() => setConnectionId('connection-2')}>Second connection</button>
+      <button onClick={() => setSearch('')}>Clear search</button>
+      <TestExplorer connectionId={connectionId} search={search} />
+    </>
+  );
+};
+
+const renderExplorer = (search = '') => render(<TestExplorer search={search} />);
+
 describe('Explorer', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(gqlFetcher).mockReset();
     onOpenObject.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   test('shows a loading state while the schema loads', async () => {
@@ -112,7 +145,142 @@ describe('Explorer', () => {
 
     expect(await screen.findByRole('button', { name: 'public' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'billing' })).toBeInTheDocument();
-    expect(screen.getByText('monthly_revenue')).toBeInTheDocument();
+  });
+
+  test('starts with every schema collapsed', async () => {
+    mockSchema(schemaResult([PUBLIC, BILLING]));
+
+    renderExplorer();
+
+    expect(await screen.findByRole('button', { name: 'public' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.queryByRole('button', { name: /^Tablas/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+  });
+
+  test('starts with the groups collapsed when there is only one schema', async () => {
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+
+    expect(await screen.findByRole('button', { name: /^Tablas/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.getByRole('button', { name: /^Funciones/ })).toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+  });
+
+  test('remembers what was expanded after mounting again', async () => {
+    mockSchema(schemaResult([PUBLIC, BILLING]));
+
+    const { unmount } = renderExplorer();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'public' }));
+    await user.click(screen.getByRole('button', { name: /^Tablas/ }));
+    await user.click(screen.getByRole('button', { name: 'Columnas de users' }));
+    expect(screen.getByText('workspace_id')).toBeInTheDocument();
+
+    unmount();
+    renderExplorer();
+
+    expect(await screen.findByText('workspace_id')).toBeInTheDocument();
+    expect(screen.queryByText('invoices')).not.toBeInTheDocument();
+  });
+
+  test('forgets what was contracted', async () => {
+    storeExpanded(['group:public.tables', 'group:public.functions']);
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /^Tablas/ }));
+
+    expect(getStoredExpanded()).toEqual(['group:public.functions']);
+  });
+
+  test('keeps what is expanded apart for each connection', async () => {
+    storeExpanded(['group:public.tables']);
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<SwitchableExplorer />);
+    const user = userEvent.setup();
+    expect(await screen.findByText('users')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Second connection' }));
+    expect(await screen.findByRole('button', { name: /^Tablas/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'First connection' }));
+    expect(await screen.findByText('users')).toBeInTheDocument();
+  });
+
+  test('ignores the stored ids that no longer exist', async () => {
+    storeExpanded(['table:public.deleted', 'group:public.tables']);
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+
+    expect(await screen.findByText('users')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Funciones/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
+  test('starts collapsed when the stored value is invalid', async () => {
+    localStorage.setItem(STORAGE_KEY, '{"invalid":');
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+
+    expect(await screen.findByRole('button', { name: /^Tablas/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
+  test('starts collapsed and still expands when localStorage fails', async () => {
+    const fail = () => {
+      throw new Error('Storage unavailable');
+    };
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(fail);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(fail);
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+    const user = userEvent.setup();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: /^Tablas/ }));
+
+    expect(screen.getByText('users')).toBeInTheDocument();
+  });
+
+  test('expands the groups with results without changing what is stored', async () => {
+    storeExpanded(['group:public.functions']);
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<SwitchableExplorer initialSearch="users" />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /^Tablas/ }));
+
+    expect(screen.getByText('users')).toBeInTheDocument();
+    expect(getStoredExpanded()).toEqual(['group:public.functions']);
+
+    await user.click(screen.getByRole('button', { name: 'Clear search' }));
+
+    expect(screen.getByRole('button', { name: /^Tablas/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.getByRole('button', { name: /^Funciones/ })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
   });
 
   test('does not show the empty groups', async () => {
@@ -125,6 +293,7 @@ describe('Explorer', () => {
   });
 
   test('shows the columns with their type and keys when expanding a table', async () => {
+    storeExpanded(['group:public.tables']);
     mockSchema(schemaResult([PUBLIC]));
 
     renderExplorer();
@@ -138,10 +307,40 @@ describe('Explorer', () => {
     expect(screen.getByRole('img', { name: 'Llave foránea' })).toBeInTheDocument();
   });
 
+  test('marks the object of the active tab', async () => {
+    storeExpanded(['group:public.tables']);
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<TestExplorer activeTabKey="table:public.users" />);
+
+    expect(await screen.findByRole('button', { name: 'users' })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
+  });
+
+  test('does not expand anything for the active tab', async () => {
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<TestExplorer activeTabKey="table:public.users" />);
+
+    expect(await screen.findByRole('button', { name: /^Tablas/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+  });
+
   test('collapses schemas, groups, tables and views with collapse all', async () => {
+    storeExpanded([
+      'schema:public',
+      'group:public.tables',
+      'schema:billing',
+      'group:billing.views'
+    ]);
     mockSchema(schemaResult([PUBLIC, BILLING]));
 
-    render(<CollapsibleExplorer search="" />);
+    renderExplorer();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
     await user.click(screen.getByRole('button', { name: 'monthly_revenue' }));
@@ -150,9 +349,12 @@ describe('Explorer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
 
+    expect(getStoredExpanded()).toEqual([]);
     expect(screen.getByRole('button', { name: 'public' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'billing' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Tablas/ })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /^Tablas/ })).not.toBeInTheDocument()
+    );
     expect(screen.queryByText('users')).not.toBeInTheDocument();
     expect(screen.queryByText('monthly_revenue')).not.toBeInTheDocument();
 
@@ -162,22 +364,24 @@ describe('Explorer', () => {
   });
 
   test('collapses the groups of a single schema with collapse all', async () => {
+    storeExpanded(['group:public.tables']);
     mockSchema(schemaResult([PUBLIC]));
 
-    render(<CollapsibleExplorer search="" />);
+    renderExplorer();
     const user = userEvent.setup();
     expect(await screen.findByText('users')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
 
     expect(screen.getByRole('button', { name: /^Tablas/ })).toBeInTheDocument();
-    expect(screen.queryByText('users')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('users')).not.toBeInTheDocument());
+    expect(getStoredExpanded()).toEqual([]);
   });
 
   test('keeps the groups with results expanded when collapsing during a search', async () => {
     mockSchema(schemaResult([PUBLIC]));
 
-    render(<CollapsibleExplorer search="users" />);
+    renderExplorer('users');
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
     expect(screen.getByText('workspace_id')).toBeInTheDocument();
@@ -185,10 +389,11 @@ describe('Explorer', () => {
     await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
 
     expect(screen.getByText('users')).toBeInTheDocument();
-    expect(screen.queryByText('workspace_id')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('workspace_id')).not.toBeInTheDocument());
   });
 
   test('shows the functions with their arguments', async () => {
+    storeExpanded(['group:public.functions']);
     mockSchema(schemaResult([PUBLIC]));
 
     renderExplorer();
@@ -197,6 +402,7 @@ describe('Explorer', () => {
   });
 
   test('opens a function in the provisional tab with a click', async () => {
+    storeExpanded(['group:public.functions']);
     mockSchema(schemaResult([PUBLIC]));
 
     renderExplorer();
@@ -245,7 +451,7 @@ describe('Explorer', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Intentar de nuevo' }));
 
-    expect(await screen.findByText('users')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Tablas/ })).toBeInTheDocument();
   });
 
   test('shows a generic error when the request fails', async () => {

@@ -7,6 +7,7 @@ export const useTabName = () => {
 
   return (tab: WorkspaceTab) => {
     if (tab.kind === 'draft') return t('Untitled {{number}}', { number: tab.number });
+    if (tab.kind === 'file') return `${tab.name}.${tab.type}`;
     return tab.kind === 'function' ? `${tab.name}(${tab.arguments})` : tab.name;
   };
 };

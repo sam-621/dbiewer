@@ -1,6 +1,6 @@
 import { FunctionTab } from '@/lib/database-schema/components/function-tab/function-tab';
 import { TableTab } from '@/lib/database-schema/components/table-tab/table-tab';
-import { SqlTab } from '@/lib/query/components/sql-tab/sql-tab';
+import { FileEditorTab } from '@/lib/file/components/file-editor-tab/file-editor-tab';
 import { Tabs, TabsPanel } from '@/shared/components/ui/tabs';
 
 import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
@@ -27,13 +27,13 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
   const renderTab = (tab: WorkspaceTab) => {
     const key = `${connectionId}:${tab.key}`;
 
-    if (tab.kind === 'draft') {
+    if (tab.kind === 'draft' || tab.kind === 'file') {
       return (
-        <SqlTab
-          key={key}
+        <FileEditorTab
+          key={tab.kind === 'file' && tab.draftKey ? `${connectionId}:${tab.draftKey}` : key}
           connectionId={connectionId}
           connectionName={connectionName}
-          tabKey={tab.key}
+          tab={tab}
         />
       );
     }

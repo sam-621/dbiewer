@@ -2,19 +2,23 @@ import { type ReactNode, useState } from 'react';
 
 import type { OpenExplorerObject } from '@/lib/database-schema/components/explorer/explorer-object';
 import type { TableViewState } from '@/lib/database-schema/utils/table-view.utils';
-import { removeStoredDraftSql } from '@/lib/query/hooks/use-draft-sql';
+import { removeStoredDraft } from '@/lib/file/hooks/use-file-draft';
 import { Logger } from '@/shared/utils/logger';
 
 import {
   activateTab,
+  changeTabDirty,
   changeTabState,
   closeTab,
   EMPTY_WORKSPACE_TABS,
   getRemovedTabKeys,
-  isDraftTabKey,
+  hasStoredDraft,
   openDraftTab,
+  openFileTab,
   openTab,
   pinTab,
+  renameFileTab,
+  replaceDraftTab,
   type WorkspaceTabs,
   WorkspaceTabsSchema
 } from '../utils/workspace-tabs.utils';
@@ -54,7 +58,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
 
   const closeWorkspaceTab = (key: string) => {
     update(closeTab(workspaceTabs, key));
-    if (isDraftTabKey(key)) removeStoredDraftSql(connectionId, key);
+    if (hasStoredDraft(key)) removeStoredDraft(connectionId, key);
   };
 
   return (
@@ -62,7 +66,14 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
       value={{
         ...workspaceTabs,
         openObject,
-        openDraft: () => update(openDraftTab(workspaceTabs, crypto.randomUUID())),
+        openDraft: type => update(openDraftTab(workspaceTabs, crypto.randomUUID(), type)),
+        openFile: file => update(openFileTab(workspaceTabs, file)),
+        replaceDraftTab: (key, file) => update(replaceDraftTab(workspaceTabs, key, file)),
+        renameFileTab: (key, name) => update(renameFileTab(workspaceTabs, key, name)),
+        changeTabDirty: (key, isDirty) => {
+          const next = changeTabDirty(workspaceTabs, key, isDirty);
+          if (next !== workspaceTabs) update(next);
+        },
         activateTab: key => update(activateTab(workspaceTabs, key)),
         pinTab: key => update(pinTab(workspaceTabs, key)),
         closeTab: closeWorkspaceTab,

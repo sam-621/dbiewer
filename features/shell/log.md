@@ -86,3 +86,12 @@
 - (api) `architecture.md` y `code-style.md` usan la firma nueva de `findOne` y `findMany`.
 - (api) Operaciones de archivos en GraphQL: `files` y `file` leen del repositorio, `saveFile` y `removeFile` usan sus use-cases. Scalar `DateTime` para `updatedAt`. Con e2e. Cierra el paso 7.
 - (api) `OrderByKey` pasa de `enum` a objeto `as const`, con llaves en PascalCase (`Asc`, `Desc`). Regla en `code-style.md`.
+- (web) Tab Files, que reemplaza a Queries: hooks de `files`, `file`, `saveFile` y `removeFile`, lista con abrir, filtrar, renombrar y eliminar, pestaña de texto para archivos `txt` y guardado real con "Save" y ⌘S. Se quitan el "+" de la barra de pestañas y "New query" del estado vacío: los archivos solo se crean desde Files. Cierra el paso 8.
+- (web) "New file" es un botón de tamaño normal que abre un modal con nombre y tipo en radio buttons; al confirmar, crea el archivo vacío y lo abre en una pestaña fija. Sin archivos, la lista muestra una fila "No files yet". Ya no se crean borradores; los `draft:` persistidos piden el nombre al guardar. Spec actualizado.
+- (web) `DateTime` se genera como `string` en el codegen. `use-file-draft.ts` pasa a `hooks/`. `workspace-page.test.tsx` deja de buscar el nombre en el header.
+- (web) `yarn gen:types` pasa a los comandos que puede correr el agente en `docs/commands.md` y en `web-implementer.md`.
+- (web) Se quita el modal de nuevo archivo: "New file" abre un menú para elegir SQL o texto y crea un borrador en una pestaña fija. El nombre se pide al guardar por primera vez. Vuelve el estado vacío de Files con su acción para crear el primero. Spec actualizado.
+- (web) Con archivos guardados, "New file" es un botón solo con ícono; el estado vacío mantiene el botón con texto.
+- (web) Sidebar: la fila de la tabla, vista, función o archivo de la pestaña activa queda marcada con el estilo del hover, sin cambiar el tab del sidebar. `ui.md` actualizado.
+- (web) Editor SQL: la columna de números de línea reserva 3 dígitos, así el texto no salta al pasar de 9 a 10 líneas.
+- (web) Explorer: arranca con todo contraído y recuerda lo expandido por conexión en `localStorage` (`dbiewer:explorer-expanded:<connectionId>`). "Collapse all" lo vacía y la expansión automática de la búsqueda no lo cambia. Se quita `collapseCount`.

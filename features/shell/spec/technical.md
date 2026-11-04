@@ -263,7 +263,7 @@ type Mutation {
 ```
 
 - `files` y `file` no llevan use-case: el resolver llama directo al repositorio con los métodos heredados (`findMany`, `findOne`). `files` lista los archivos de la conexión y ordena por `updated_at desc, id` con el `orderBy` de `findMany`; si la conexión no existe, devuelve la lista vacía. `file` devuelve `null` si no existe.
-- `saveFile` crea el archivo si no recibe `id` y, si lo recibe, actualiza su nombre y contenido. No hay `create` y `update` por separado: un archivo nuevo vive en memoria hasta el primer guardado.
+- `saveFile` crea el archivo si no recibe `id` y, si lo recibe, actualiza su nombre y contenido. No hay `create` y `update` por separado: un archivo nuevo vive en el navegador hasta el primer guardado.
 - El tipo no cambia después de crear el archivo.
 - Nombre según `product.md`, validado con zod en el use-case. El nombre se guarda sin extensión; si el usuario escribe la de su tipo, se quita.
 
@@ -283,19 +283,21 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 
 - **Conexión activa:** `useActiveConnection` en `src/lib/workspace/hooks/`, con el id en `localStorage` (`dbiewer:active-connection`). Si el id guardado ya no existe, usa la conexión más reciente.
 - **Ancho del sidebar:** en `localStorage` (`dbiewer:sidebar-width`), con `try/catch`.
-- **Pestañas:** estado por conexión en `localStorage` (`dbiewer:tabs:<connectionId>`): lista de pestañas, activa y cuál es provisional. Los borradores sin guardar van en `dbiewer:draft:<connectionId>:<tabKey>`. Todo leído y escrito con `try/catch`: si falla, el shell arranca sin pestañas.
-- **Clave de pestaña:** `table:<schema>.<name>`, `view:<schema>.<name>`, `function:<schema>.<name>(<args>)`, `query:<fileId>` y `draft:<uuid>` para una query sin guardar.
+- **Árbol del Explorer:** lo expandido va por conexión en `localStorage` (`dbiewer:explorer-expanded:<connectionId>`), como lista de ids de esquemas, grupos, tablas y vistas, con `try/catch`. Un id que ya no existe en el esquema se ignora.
+- **Pestañas:** estado por conexión en `localStorage` (`dbiewer:tabs:<connectionId>`): lista de pestañas, activa, cuál es provisional y, en las de archivo, si tiene cambios sin guardar (`isDirty`) y la clave de su borrador (`draftKey`), que mantiene montado el editor al pasar de `draft:<uuid>` a `file:<fileId>`. Los borradores sin guardar van en `dbiewer:draft:<connectionId>:<tabKey>`. Todo leído y escrito con `try/catch`: si falla, el shell arranca sin pestañas.
+- **Clave de pestaña:** `table:<schema>.<name>`, `view:<schema>.<name>`, `function:<schema>.<name>(<args>)`, `file:<fileId>` y `draft:<uuid>` para un archivo sin guardar. Una pestaña de archivo o borrador guarda su tipo (`sql` o `txt`); un borrador ya persistido sin tipo cuenta como `sql`.
 - **Módulos:**
   - `src/lib/workspace/`: `WorkspaceLayout` con el selector de conexión, el shell (sidebar y área de pestañas) y el estado de pestañas.
   - `src/lib/database-schema/`: explorador, pestaña de tabla o vista (Data y Structure) y pestaña de función.
-  - `src/lib/query/`: pestaña SQL, editor, panel de resultados y queries guardadas.
+  - `src/lib/query/`: pestaña SQL, editor y panel de resultados.
+  - `src/lib/file/`: tab Files, hooks de `files`, `file`, `saveFile` y `removeFile`, diálogo del nombre y pestaña de texto.
 - **Editor:** CodeMirror 6 con `@codemirror/lang-sql` (dialecto Postgres) y `sql-formatter` para "Format". La sentencia bajo el cursor se toma separando por `;` fuera de strings y comentarios. El autocompletado usa `@codemirror/autocomplete` con la opción `schema` de `sql()`, armada desde la cache de `connectionSchema` (sin pedidos nuevos), con `defaultSchema: 'public'`.
 - **Filtro y orden de la tabla:** dos campos de una línea con CodeMirror y `@codemirror/lang-sql`, sin números de línea. Autocompletan las columnas de la tabla (desde la cache de `connectionSchema`) y palabras clave de Postgres. Enter aplica y vuelve a la página 1; con el popup de autocompletado abierto, Enter acepta la sugerencia y no aplica.
 - **Historial de filtro y orden:** en `sessionStorage` (`dbiewer:table-history:<connectionId>:<schema>.<name>:where` y `:order-by`), con `try/catch`. Guarda hasta 50 textos.
 - **Columnas visibles:** en memoria, por conexión y clave de pestaña, fuera de `localStorage`. Se borra al cerrar la pestaña o al reemplazar la provisional. Guarda las columnas ocultas, así una columna nueva aparece visible.
 - **Grilla:** el componente `table` de coss, con encabezado fijo y scroll horizontal. Sin virtualización: el máximo es 1,000 filas.
 - **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página; la definición de una función por `connectionId`, esquema, nombre y argumentos. "Reload" en el explorador o en la tabla los vuelve a pedir.
-- Después de crear, editar o eliminar un archivo, `files`.
+- Después de crear, editar o eliminar un archivo, se invalida `files`.
 
 ## Impacto en código existente
 
@@ -312,4 +314,4 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 
 - **api, integración:** repositorio de `file`, incluido el índice único por tipo y nombre.
 - **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (`where`, `orderBy`, paginación, fragmento inválido, fragmento demasiado largo, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `file` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
-- **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla y pestaña SQL con el fetcher mockeado.
+- **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla, pestaña SQL, tab Files y pestaña de texto con el fetcher mockeado.

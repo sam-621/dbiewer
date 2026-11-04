@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { gqlFetcher } from '@/lib/api/fetcher';
+import type { CommonFileFragment } from '@/lib/api/types';
+import { WorkspaceTabsProvider } from '@/lib/workspace/contexts/workspace-tabs-provider';
 
 import { render } from '../../../../../tests/render';
 
@@ -12,6 +14,14 @@ vi.mock('@/lib/api/fetcher');
 
 const TAB_KEY = 'draft:1';
 const DRAFT_STORAGE_KEY = `dbiewer:draft:connection-1:${TAB_KEY}`;
+
+const FILE: CommonFileFragment = {
+  id: 'file-1',
+  name: 'top_customers',
+  type: 'SQL',
+  content: 'select 1',
+  updatedAt: '2026-11-01T12:00:00.000Z'
+};
 
 const EXECUTION = {
   columns: [
@@ -70,13 +80,23 @@ const getSuggestions = () => screen.queryAllByRole('option').map(option => optio
 
 const waitForCompletionDelay = () => new Promise(resolve => setTimeout(resolve, 100));
 
-const renderTab = (sql = 'select id, email from users;\nselect 2;') => {
+const renderTab = (
+  sql = 'select id, email from users;\nselect 2;',
+  file: CommonFileFragment | null = null
+) => {
   localStorage.setItem(DRAFT_STORAGE_KEY, sql);
 
   return render(
-    <div className="h-96">
-      <SqlTab connectionId="connection-1" connectionName="Acme prod" tabKey={TAB_KEY} />
-    </div>
+    <WorkspaceTabsProvider connectionId="connection-1">
+      <div className="h-96">
+        <SqlTab
+          connectionId="connection-1"
+          connectionName="Acme prod"
+          tabKey={TAB_KEY}
+          file={file}
+        />
+      </div>
+    </WorkspaceTabsProvider>
   );
 };
 
@@ -203,6 +223,51 @@ describe('SqlTab', () => {
       'SELECT\n  id\nFROM\n  users\nWHERE\n  id = 1'
     );
     expect(getRunInputs()).toEqual([]);
+  });
+
+  test('asks for the name before saving a new file', async () => {
+    renderTab('select 1');
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Guardar archivo' })).toBeInTheDocument();
+    expect(getRunInputs()).toEqual([]);
+  });
+
+  test('saves an existing file with the keyboard shortcut and clears its stored changes', async () => {
+    mockRun({ saveFile: { apiErrors: [], file: { ...FILE, content: 'select 2' } } });
+
+    renderTab('select 2', FILE);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('textbox', { name: 'Editor SQL' }));
+    await user.keyboard('{Control>}s{/Control}');
+
+    await waitFor(() =>
+      expect(getRunInputs()).toEqual([
+        {
+          id: 'file-1',
+          connectionId: 'connection-1',
+          name: 'top_customers',
+          type: 'SQL',
+          content: 'select 2'
+        }
+      ])
+    );
+    await waitFor(() => expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toBeNull());
+  });
+
+  test('shows the error when an existing file can no longer be saved', async () => {
+    mockRun({
+      saveFile: { apiErrors: [{ code: 'FILE_NOT_FOUND', message: 'Not found' }], file: null }
+    });
+
+    renderTab('select 2', FILE);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Este archivo ya no existe')).toBeInTheDocument();
+    expect(localStorage.getItem(DRAFT_STORAGE_KEY)).toBe('select 2');
   });
 
   test('suggests the tables and columns of the connection', async () => {

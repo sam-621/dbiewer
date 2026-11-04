@@ -15,7 +15,8 @@ const config: CodegenConfig = {
       config: {
         documentMode: 'string',
         useTypeImports: true,
-        enumsAsTypes: true
+        enumsAsTypes: true,
+        scalars: { DateTime: 'string' }
       }
     }
   }

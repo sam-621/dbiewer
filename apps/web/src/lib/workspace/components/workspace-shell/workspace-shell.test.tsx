@@ -40,6 +40,15 @@ const SCHEMAS = [
   }
 ];
 
+const EXPANDED_IDS = [
+  'schema:public',
+  'group:public.tables',
+  'group:public.views',
+  'group:public.functions',
+  'schema:billing',
+  'group:billing.tables'
+];
+
 const STRUCTURE = {
   columns: [
     { name: 'id', type: 'uuid', isNullable: false, default: null, isPrimaryKey: true },
@@ -59,6 +68,14 @@ const ROWS = {
   totalRows: 1
 };
 
+const NOTES = {
+  id: 'file-1',
+  name: 'notes',
+  type: 'TXT',
+  content: '',
+  updatedAt: '2026-11-01T12:00:00.000Z'
+};
+
 const getSchemaCalls = () =>
   vi
     .mocked(gqlFetcher)
@@ -74,6 +91,12 @@ const getLocation = () =>
     .getAllByRole('listitem')
     .map(item => item.textContent);
 
+const createDraft = async (user: ReturnType<typeof userEvent.setup>, type: string) => {
+  await user.click(screen.getByRole('tab', { name: 'Archivos' }));
+  await user.click(await screen.findByRole('button', { name: 'Nuevo archivo' }));
+  await user.click(await screen.findByRole('menuitem', { name: type }));
+};
+
 const renderShell = () =>
   render(
     <ActiveConnectionProvider>
@@ -84,6 +107,10 @@ const renderShell = () =>
 describe('WorkspaceShell', () => {
   beforeEach(() => {
     localStorage.clear();
+    localStorage.setItem(
+      `dbiewer:explorer-expanded:${CONNECTION.id}`,
+      JSON.stringify(EXPANDED_IDS)
+    );
     vi.mocked(gqlFetcher).mockReset();
     vi.mocked(gqlFetcher).mockImplementation(async (document, variables) => {
       const query = document.toString();
@@ -92,6 +119,11 @@ describe('WorkspaceShell', () => {
       }
       if (query.includes('query GetTableRows')) {
         return { tableRows: { apiErrors: [], tableRows: ROWS } };
+      }
+      if (query.includes('query GetFiles')) return { files: { items: [] } };
+      if (query.includes('query GetFile')) return { file: NOTES };
+      if (query.includes('mutation SaveFile')) {
+        return { saveFile: { apiErrors: [], file: NOTES } };
       }
       return variables
         ? { connectionSchema: { apiErrors: [], schemas: SCHEMAS } }
@@ -106,22 +138,24 @@ describe('WorkspaceShell', () => {
       'aria-selected',
       'true'
     );
-    expect(screen.getByRole('tab', { name: 'Consultas' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Archivos' })).toBeInTheDocument();
     expect(await screen.findByText('users')).toBeInTheDocument();
     expect(
-      screen.getByText('Abre una tabla desde el explorador para ver sus datos.')
+      screen.getByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
   });
 
-  test('changes the search placeholder and shows the empty queries on the Queries tab', async () => {
+  test('changes the search placeholder and shows the empty files on the Files tab', async () => {
     renderShell();
     const user = userEvent.setup();
     expect(await screen.findByPlaceholderText('Buscar tablas, vistas…')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Consultas' }));
+    await user.click(screen.getByRole('tab', { name: 'Archivos' }));
 
-    expect(screen.getByPlaceholderText('Filtrar consultas…')).toBeInTheDocument();
-    expect(screen.getByText('Sin consultas guardadas')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Filtrar archivos…')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Aquí aparecen los archivos que guardes en esta conexión.')
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Recargar' })).not.toBeInTheDocument();
   });
 
@@ -173,6 +207,45 @@ describe('WorkspaceShell', () => {
     await user.click(screen.getByRole('button', { name: 'users' }));
 
     expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
+  });
+
+  test('does not offer new queries from the tab bar or the empty state', async () => {
+    renderShell();
+    await screen.findByText('users');
+
+    expect(screen.queryByRole('button', { name: /Nueva consulta/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Nuevo archivo' })).not.toBeInTheDocument();
+  });
+
+  test('asks before closing a tab with unsaved changes and keeps it when canceling', async () => {
+    localStorage.setItem(
+      `dbiewer:tabs:${CONNECTION.id}`,
+      JSON.stringify({
+        tabs: [{ key: 'draft:1', kind: 'draft', number: 1, type: 'txt', isDirty: true }],
+        activeKey: 'draft:1',
+        provisionalKey: null
+      })
+    );
+    localStorage.setItem(`dbiewer:draft:${CONNECTION.id}:draft:1`, 'unsaved');
+
+    renderShell();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Cerrar Sin título 1' }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: '¿Descartar los cambios?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(getTabs()).toEqual(['Sin título 1']);
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar Sin título 1' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Descartar' })
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByRole('tablist', { name: 'Pestañas abiertas' })).not.toBeInTheDocument()
+    );
+    expect(localStorage.getItem(`dbiewer:draft:${CONNECTION.id}:draft:1`)).toBeNull();
   });
 
   test('reloads the schema', async () => {
@@ -349,7 +422,7 @@ describe('WorkspaceShell', () => {
 
     expect(screen.queryByRole('tablist', { name: 'Pestañas abiertas' })).not.toBeInTheDocument();
     expect(
-      screen.getByText('Abre una tabla desde el explorador para ver sus datos.')
+      screen.getByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
   });
 
@@ -397,32 +470,54 @@ describe('WorkspaceShell', () => {
     expect(getLocation()).toEqual(['Acme prod', 'public', 'users']);
   });
 
-  test('shows the file name of the active query in the status bar', async () => {
-    renderShell();
-    const user = userEvent.setup();
-    await screen.findByText('users');
+  test('shows the file name of a stored draft in the status bar', async () => {
+    localStorage.setItem(
+      `dbiewer:tabs:${CONNECTION.id}`,
+      JSON.stringify({
+        tabs: [{ key: 'draft:1', kind: 'draft', number: 1 }],
+        activeKey: 'draft:1',
+        provisionalKey: null
+      })
+    );
 
-    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
+    renderShell();
+    await screen.findByText('users');
 
     expect(getLocation()).toEqual(['Acme prod', 'Sin título 1.sql']);
+    expect(screen.getByRole('textbox', { name: 'Editor SQL' })).toBeInTheDocument();
   });
 
-  test('opens new SQL tabs from the empty state and the tab bar', async () => {
+  test('opens SQL and text drafts from the Files tab', async () => {
     renderShell();
     const user = userEvent.setup();
     await screen.findByText('users');
 
-    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
+    await createDraft(user, 'SQL');
     expect(getTabs()).toEqual(['Sin título 1']);
     expect(screen.getByRole('textbox', { name: 'Editor SQL' })).toBeInTheDocument();
-    expect(screen.getAllByText('Acme prod').length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole('button', { name: 'users' }));
-    await user.click(screen.getByRole('button', { name: 'Nueva consulta' }));
-    expect(getTabs()).toEqual(['Sin título 1', 'users', 'Sin título 2']);
+    await createDraft(user, 'Texto');
+    expect(getTabs()).toEqual(['Sin título 1', 'Sin título 2']);
     expect(screen.getByRole('tab', { name: 'Sin título 2' })).toHaveAttribute(
       'aria-selected',
       'true'
     );
+    expect(screen.getByRole('textbox', { name: 'Editor de texto' })).toBeInTheDocument();
+    expect(getLocation()).toEqual(['Acme prod', 'Sin título 2.txt']);
+  });
+
+  test('asks for the name on the first save and turns the draft into a file', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await screen.findByText('users');
+
+    await createDraft(user, 'Texto');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Guardar archivo' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Nombre' }), 'notes');
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(getTabs()).toEqual(['notes.txt']));
+    expect(getLocation()).toEqual(['Acme prod', 'notes.txt']);
   });
 });

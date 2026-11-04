@@ -190,7 +190,7 @@ describe('NewConnectionDialog', () => {
     await save(user, dialog);
 
     expect(
-      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+      await screen.findByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
       input: {
@@ -267,7 +267,7 @@ describe('NewConnectionDialog', () => {
     await save(user, dialog);
 
     expect(
-      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+      await screen.findByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), {
       input: expect.objectContaining({ password: null })
@@ -417,7 +417,7 @@ describe('NewConnectionDialog', () => {
     await save(user, dialog);
 
     expect(
-      await screen.findByText('Abre una tabla desde el explorador para ver sus datos.')
+      await screen.findByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
     expect(createConnectionCalls()).toHaveLength(1);
   });

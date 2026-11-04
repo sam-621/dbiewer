@@ -26,6 +26,11 @@ type Documents = {
     "\n  query GetTableStructure($input: DbObjectInput!) {\n    tableStructure(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      structure {\n        columns {\n          name\n          type\n          isNullable\n          default\n          isPrimaryKey\n        }\n        indexes {\n          name\n          definition\n          isUnique\n        }\n        foreignKeys {\n          columns\n          referencedSchema\n          referencedTable\n          referencedColumns\n          onDelete\n        }\n        definition\n      }\n    }\n  }\n": typeof types.GetTableStructureDocument,
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": typeof types.GetTableRowsDocument,
     "\n  query GetFunctionDefinition($input: FunctionDefinitionInput!) {\n    functionDefinition(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      definition\n    }\n  }\n": typeof types.GetFunctionDefinitionDocument,
+    "\n  fragment CommonFile on File {\n    id\n    name\n    type\n    content\n    updatedAt\n  }\n": typeof types.CommonFileFragmentDoc,
+    "\n  query GetFiles($connectionId: ID!) {\n    files(connectionId: $connectionId) {\n      items {\n        ...CommonFile\n      }\n    }\n  }\n": typeof types.GetFilesDocument,
+    "\n  query GetFile($id: ID!) {\n    file(id: $id) {\n      ...CommonFile\n    }\n  }\n": typeof types.GetFileDocument,
+    "\n  mutation SaveFile($input: SaveFileInput!) {\n    saveFile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      file {\n        ...CommonFile\n      }\n    }\n  }\n": typeof types.SaveFileDocument,
+    "\n  mutation RemoveFile($id: ID!) {\n    removeFile(id: $id) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": typeof types.RemoveFileDocument,
     "\n  mutation RunQuery($input: RunQueryInput!) {\n    runQuery(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      execution {\n        columns {\n          name\n          type\n        }\n        rows\n        rowCount\n        isTruncated\n        durationMs\n        command\n      }\n    }\n  }\n": typeof types.RunQueryDocument,
 };
 const documents: Documents = {
@@ -40,6 +45,11 @@ const documents: Documents = {
     "\n  query GetTableStructure($input: DbObjectInput!) {\n    tableStructure(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      structure {\n        columns {\n          name\n          type\n          isNullable\n          default\n          isPrimaryKey\n        }\n        indexes {\n          name\n          definition\n          isUnique\n        }\n        foreignKeys {\n          columns\n          referencedSchema\n          referencedTable\n          referencedColumns\n          onDelete\n        }\n        definition\n      }\n    }\n  }\n": types.GetTableStructureDocument,
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": types.GetTableRowsDocument,
     "\n  query GetFunctionDefinition($input: FunctionDefinitionInput!) {\n    functionDefinition(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      definition\n    }\n  }\n": types.GetFunctionDefinitionDocument,
+    "\n  fragment CommonFile on File {\n    id\n    name\n    type\n    content\n    updatedAt\n  }\n": types.CommonFileFragmentDoc,
+    "\n  query GetFiles($connectionId: ID!) {\n    files(connectionId: $connectionId) {\n      items {\n        ...CommonFile\n      }\n    }\n  }\n": types.GetFilesDocument,
+    "\n  query GetFile($id: ID!) {\n    file(id: $id) {\n      ...CommonFile\n    }\n  }\n": types.GetFileDocument,
+    "\n  mutation SaveFile($input: SaveFileInput!) {\n    saveFile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      file {\n        ...CommonFile\n      }\n    }\n  }\n": types.SaveFileDocument,
+    "\n  mutation RemoveFile($id: ID!) {\n    removeFile(id: $id) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n": types.RemoveFileDocument,
     "\n  mutation RunQuery($input: RunQueryInput!) {\n    runQuery(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      execution {\n        columns {\n          name\n          type\n        }\n        rows\n        rowCount\n        isTruncated\n        durationMs\n        command\n      }\n    }\n  }\n": types.RunQueryDocument,
 };
 
@@ -87,6 +97,26 @@ export function graphql(source: "\n  query GetTableRows($input: TableRowsInput!)
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetFunctionDefinition($input: FunctionDefinitionInput!) {\n    functionDefinition(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      definition\n    }\n  }\n"): typeof import('./graphql').GetFunctionDefinitionDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment CommonFile on File {\n    id\n    name\n    type\n    content\n    updatedAt\n  }\n"): typeof import('./graphql').CommonFileFragmentDoc;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFiles($connectionId: ID!) {\n    files(connectionId: $connectionId) {\n      items {\n        ...CommonFile\n      }\n    }\n  }\n"): typeof import('./graphql').GetFilesDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFile($id: ID!) {\n    file(id: $id) {\n      ...CommonFile\n    }\n  }\n"): typeof import('./graphql').GetFileDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SaveFile($input: SaveFileInput!) {\n    saveFile(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      file {\n        ...CommonFile\n      }\n    }\n  }\n"): typeof import('./graphql').SaveFileDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveFile($id: ID!) {\n    removeFile(id: $id) {\n      apiErrors {\n        code\n        message\n      }\n      success\n    }\n  }\n"): typeof import('./graphql').RemoveFileDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -3,11 +3,15 @@ import { createContext } from 'react';
 import type { OpenExplorerObject } from '@/lib/database-schema/components/explorer/explorer-object';
 import type { TableViewState } from '@/lib/database-schema/utils/table-view.utils';
 
-import type { WorkspaceTabs } from '../utils/workspace-tabs.utils';
+import type { FileExtension, WorkspaceTabs } from '../utils/workspace-tabs.utils';
 
 type WorkspaceTabsContextValue = WorkspaceTabs & {
   openObject: OpenExplorerObject;
-  openDraft: () => void;
+  openDraft: (type: FileExtension) => void;
+  openFile: (file: { id: string; name: string; type: FileExtension }) => void;
+  replaceDraftTab: (key: string, file: { id: string; name: string }) => void;
+  renameFileTab: (key: string, name: string) => void;
+  changeTabDirty: (key: string, isDirty: boolean) => void;
   activateTab: (key: string) => void;
   pinTab: (key: string) => void;
   closeTab: (key: string) => void;

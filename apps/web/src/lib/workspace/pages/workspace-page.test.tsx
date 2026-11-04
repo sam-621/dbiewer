@@ -74,6 +74,9 @@ const renderPage = () =>
 describe('WorkspacePage', () => {
   beforeEach(() => {
     localStorage.removeItem('dbiewer:active-connection');
+    [CONNECTION, STAGING].forEach(({ id }) =>
+      localStorage.setItem(`dbiewer:explorer-expanded:${id}`, '["group:public.tables"]')
+    );
     vi.mocked(gqlFetcher).mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -100,12 +103,12 @@ describe('WorkspacePage', () => {
     renderPage();
 
     const header = await screen.findByRole('banner');
-    expect(await within(header).findByText('Ana')).toBeInTheDocument();
+    const accountButton = await within(header).findByRole('button', {
+      name: 'Abrir el menú de la cuenta'
+    });
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
     expect(within(header).queryByText('ana@acme.dev')).not.toBeInTheDocument();
-    expect(within(header).getAllByRole('button')).toEqual([
-      within(header).getByRole('button', { name: 'Abrir el menú de la cuenta' })
-    ]);
+    expect(within(header).getAllByRole('button')).toEqual([accountButton]);
   });
 
   test('opens the new connection dialog from the empty state', async () => {
@@ -160,7 +163,7 @@ describe('WorkspacePage', () => {
 
     expect(await screen.findByText('users')).toBeInTheDocument();
     expect(
-      screen.getByText('Abre una tabla desde el explorador para ver sus datos.')
+      screen.getByText('Abre una tabla desde el explorador o un archivo desde Archivos.')
     ).toBeInTheDocument();
     const header = screen.getByRole('banner');
     expect(within(header).getByText('dbiewer')).toBeInTheDocument();
