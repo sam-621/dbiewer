@@ -88,3 +88,15 @@ export const GET_TABLE_ROWS_QUERY = graphql(`
     }
   }
 `);
+
+export const GET_FUNCTION_DEFINITION_QUERY = graphql(`
+  query GetFunctionDefinition($input: FunctionDefinitionInput!) {
+    functionDefinition(input: $input) {
+      apiErrors {
+        code
+        message
+      }
+      definition
+    }
+  }
+`);

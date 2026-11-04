@@ -42,7 +42,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 - **Permite:**
   - Expandir y contraer esquemas, grupos y tablas.
   - Tabla: un clic en la fila la abre en la pestaña provisional; la flechita expande o contrae sus columnas.
-  - Vista: toda la fila es un solo botón: un clic expande o contrae sus columnas y un doble clic la abre en la pestaña provisional. Al pasar el mouse aparece a la derecha un botón "Open" que también la abre en la pestaña provisional. Con una función, doble clic la abre en la pestaña provisional.
+  - Vista: toda la fila es un solo botón: un clic expande o contrae sus columnas y un doble clic la abre en la pestaña provisional. Al pasar el mouse aparece a la derecha un botón "Open" que también la abre en la pestaña provisional. Con una función, un clic la abre en la pestaña provisional.
   - Buscar por nombre: filtra en todos los esquemas y expande los grupos con resultados.
 - **Estados:** cargando el esquema; no se pudo conectar, con reintento; base sin objetos; búsqueda sin resultados.
 

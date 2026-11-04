@@ -14,7 +14,7 @@ export const ExplorerObjectButton = ({ object, onOpenObject, children }: Props) 
   <SidebarMenuButton
     size="sm"
     className="min-w-0 flex-1"
-    onDoubleClick={() => onOpenObject?.(object, { isPinned: false })}
+    onClick={() => onOpenObject?.(object, { isPinned: false })}
   >
     {children}
   </SidebarMenuButton>

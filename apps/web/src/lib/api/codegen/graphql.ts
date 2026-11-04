@@ -60,6 +60,13 @@ export type DbOrderInput = {
   direction: SortDirection;
 };
 
+export type FunctionDefinitionInput = {
+  arguments: string;
+  connectionId: string | number;
+  name: string;
+  schema: string;
+};
+
 export type RunQueryInput = {
   connectionId: string | number;
   sql: string;
@@ -165,6 +172,13 @@ export type GetTableRowsQueryVariables = Exact<{
 
 
 export type GetTableRowsQuery = { tableRows: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, tableRows: { rows: Array<Array<string | null>>, totalRows: number, columns: Array<{ name: string, type: string }> } | null } };
+
+export type GetFunctionDefinitionQueryVariables = Exact<{
+  input: FunctionDefinitionInput;
+}>;
+
+
+export type GetFunctionDefinitionQuery = { functionDefinition: { definition: string | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
 
 export type RunQueryMutationVariables = Exact<{
   input: RunQueryInput;
@@ -384,6 +398,17 @@ export const GetTableRowsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetTableRowsQuery, GetTableRowsQueryVariables>;
+export const GetFunctionDefinitionDocument = new TypedDocumentString(`
+    query GetFunctionDefinition($input: FunctionDefinitionInput!) {
+  functionDefinition(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    definition
+  }
+}
+    `) as unknown as TypedDocumentString<GetFunctionDefinitionQuery, GetFunctionDefinitionQueryVariables>;
 export const RunQueryDocument = new TypedDocumentString(`
     mutation RunQuery($input: RunQueryInput!) {
   runQuery(input: $input) {

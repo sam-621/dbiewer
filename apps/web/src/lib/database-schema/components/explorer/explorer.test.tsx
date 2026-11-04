@@ -8,6 +8,7 @@ import { SidebarProvider } from '@/shared/components/ui/sidebar';
 import { render } from '../../../../../tests/render';
 
 import { Explorer } from './explorer';
+import type { OpenExplorerObject } from './explorer-object';
 
 vi.mock('@/lib/api/fetcher');
 
@@ -52,16 +53,19 @@ const mockSchema = (result: unknown) => {
 
 const schemaResult = (schemas: unknown[]) => ({ connectionSchema: { apiErrors: [], schemas } });
 
+const onOpenObject = vi.fn<OpenExplorerObject>();
+
 const renderExplorer = (search = '') =>
   render(
     <SidebarProvider>
-      <Explorer connectionId="connection-1" search={search} />
+      <Explorer connectionId="connection-1" search={search} onOpenObject={onOpenObject} />
     </SidebarProvider>
   );
 
 describe('Explorer', () => {
   beforeEach(() => {
     vi.mocked(gqlFetcher).mockReset();
+    onOpenObject.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -122,6 +126,20 @@ describe('Explorer', () => {
     renderExplorer();
 
     expect(await screen.findByText('refresh_stats(since date)')).toBeInTheDocument();
+  });
+
+  test('opens a function in the provisional tab with a click', async () => {
+    mockSchema(schemaResult([PUBLIC]));
+
+    renderExplorer();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'refresh_stats(since date)' }));
+
+    expect(onOpenObject).toHaveBeenCalledWith(
+      { kind: 'function', schema: 'public', name: 'refresh_stats', arguments: 'since date' },
+      { isPinned: false }
+    );
   });
 
   test('shows a message when the search has no results', async () => {

@@ -248,6 +248,35 @@ describe('WorkspaceShell', () => {
     );
   });
 
+  test('opens a function with a double click and shows its definition', async () => {
+    const [publicSchema, billingSchema] = SCHEMAS;
+    const functions = [{ name: 'refresh_stats', arguments: 'since date', kind: 'FUNCTION' }];
+    vi.mocked(gqlFetcher).mockImplementation(async (_document, variables) => {
+      if ((variables as { input?: unknown } | undefined)?.input) {
+        return {
+          functionDefinition: { apiErrors: [], definition: 'CREATE FUNCTION refresh_stats' }
+        };
+      }
+      return variables
+        ? {
+            connectionSchema: {
+              apiErrors: [],
+              schemas: [{ ...publicSchema, functions }, billingSchema]
+            }
+          }
+        : { connections: { items: [CONNECTION] } };
+    });
+
+    renderShell();
+    const user = userEvent.setup();
+    await user.dblClick(await screen.findByRole('button', { name: 'refresh_stats(since date)' }));
+
+    expect(getTabs()).toEqual(['refresh_stats(since date)']);
+    expect(
+      await screen.findByRole('textbox', { name: 'Definición de la función' })
+    ).toHaveTextContent('CREATE FUNCTION refresh_stats');
+  });
+
   test('pins a tab with a double click and keeps it when opening another', async () => {
     renderShell();
     const user = userEvent.setup();

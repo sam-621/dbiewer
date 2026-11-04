@@ -309,7 +309,7 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
   - `src/lib/query/`: pestaña SQL, editor, panel de resultados y queries guardadas.
 - **Editor:** CodeMirror 6 con `@codemirror/lang-sql` (dialecto Postgres) y `sql-formatter` para "Format". La sentencia bajo el cursor se toma separando por `;` fuera de strings y comentarios. El autocompletado usa `@codemirror/autocomplete` con la opción `schema` de `sql()`, armada desde la cache de `connectionSchema` (sin pedidos nuevos), con `defaultSchema: 'public'`.
 - **Grilla:** el componente `table` de coss, con encabezado fijo y scroll horizontal. Sin virtualización: el máximo es 1,000 filas.
-- **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página. "Reload" en el explorador o en la tabla los vuelve a pedir.
+- **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página; la definición de una función por `connectionId`, esquema, nombre y argumentos. "Reload" en el explorador o en la tabla los vuelve a pedir.
 - Después de crear, editar o eliminar una query guardada, `savedQueries`.
 
 ## Impacto en código existente

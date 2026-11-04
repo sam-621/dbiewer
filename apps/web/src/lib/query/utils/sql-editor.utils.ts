@@ -2,7 +2,7 @@ import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
 import { bracketMatching, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Compartment, type Extension, Prec } from '@codemirror/state';
+import { type Compartment, EditorState, type Extension, Prec } from '@codemirror/state';
 import {
   drawSelection,
   EditorView,
@@ -101,6 +101,17 @@ export const getSqlSchema = (schemas: DbSchemaNode[]): SQLNamespace =>
     ])
   );
 
+const getSqlBaseExtensions = (label: string): Extension[] => [
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightActiveLine(),
+  drawSelection(),
+  bracketMatching(),
+  syntaxHighlighting(sqlHighlightStyle),
+  sqlEditorTheme,
+  EditorView.contentAttributes.of({ 'aria-label': label })
+];
+
 export const getSqlEditorExtensions = ({
   label,
   languageCompartment,
@@ -108,16 +119,10 @@ export const getSqlEditorExtensions = ({
   onRun,
   onChange
 }: Params): Extension[] => [
-  lineNumbers(),
-  highlightActiveLineGutter(),
-  highlightActiveLine(),
-  drawSelection(),
-  bracketMatching(),
+  ...getSqlBaseExtensions(label),
   history(),
   languageCompartment.of(getSqlLanguage(schema)),
   autocompletion(),
-  syntaxHighlighting(sqlHighlightStyle),
-  sqlEditorTheme,
   Prec.highest(
     keymap.of([
       {
@@ -131,10 +136,16 @@ export const getSqlEditorExtensions = ({
   ),
   Prec.high(keymap.of([{ key: 'Tab', run: acceptCompletion }])),
   keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
-  EditorView.contentAttributes.of({ 'aria-label': label }),
   EditorView.updateListener.of(update => {
     if (update.docChanged) onChange(update.state.doc.toString());
   })
+];
+
+export const getSqlViewerExtensions = (label: string): Extension[] => [
+  ...getSqlBaseExtensions(label),
+  sql({ dialect: PostgreSQL }),
+  keymap.of(defaultKeymap),
+  EditorState.readOnly.of(true)
 ];
 
 export const formatSql = (sqlText: string) =>

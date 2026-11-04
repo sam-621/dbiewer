@@ -9,6 +9,13 @@ import { useWorkspaceTabs } from './use-workspace-tabs';
 const USERS = { kind: 'table', schema: 'public', name: 'users' } as const;
 const ORDERS = { kind: 'table', schema: 'public', name: 'orders' } as const;
 const REVENUE = { kind: 'view', schema: 'billing', name: 'revenue' } as const;
+const REFRESH = {
+  kind: 'function',
+  schema: 'public',
+  name: 'refresh_stats',
+  arguments: 'since date'
+} as const;
+const REFRESH_KEY = 'function:public.refresh_stats(since date)';
 
 const renderTabsFor = (initialConnectionId: string) => {
   let connectionId = initialConnectionId;
@@ -114,17 +121,67 @@ describe('useWorkspaceTabs', () => {
     expect(result.current.activeKey).toBeNull();
   });
 
-  test('does not open functions', () => {
+  test('opens a function in the provisional tab and replaces it with another object', () => {
     const { result } = renderTabs();
 
-    act(() =>
-      result.current.openObject(
-        { kind: 'function', schema: 'public', name: 'refresh_stats', arguments: '' },
-        { isPinned: false }
-      )
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+    act(() => result.current.openObject(REFRESH, { isPinned: false }));
+
+    expect(result.current.tabs).toEqual([{ key: REFRESH_KEY, ...REFRESH }]);
+    expect(result.current.activeKey).toBe(REFRESH_KEY);
+    expect(result.current.provisionalKey).toBe(REFRESH_KEY);
+
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+
+    expect(tabKeys(result.current.tabs)).toEqual(['table:public.users']);
+  });
+
+  test('keeps a tab per overload of a function', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(REFRESH, { isPinned: true }));
+    act(() => result.current.openObject({ ...REFRESH, arguments: '' }, { isPinned: true }));
+
+    expect(tabKeys(result.current.tabs)).toEqual([REFRESH_KEY, 'function:public.refresh_stats()']);
+  });
+
+  test('pins a provisional function tab', () => {
+    const { result } = renderTabs();
+
+    act(() => result.current.openObject(REFRESH, { isPinned: false }));
+    act(() => result.current.pinTab(REFRESH_KEY));
+    act(() => result.current.openObject(USERS, { isPinned: false }));
+
+    expect(tabKeys(result.current.tabs)).toEqual([REFRESH_KEY, 'table:public.users']);
+    expect(result.current.provisionalKey).toBe('table:public.users');
+  });
+
+  test('restores function tabs next to the stored tabs of other kinds', () => {
+    localStorage.setItem(
+      'dbiewer:tabs:connection-1',
+      JSON.stringify({
+        tabs: [
+          {
+            key: 'table:public.users',
+            ...USERS,
+            state: { view: 'data', filters: [], orderBy: null, page: 1 }
+          },
+          { key: 'draft:1', kind: 'draft', number: 1 }
+        ],
+        activeKey: 'draft:1',
+        provisionalKey: null
+      })
     );
 
-    expect(result.current.tabs).toEqual([]);
+    const { result, unmount } = renderTabs();
+    expect(tabKeys(result.current.tabs)).toEqual(['table:public.users', 'draft:1']);
+
+    act(() => result.current.openObject(REFRESH, { isPinned: false }));
+    unmount();
+
+    const { result: restored } = renderTabs();
+    expect(restored.current.tabs.at(-1)).toEqual({ key: REFRESH_KEY, ...REFRESH });
+    expect(restored.current.provisionalKey).toBe(REFRESH_KEY);
   });
 
   test('opens new queries as pinned draft tabs with increasing numbers', () => {

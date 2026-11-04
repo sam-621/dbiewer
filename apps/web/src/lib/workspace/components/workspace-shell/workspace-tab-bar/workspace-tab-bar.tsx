@@ -1,6 +1,13 @@
 import { useTranslation } from 'react-i18next';
 
-import { EyeIcon, FileIcon, PlusIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
+import {
+  CodeIcon,
+  EyeIcon,
+  FileIcon,
+  PlusIcon,
+  TableIcon,
+  XIcon
+} from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
@@ -8,14 +15,16 @@ import { cn } from '@/shared/utils/cn';
 import { useWorkspaceTabs } from '../../../hooks/use-workspace-tabs';
 import type { WorkspaceTab } from '../../../utils/workspace-tabs.utils';
 
-const TAB_ICONS = { table: TableIcon, view: EyeIcon, draft: FileIcon };
+const TAB_ICONS = { table: TableIcon, view: EyeIcon, function: CodeIcon, draft: FileIcon };
 
 export const WorkspaceTabBar = () => {
   const { t } = useTranslation();
   const { tabs, activeKey, provisionalKey, pinTab, closeTab, openDraft } = useWorkspaceTabs();
 
-  const getTabName = (tab: WorkspaceTab) =>
-    tab.kind === 'draft' ? t('Untitled {{number}}', { number: tab.number }) : tab.name;
+  const getTabName = (tab: WorkspaceTab) => {
+    if (tab.kind === 'draft') return t('Untitled {{number}}', { number: tab.number });
+    return tab.kind === 'function' ? `${tab.name}(${tab.arguments})` : tab.name;
+  };
 
   return (
     <TabsList
@@ -38,7 +47,7 @@ export const WorkspaceTabBar = () => {
           >
             <TabsTab
               value={tab.key}
-              title={tab.kind === 'draft' ? name : `${tab.schema}.${tab.name}`}
+              title={tab.kind === 'draft' ? name : `${tab.schema}.${name}`}
               className="h-full grow-0 gap-1.5 rounded-none border-0 ps-3 pe-8 hover:bg-transparent sm:h-full"
               onDoubleClick={() => pinTab(tab.key)}
             >

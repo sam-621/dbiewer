@@ -39,10 +39,8 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
     storeTabs(connectionId, next);
   };
 
-  const openObject: OpenExplorerObject = (object, options) => {
-    if (object.kind === 'function') return;
+  const openObject: OpenExplorerObject = (object, options) =>
     update(openTab(workspaceTabs, object, options));
-  };
 
   const closeWorkspaceTab = (key: string) => {
     update(closeTab(workspaceTabs, key));

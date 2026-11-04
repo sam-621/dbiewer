@@ -14,13 +14,25 @@ const ObjectTabSchema = z.object({
   state: TableViewStateSchema
 });
 
+const FunctionTabSchema = z.object({
+  key: z.string(),
+  kind: z.literal('function'),
+  schema: z.string(),
+  name: z.string(),
+  arguments: z.string()
+});
+
 const DraftTabSchema = z.object({
   key: z.string(),
   kind: z.literal('draft'),
   number: z.number().int().min(1)
 });
 
-const WorkspaceTabSchema = z.discriminatedUnion('kind', [ObjectTabSchema, DraftTabSchema]);
+const WorkspaceTabSchema = z.discriminatedUnion('kind', [
+  ObjectTabSchema,
+  FunctionTabSchema,
+  DraftTabSchema
+]);
 
 export const WorkspaceTabsSchema = z.object({
   tabs: z.array(WorkspaceTabSchema),
@@ -31,8 +43,10 @@ export const WorkspaceTabsSchema = z.object({
 export type WorkspaceTab = z.infer<typeof WorkspaceTabSchema>;
 export type WorkspaceTabs = z.infer<typeof WorkspaceTabsSchema>;
 export type ObjectTab = z.infer<typeof ObjectTabSchema>;
+export type FunctionTab = z.infer<typeof FunctionTabSchema>;
 export type DraftTab = z.infer<typeof DraftTabSchema>;
-export type WorkspaceTabObject = Pick<ObjectTab, 'kind' | 'schema' | 'name'>;
+export type WorkspaceTabObject =
+  Pick<ObjectTab, 'kind' | 'schema' | 'name'> | Omit<FunctionTab, 'key'>;
 
 export const EMPTY_WORKSPACE_TABS: WorkspaceTabs = {
   tabs: [],
@@ -40,8 +54,10 @@ export const EMPTY_WORKSPACE_TABS: WorkspaceTabs = {
   provisionalKey: null
 };
 
-export const getTabKey = ({ kind, schema, name }: WorkspaceTabObject) =>
-  `${kind}:${schema}.${name}`;
+export const getTabKey = (object: WorkspaceTabObject) =>
+  object.kind === 'function'
+    ? `function:${object.schema}.${object.name}(${object.arguments})`
+    : `${object.kind}:${object.schema}.${object.name}`;
 
 export const openTab = (
   current: WorkspaceTabs,
@@ -56,7 +72,10 @@ export const openTab = (
     return { ...current, activeKey: key, provisionalKey };
   }
 
-  const tab: ObjectTab = { key, ...object, state: DEFAULT_TABLE_VIEW_STATE };
+  const tab: WorkspaceTab =
+    object.kind === 'function'
+      ? { key, ...object }
+      : { key, ...object, state: DEFAULT_TABLE_VIEW_STATE };
 
   if (isPinned) return { ...current, tabs: [...current.tabs, tab], activeKey: key };
 
@@ -112,9 +131,7 @@ export const changeTabState = (
   pinTab(
     {
       ...current,
-      tabs: current.tabs.map(tab =>
-        tab.key === key && tab.kind !== 'draft' ? { ...tab, state } : tab
-      )
+      tabs: current.tabs.map(tab => (tab.key === key && 'state' in tab ? { ...tab, state } : tab))
     },
     key
   );
