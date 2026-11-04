@@ -1,8 +1,14 @@
-import { acceptCompletion, autocompletion } from '@codemirror/autocomplete';
+import { acceptCompletion, autocompletion, closeCompletion } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
 import { bracketMatching, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Compartment, EditorState, type Extension, Prec } from '@codemirror/state';
+import {
+  type Compartment,
+  EditorState,
+  type Extension,
+  Prec,
+  Transaction
+} from '@codemirror/state';
 import {
   drawSelection,
   EditorView,
@@ -15,6 +21,8 @@ import { tags } from '@lezer/highlight';
 import { format } from 'sql-formatter';
 
 import type { DbSchemaNode } from '@/lib/database-schema/utils/database-schema.utils';
+
+import { quoteIdentifier } from './sql.utils';
 
 const sqlEditorTheme = EditorView.theme({
   '&': {
@@ -70,6 +78,13 @@ const sqlEditorTheme = EditorView.theme({
   '.cm-completionDetail': { color: 'var(--muted-foreground)', fontStyle: 'normal' }
 });
 
+const sqlFragmentTheme = EditorView.theme({
+  '&': { height: 'auto', backgroundColor: 'transparent', fontSize: '12px' },
+  '.cm-scroller': { scrollbarWidth: 'none' },
+  '.cm-content': { paddingBlock: '6px' },
+  '.cm-line': { padding: '0' }
+});
+
 const sqlHighlightStyle = HighlightStyle.define([
   { tag: tags.keyword, color: 'var(--sql-kw)' },
   { tag: [tags.string, tags.special(tags.string)], color: 'var(--sql-str)' },
@@ -101,15 +116,19 @@ export const getSqlSchema = (schemas: DbSchemaNode[]): SQLNamespace =>
     ])
   );
 
-const getSqlBaseExtensions = (label: string): Extension[] => [
-  lineNumbers(),
-  highlightActiveLineGutter(),
-  highlightActiveLine(),
+const getSqlTextExtensions = (label: string): Extension[] => [
   drawSelection(),
   bracketMatching(),
   syntaxHighlighting(sqlHighlightStyle),
   sqlEditorTheme,
   EditorView.contentAttributes.of({ 'aria-label': label })
+];
+
+const getSqlBaseExtensions = (label: string): Extension[] => [
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightActiveLine(),
+  ...getSqlTextExtensions(label)
 ];
 
 export const getSqlEditorExtensions = ({
@@ -147,6 +166,71 @@ export const getSqlViewerExtensions = (label: string): Extension[] => [
   keymap.of(defaultKeymap),
   EditorState.readOnly.of(true)
 ];
+
+export const getSqlFragmentLanguage = (columns: string[]) =>
+  sql({
+    dialect: PostgreSQL,
+    schema: columns.map(name => ({ label: name, apply: quoteIdentifier(name), type: 'property' }))
+  });
+
+const singleLine = EditorState.transactionFilter.of(transaction => {
+  const { newDoc } = transaction;
+  if (newDoc.lines === 1) return transaction;
+
+  const changes = Array.from({ length: newDoc.lines - 1 }, (_, index) => {
+    const { to } = newDoc.line(index + 1);
+    return { from: to, to: to + 1, insert: ' ' };
+  });
+
+  return [transaction, { changes, sequential: true }];
+});
+
+type FragmentParams = {
+  label: string;
+  languageCompartment: Compartment;
+  columns: string[];
+  onSubmit: (text: string) => void;
+  onChange: (text: string, isUserEdit: boolean) => void;
+};
+
+export const getSqlFragmentExtensions = ({
+  label,
+  languageCompartment,
+  columns,
+  onSubmit,
+  onChange
+}: FragmentParams): Extension[] => {
+  const submit = (view: EditorView) => {
+    closeCompletion(view);
+    onSubmit(view.state.doc.toString().trim());
+    return true;
+  };
+
+  return [
+    sqlFragmentTheme,
+    ...getSqlTextExtensions(label),
+    singleLine,
+    history(),
+    languageCompartment.of(getSqlFragmentLanguage(columns)),
+    autocompletion({ interactionDelay: 0 }),
+    Prec.high(
+      keymap.of([
+        { key: 'Enter', run: submit, shift: submit },
+        { key: 'Mod-Enter', run: submit },
+        { key: 'Tab', run: acceptCompletion }
+      ])
+    ),
+    keymap.of([...defaultKeymap, ...historyKeymap]),
+    EditorView.updateListener.of(update => {
+      if (!update.docChanged) return;
+
+      const isUserEdit = update.transactions.some(
+        transaction => transaction.docChanged && !transaction.annotation(Transaction.remote)
+      );
+      onChange(update.state.doc.toString(), isUserEdit);
+    })
+  ];
+};
 
 export const formatSql = (sqlText: string) =>
   format(sqlText, { language: 'postgresql', keywordCase: 'upper' });

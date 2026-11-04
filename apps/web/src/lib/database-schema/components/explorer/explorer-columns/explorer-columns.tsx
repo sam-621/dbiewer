@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { KeyIcon, LinkIcon } from '@/shared/components/icons/icons';
 
 import { type DbSchemaNode, formatColumnType } from '../../../utils/database-schema.utils';
+import { ExplorerName } from '../explorer-name/explorer-name';
 
 type Props = { columns: DbSchemaNode['tables'][number]['columns'] };
 
@@ -31,9 +32,11 @@ export const ExplorerColumns = ({ columns }: Props) => {
               />
             )}
           </span>
-          <span title={column.name} className="max-w-[70%] shrink-0 truncate">
-            {column.name}
-          </span>
+          <ExplorerName
+            name={column.name}
+            className="max-w-[70%] shrink-0"
+            isRowHighlighted={false}
+          />
           <span title={column.type} className="ms-auto min-w-0 truncate ps-2 text-muted-foreground">
             {formatColumnType(column.type)}
           </span>

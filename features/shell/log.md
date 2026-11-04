@@ -59,3 +59,8 @@
 - (web) Pestaña de función: doble clic en el Explorer la abre en la pestaña provisional, con el aviso de solo lectura, la definición en CodeMirror sin editar ni ejecutar y un botón de copiar. Cierra el paso 6.
 - (web) Explorer: las funciones se abren en la pestaña provisional con un clic.
 - (api) Tabla `saved_query` con RLS, FK a `connection` con cascade e índice único por `(connection_id, lower(name))`, con su migración generada y la custom. Parte del paso 7; falta el CRUD.
+- (web) Explorer: al pasar el mouse por un nombre cortado aparece al instante el nombre completo en el mismo lugar, sobrepasando el borde del sidebar, con fondo opaco. Reemplaza el `title` en tablas, vistas, funciones y columnas. `ui.md` actualizado.
+- (api) `tableRows` recibe `where` y `orderBy` como fragmentos de SQL de texto libre, hasta 10,000 caracteres cada uno, en vez de filtros estructurados. Si Postgres los rechaza, `QUERY_FAILED`. El cliente se destruye al terminar, como en `runQuery`. Se borran `DbFilterInput`, `DbFilterOperator`, `DbOrderInput` y `SortDirection`. Spec actualizado.
+- (web) Pestaña de tabla: la barra de filtros pasa a dos campos de texto libre, `WHERE` y `ORDER BY`, con CodeMirror de una línea y autocompletado de columnas y palabras clave. Enter aplica, cada campo se puede quitar, el encabezado de la grilla escribe en `ORDER BY` y el error de Postgres se muestra con la barra editable. Se borran los chips y menús de filtros.
+- (web) Historial de `WHERE` y `ORDER BY` por tabla en `sessionStorage`: se abre desde el ícono del campo, con 5 visibles y scroll, y elegir uno lo aplica.
+- (web) Historial de `WHERE` y `ORDER BY`: la lista usa el mismo degradado del Explorer para indicar que hay más arriba o abajo.

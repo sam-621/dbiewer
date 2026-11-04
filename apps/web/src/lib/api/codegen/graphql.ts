@@ -28,23 +28,6 @@ export type CreateWorkspaceInput = {
   name: string;
 };
 
-export type DbFilterInput = {
-  column: string;
-  operator: DbFilterOperator;
-  value?: string | null | undefined;
-};
-
-export type DbFilterOperator =
-  | 'CONTAINS'
-  | 'EQ'
-  | 'GT'
-  | 'GTE'
-  | 'IS_NOT_NULL'
-  | 'IS_NULL'
-  | 'LT'
-  | 'LTE'
-  | 'NEQ';
-
 export type DbFunctionKind =
   | 'FUNCTION'
   | 'PROCEDURE';
@@ -53,11 +36,6 @@ export type DbObjectInput = {
   connectionId: string | number;
   name: string;
   schema: string;
-};
-
-export type DbOrderInput = {
-  column: string;
-  direction: SortDirection;
 };
 
 export type FunctionDefinitionInput = {
@@ -79,17 +57,13 @@ export type ShellErrorCode =
   | 'OBJECT_NOT_FOUND'
   | 'QUERY_FAILED';
 
-export type SortDirection =
-  | 'ASC'
-  | 'DESC';
-
 export type TableRowsInput = {
   connectionId: string | number;
-  filters?: Array<DbFilterInput> | null | undefined;
   name: string;
-  orderBy?: DbOrderInput | null | undefined;
+  orderBy?: string | null | undefined;
   page: number;
   schema: string;
+  where?: string | null | undefined;
 };
 
 export type TestConnectionInput = {

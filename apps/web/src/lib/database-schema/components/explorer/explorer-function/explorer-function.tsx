@@ -2,6 +2,7 @@ import { CodeIcon } from '@/shared/components/icons/icons';
 import { SidebarMenuItem } from '@/shared/components/ui/sidebar';
 
 import type { DbSchemaNode } from '../../../utils/database-schema.utils';
+import { ExplorerName } from '../explorer-name/explorer-name';
 import type { OpenExplorerObject } from '../explorer-object';
 import { ExplorerObjectButton } from '../explorer-object-button/explorer-object-button';
 
@@ -22,9 +23,7 @@ export const ExplorerFunction = ({ schemaName, fn, onOpenObject }: Props) => {
       >
         <span aria-hidden="true" className="size-4 shrink-0" />
         <CodeIcon className="text-sql-fn" />
-        <span title={signature} className="truncate font-mono">
-          {signature}
-        </span>
+        <ExplorerName name={signature} />
       </ExplorerObjectButton>
     </SidebarMenuItem>
   );

@@ -15,6 +15,7 @@ import {
 import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerChevron } from '../explorer-chevron/explorer-chevron';
 import { ExplorerColumns } from '../explorer-columns/explorer-columns';
+import { ExplorerName } from '../explorer-name/explorer-name';
 import type { OpenExplorerObject } from '../explorer-object';
 
 type Props = {
@@ -39,9 +40,7 @@ export const ExplorerView = ({ schemaName, view, onOpenObject }: Props) => {
         >
           <ExplorerChevron />
           <EyeIcon className="text-muted-foreground" />
-          <span title={view.name} className="truncate font-mono">
-            {view.name}
-          </span>
+          <ExplorerName name={view.name} />
         </CollapsibleTrigger>
         <SidebarMenuAction
           showOnHover

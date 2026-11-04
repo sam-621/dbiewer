@@ -95,8 +95,8 @@ describe('useWorkspaceTabs', () => {
     act(() =>
       result.current.changeTabState('view:billing.revenue', {
         view: 'structure',
-        filters: [],
-        orderBy: null,
+        where: '',
+        orderBy: '',
         page: 1
       })
     );
@@ -164,7 +164,7 @@ describe('useWorkspaceTabs', () => {
           {
             key: 'table:public.users',
             ...USERS,
-            state: { view: 'data', filters: [], orderBy: null, page: 1 }
+            state: { view: 'data', where: '', orderBy: '', page: 1 }
           },
           { key: 'draft:1', kind: 'draft', number: 1 }
         ],

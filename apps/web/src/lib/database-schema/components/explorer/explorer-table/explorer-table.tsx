@@ -11,6 +11,7 @@ import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sideb
 import type { DbSchemaNode } from '../../../utils/database-schema.utils';
 import { ExplorerChevron } from '../explorer-chevron/explorer-chevron';
 import { ExplorerColumns } from '../explorer-columns/explorer-columns';
+import { ExplorerName } from '../explorer-name/explorer-name';
 import type { OpenExplorerObject } from '../explorer-object';
 
 type Props = {
@@ -37,9 +38,7 @@ export const ExplorerTable = ({ schemaName, table, onOpenObject }: Props) => {
             }
           >
             <TableIcon className="text-muted-foreground" />
-            <span title={table.name} className="truncate font-mono">
-              {table.name}
-            </span>
+            <ExplorerName name={table.name} />
           </SidebarMenuButton>
           <CollapsibleTrigger
             aria-label={t('Columns of {{name}}', { name: table.name })}

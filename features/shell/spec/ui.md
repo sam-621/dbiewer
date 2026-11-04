@@ -37,7 +37,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Por tabla: nombre, sin número de filas. Al expandirla, sus columnas con tipo, y un ícono para PK y otro para FK. El tipo se muestra con su alias corto de Postgres (`timestamptz`, `varchar(255)`) y se corta si no entra; el nombre de la columna tiene prioridad.
   - Por vista: nombre, y sus columnas al expandirla.
   - Por función: nombre con sus argumentos (`refresh_stats()`).
-  - Los nombres largos de tablas, vistas, funciones y columnas se cortan y se ven completos al pasar el mouse.
+  - Los nombres largos de tablas, vistas, funciones y columnas se cortan. Al pasar el mouse, el nombre completo aparece al instante en el mismo lugar, sobrepasando el borde del sidebar, con fondo para que se lea. En una vista con el nombre cortado, tapa el botón "Open" hasta que el mouse llega a él.
   - Una acción "Reload" para volver a leer el esquema.
 - **Permite:**
   - Expandir y contraer esquemas, grupos y tablas.
@@ -65,13 +65,13 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 - **Ubicación:** área de pestañas, al abrir una tabla o vista.
 - **Muestra:** arriba, el nombre (con el esquema si hay más de uno), las filas exactas y la cantidad de columnas, un aviso "View · read only" si es una vista, el selector "Data" / "Structure" y "Reload".
 - **Data:**
-  - Barra de filtros: `WHERE` con un chip por condición (`plan = 'pro'`), cada uno con quitar, y "Add filter"; a la derecha, `ORDER BY` con la columna y dirección.
+  - Barra de filtros: dos campos de texto discretos, sin borde, en la misma fila y separados por una línea: `WHERE` a la izquierda y `ORDER BY` a la derecha, cada uno con su ícono y su etiqueta como prefijo. El ícono es un botón que abre el historial de ese campo: un menú con lo aplicado antes, con 5 visibles y scroll para el resto, con un degradado arriba o abajo si hay más. Con texto, muestran una acción para quitarlo.
   - Grilla: número de fila y una columna por campo con su nombre y tipo, la PK marcada. `NULL` se ve distinto de un texto vacío. Los valores largos se cortan.
   - Pie: `14 of 14,823 rows · 38 ms`, página actual y total, anterior y siguiente.
 - **Detalle de fila:** al hacer clic en una fila de la grilla se abre un panel a la derecha con un campo por columna (nombre, tipo, PK) y su valor en un input de solo lectura, con copiar. `NULL` se ve distinto del texto vacío. La fila abierta queda marcada. Más adelante será un form para editar la fila (milestone 9).
 - **Structure:** columnas (nombre, tipo, si admite null, default), índices (nombre, definición, si es único), FKs (columnas, referencia, acción al borrar) y el DDL o la definición de la vista, con copiar.
-- **Permite:** agregar, editar y quitar filtros; ordenar por una columna, también desde el encabezado de la grilla; paginar; abrir el detalle de una fila (desde ahí se copia cada valor); pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
-- **Estados:** cargando; error de conexión o de query, con reintento; la tabla ya no existe; sin filas, o sin filas con esos filtros.
+- **Permite:** escribir el `WHERE` y el `ORDER BY` con autocompletado de columnas y palabras clave; aplicarlos con Enter (con sugerencias abiertas, Enter acepta la sugerencia); volver a aplicar uno del historial; quitarlos con su acción o vaciando el campo; ordenar por una columna desde el encabezado de la grilla, que escribe en el campo `ORDER BY`; paginar; abrir el detalle de una fila (desde ahí se copia cada valor); pasar entre Data y Structure. Cualquiera de estas acciones fija la pestaña.
+- **Estados:** cargando; error de conexión o de query, con reintento; `WHERE` u `ORDER BY` inválido, con el mensaje de Postgres en lugar de la grilla y la barra de filtros visible; la tabla ya no existe; sin filas, o sin filas con esos filtros.
 
 ### Pestaña SQL
 

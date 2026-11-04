@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { getStatementAt } from './sql.utils';
+import { getStatementAt, quoteIdentifier } from './sql.utils';
 
 const at = (sqlWithCursor: string) => {
   const cursor = sqlWithCursor.indexOf('|');
@@ -46,5 +46,22 @@ describe('getStatementAt', () => {
   test('returns an empty text when there is nothing to run', () => {
     expect(at('|')).toBe('');
     expect(at('  |  ')).toBe('');
+  });
+});
+
+describe('quoteIdentifier', () => {
+  test('keeps a plain identifier as it is', () => {
+    expect(quoteIdentifier('created_at')).toBe('created_at');
+  });
+
+  test('quotes uppercase, spaces and reserved words', () => {
+    expect(quoteIdentifier('createdAt')).toBe('"createdAt"');
+    expect(quoteIdentifier('full name')).toBe('"full name"');
+    expect(quoteIdentifier('order')).toBe('"order"');
+    expect(quoteIdentifier('1st')).toBe('"1st"');
+  });
+
+  test('escapes the quotes of the identifier', () => {
+    expect(quoteIdentifier('a"b')).toBe('"a""b"');
   });
 });

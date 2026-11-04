@@ -8,7 +8,7 @@ Reglas de negocio y decisiones en `product.md`.
 - Las credenciales se leen del repositorio dentro del `UnitOfWork` del workspace, y la contraseña se descifra con `EncryptionService.decrypt(passwordEncrypted, id)`. El service recibe las credenciales ya descifradas, sin tocar la base de la api.
 - Cada cliente se abre con `statement_timeout` de 30 s (`options: '-c statement_timeout=30000'`) y los mismos modos de SSL que `testConnection`.
 - Si no conecta, lanza `PostgresConnectionFailedError`. Si la query falla, lanza `PostgresQueryFailedError` con el mensaje de Postgres.
-- Los identificadores se citan con `escapeIdentifier` de `pg` y los valores van siempre como parámetros (`$1`, `$2`…).
+- Los identificadores se citan con `escapeIdentifier` de `pg` y los valores van siempre como parámetros (`$1`, `$2`…). La excepción son los fragmentos `where` y `orderBy` de `tableRows`, que escribe el usuario.
 
 ## Modelo
 
@@ -125,35 +125,12 @@ type DbForeignKey {
   onDelete: String!
 }
 
-enum DbFilterOperator {
-  EQ
-  NEQ
-  GT
-  GTE
-  LT
-  LTE
-  CONTAINS
-  IS_NULL
-  IS_NOT_NULL
-}
-
-input DbFilterInput {
-  column: String!
-  operator: DbFilterOperator!
-  value: String
-}
-
-input DbOrderInput {
-  column: String!
-  direction: SortDirection!
-}
-
 input TableRowsInput {
   connectionId: ID!
   schema: String!
   name: String!
-  filters: [DbFilterInput!]
-  orderBy: DbOrderInput
+  where: String
+  orderBy: String
   page: Int!
 }
 
@@ -199,8 +176,9 @@ type Query {
 
 - Sirven para tablas y vistas. `definition` es el DDL armado de las columnas y constraints en una tabla, y `pg_get_viewdef` en una vista. Una vista devuelve `indexes` y `foreignKeys` vacíos.
 - `functionDefinition` usa `pg_get_functiondef`. Recibe `arguments`, el mismo texto de `DbFunction.arguments`, para distinguir funciones sobrecargadas. Si no existe, `OBJECT_NOT_FOUND`.
-- `tableRows` valida `filters` y `orderBy` contra las columnas reales: una columna que no existe es `INVALID_INPUT`. `CONTAINS` es `<col>::text ILIKE '%' || $n || '%'`. Los operadores de comparación y `CONTAINS` requieren `value`; sin él, `INVALID_INPUT`. Páginas de 50 con `LIMIT/OFFSET`, `page` desde 1. Sin `orderBy`, ordena por la PK si hay; con `orderBy`, desempata por la PK. El service arma el orden y la página, así lo cubre la integración.
-- `totalRows` es un `count(*)` con los mismos filtros.
+- `tableRows` recibe `where` y `orderBy` como fragmentos de SQL y los pega tal cual, cada uno en su propia línea para que un comentario `--` no se coma lo que sigue, con `where` entre paréntesis. Un fragmento vacío o solo con espacios cuenta como ausente. Como máximo 10,000 caracteres cada uno, validado con zod en el use-case. Si Postgres los rechaza, `QUERY_FAILED` con su mensaje. Páginas de 50 con `LIMIT/OFFSET`, `page` desde 1. Sin `orderBy`, ordena por la PK si hay; con `orderBy`, desempata por la PK. El service arma el orden y la página, así lo cubre la integración.
+- `totalRows` es un `count(*)` con el mismo `where`.
+- Al terminar, `tableRows` destruye el cliente en vez de devolverlo al pool, como `runQuery`: un fragmento puede cambiar el estado de sesión (`set_config`).
 - Los valores salen como texto (`null` para `NULL`), tal como los devuelve `pg` con los parsers de tipo en texto, para no perder precisión en `numeric`, `bigint` o fechas.
 
 ### Ejecutar
@@ -308,6 +286,8 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
   - `src/lib/database-schema/`: explorador, pestaña de tabla o vista (Data y Structure) y pestaña de función.
   - `src/lib/query/`: pestaña SQL, editor, panel de resultados y queries guardadas.
 - **Editor:** CodeMirror 6 con `@codemirror/lang-sql` (dialecto Postgres) y `sql-formatter` para "Format". La sentencia bajo el cursor se toma separando por `;` fuera de strings y comentarios. El autocompletado usa `@codemirror/autocomplete` con la opción `schema` de `sql()`, armada desde la cache de `connectionSchema` (sin pedidos nuevos), con `defaultSchema: 'public'`.
+- **Filtro y orden de la tabla:** dos campos de una línea con CodeMirror y `@codemirror/lang-sql`, sin números de línea. Autocompletan las columnas de la tabla (desde la cache de `connectionSchema`) y palabras clave de Postgres. Enter aplica y vuelve a la página 1; con el popup de autocompletado abierto, Enter acepta la sugerencia y no aplica.
+- **Historial de filtro y orden:** en `sessionStorage` (`dbiewer:table-history:<connectionId>:<schema>.<name>:where` y `:order-by`), con `try/catch`. Guarda hasta 50 textos.
 - **Grilla:** el componente `table` de coss, con encabezado fijo y scroll horizontal. Sin virtualización: el máximo es 1,000 filas.
 - **Cache keys:** el esquema por `connectionId`; la estructura y las filas por `connectionId`, objeto, filtros, orden y página; la definición de una función por `connectionId`, esquema, nombre y argumentos. "Reload" en el explorador o en la tabla los vuelve a pedir.
 - Después de crear, editar o eliminar una query guardada, `savedQueries`.
@@ -326,5 +306,5 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 ## Tests
 
 - **api, integración:** repositorio de `saved_query`, incluido el índice único por nombre.
-- **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (filtros, orden, paginación, columna inválida, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
+- **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (`where`, `orderBy`, paginación, fragmento inválido, fragmento demasiado largo, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
 - **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla y pestaña SQL con el fetcher mockeado.

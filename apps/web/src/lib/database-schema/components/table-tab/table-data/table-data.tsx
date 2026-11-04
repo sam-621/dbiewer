@@ -6,6 +6,8 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 
 import type { useGetTableRows } from '../../../hooks/use-get-table-rows';
 import {
+  formatTableOrder,
+  parseTableOrder,
   TABLE_PAGE_SIZE,
   type TableOrder,
   type TableStructureNode,
@@ -13,9 +15,8 @@ import {
 } from '../../../utils/table-view.utils';
 import { TableTabMessage } from '../table-tab-message/table-tab-message';
 
-import { TableFilters } from './table-filters/table-filters';
+import { TableFilterBar } from './table-filter-bar/table-filter-bar';
 import { TableGrid } from './table-grid/table-grid';
-import { TableOrderSelect } from './table-order/table-order';
 import { TablePagination } from './table-pagination/table-pagination';
 import { type TableRowDetail, TableRowSheet } from './table-row-sheet/table-row-sheet';
 
@@ -24,7 +25,8 @@ type Props = {
   rowsResult: ReturnType<typeof useGetTableRows>;
   state: TableViewState;
   onStateChange: (state: TableViewState) => void;
-  objectName: string;
+  connectionId: string;
+  object: { schema: string; name: string };
   onPin: () => void;
 };
 
@@ -32,7 +34,8 @@ export const TableData = ({
   structure,
   rowsResult,
   state,
-  objectName,
+  connectionId,
+  object,
   onStateChange,
   onPin
 }: Props) => {
@@ -40,8 +43,10 @@ export const TableData = ({
   const { tableRows, rowsError, durationMs, isLoading, isFetching, isPlaceholderData, refetch } =
     rowsResult;
   const primaryKey = structure.columns.find(column => column.isPrimaryKey)?.name ?? null;
-  const order: TableOrder | null =
-    state.orderBy ?? (primaryKey ? { column: primaryKey, direction: 'ASC' } : null);
+  const defaultOrder: TableOrder | null = primaryKey
+    ? { column: primaryKey, direction: 'ASC' }
+    : null;
+  const order = state.orderBy ? parseTableOrder(state.orderBy) : defaultOrder;
 
   const [shownRow, setShownRow] = useState<(TableRowDetail & { index: number }) | null>(null);
   const [isRowOpen, setIsRowOpen] = useState(false);
@@ -56,7 +61,8 @@ export const TableData = ({
     onPin();
   };
 
-  const changeOrder = (orderBy: TableOrder) => onStateChange({ ...state, orderBy, page: 1 });
+  const changeOrder = (nextOrder: TableOrder) =>
+    onStateChange({ ...state, orderBy: formatTableOrder(nextOrder), page: 1 });
 
   const renderGrid = () => {
     if (isLoading) {
@@ -80,9 +86,7 @@ export const TableData = ({
         <Empty className="md:py-12">
           <EmptyHeader>
             <EmptyTitle className="text-base">
-              {state.filters.length
-                ? t('No rows match these filters')
-                : t('This table has no rows')}
+              {state.where ? t('No rows match these filters') : t('This table has no rows')}
             </EmptyTitle>
           </EmptyHeader>
         </Empty>
@@ -106,14 +110,15 @@ export const TableData = ({
 
   return (
     <>
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-2">
-        <TableFilters
-          columns={structure.columns}
-          filters={state.filters}
-          onFiltersChange={filters => onStateChange({ ...state, filters, page: 1 })}
-        />
-        <TableOrderSelect columns={structure.columns} order={order} onOrderChange={changeOrder} />
-      </div>
+      <TableFilterBar
+        connectionId={connectionId}
+        object={object}
+        where={state.where}
+        orderBy={state.orderBy}
+        onWhereChange={where => onStateChange({ ...state, where, page: 1 })}
+        onOrderByChange={orderBy => onStateChange({ ...state, orderBy, page: 1 })}
+        onPin={onPin}
+      />
       {renderGrid()}
       {tableRows && !rowsError && (
         <TablePagination
@@ -126,7 +131,7 @@ export const TableData = ({
       )}
       {tableRows && (
         <TableRowSheet
-          objectName={objectName}
+          objectName={object.name}
           columns={tableRows.columns}
           primaryKey={primaryKey}
           isOpen={isRowOpen}

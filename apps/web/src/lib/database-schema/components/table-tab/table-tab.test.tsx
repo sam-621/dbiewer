@@ -64,6 +64,25 @@ const ROWS = {
   totalRows: 120
 };
 
+const SCHEMAS = [
+  {
+    name: 'public',
+    tables: [
+      {
+        name: 'users',
+        columns: ['id', 'email', 'plan', 'Full Name'].map(name => ({
+          name,
+          type: 'text',
+          isPrimaryKey: false,
+          isForeignKey: false
+        }))
+      }
+    ],
+    views: [],
+    functions: []
+  }
+];
+
 type Result = unknown;
 
 const mockApi = ({
@@ -73,7 +92,7 @@ const mockApi = ({
   vi.mocked(gqlFetcher).mockImplementation(async document => {
     const query = document.toString();
     if (query.includes('query GetConnectionSchema')) {
-      return { connectionSchema: { apiErrors: [], schemas: [] } };
+      return { connectionSchema: { apiErrors: [], schemas: SCHEMAS } };
     }
     const result = await (query.includes('query GetTableStructure') ? structure : rows);
     if (result instanceof Error) throw result;
@@ -118,10 +137,29 @@ const Harness = ({ object }: { object: TableTabObject }) => {
 
 const renderTab = (object = USERS) => render(<Harness object={object} />);
 
+const whereField = () => screen.getByRole('textbox', { name: 'WHERE' });
+
+const orderByField = () => screen.getByRole('textbox', { name: 'ORDER BY' });
+
+const getSuggestions = () =>
+  Array.from(document.querySelectorAll('.cm-tooltip-autocomplete li')).map(
+    option => option.textContent
+  );
+
+const WHERE_HISTORY_KEY = 'dbiewer:table-history:connection-1:public.users:where';
+
+const ORDER_BY_HISTORY_KEY = 'dbiewer:table-history:connection-1:public.users:order-by';
+
+const getSchemaCalls = () =>
+  vi
+    .mocked(gqlFetcher)
+    .mock.calls.filter(([document]) => document.toString().includes('query GetConnectionSchema'));
+
 describe('TableTab', () => {
   beforeEach(() => {
     vi.mocked(gqlFetcher).mockReset();
     onPin.mockReset();
+    sessionStorage.clear();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -151,8 +189,8 @@ describe('TableTab', () => {
       connectionId: 'connection-1',
       schema: 'public',
       name: 'users',
-      filters: [],
-      orderBy: null,
+      where: '',
+      orderBy: '',
       page: 1
     });
   });
@@ -172,66 +210,203 @@ describe('TableTab', () => {
     expect(await screen.findByText('Vista · solo lectura')).toBeInTheDocument();
   });
 
-  test('adds, edits and removes a filter', async () => {
+  test('applies WHERE and ORDER BY with Enter and goes back to the first page', async () => {
     mockApi();
 
     renderTab();
     const user = userEvent.setup();
     await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    await waitFor(() => expect(lastRowsInput()?.page).toBe(2));
 
-    await user.click(screen.getByRole('button', { name: 'Agregar filtro' }));
-    await user.click(await screen.findByRole('button', { name: 'Aplicar' }));
-    expect(await screen.findByText('Ingresa un valor')).toBeInTheDocument();
+    await user.click(whereField());
+    await user.keyboard("  plan = 'pro'  {Enter}");
 
-    await user.type(screen.getByLabelText('Valor'), "o'brien");
-    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+    await waitFor(() => expect(lastRowsInput()?.where).toBe("plan = 'pro'"));
+    expect(lastRowsInput()?.page).toBe(1);
 
-    await waitFor(() =>
-      expect(lastRowsInput()?.filters).toEqual([{ column: 'id', operator: 'EQ', value: "o'brien" }])
-    );
-    expect(lastState()?.page).toBe(1);
-    const chip = screen.getByRole('button', { name: "id = 'o''brien'" });
+    await user.click(orderByField());
+    await user.keyboard('2 desc{Enter}');
 
-    await user.click(chip);
-    await user.click(await screen.findByRole('combobox', { name: 'Operador' }));
-    await user.click(await screen.findByRole('option', { name: 'is null' }));
-    expect(screen.queryByLabelText('Valor')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
-
-    await waitFor(() =>
-      expect(lastRowsInput()?.filters).toEqual([{ column: 'id', operator: 'IS_NULL', value: null }])
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Quitar filtro' }));
-
-    await waitFor(() => expect(lastRowsInput()?.filters).toEqual([]));
+    await waitFor(() => expect(lastRowsInput()?.orderBy).toBe('2 desc'));
+    expect(lastRowsInput()?.where).toBe("plan = 'pro'");
   });
 
-  test('orders from the grid header and from ORDER BY', async () => {
+  test('pins the tab when typing in a field', async () => {
     mockApi();
 
     renderTab();
     const user = userEvent.setup();
-    expect(await screen.findByRole('combobox', { name: 'ORDER BY' })).toHaveTextContent('id');
+    await screen.findByText('ana@acme.dev');
+    expect(onPin).not.toHaveBeenCalled();
+
+    await user.click(whereField());
+    await user.keyboard('1');
+
+    expect(onPin).toHaveBeenCalled();
+    expect(onStateChange).not.toHaveBeenCalled();
+  });
+
+  test('removes a filter with its action and by emptying the field', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    expect(screen.queryByRole('button', { name: 'Quitar WHERE' })).not.toBeInTheDocument();
+
+    await user.click(whereField());
+    await user.keyboard('1 = 1{Enter}');
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('1 = 1'));
+
+    await user.click(screen.getByRole('button', { name: 'Quitar WHERE' }));
+
+    await waitFor(() => expect(lastRowsInput()?.where).toBe(''));
+    expect(whereField()).toHaveTextContent('');
+    expect(whereField()).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Quitar WHERE' })).not.toBeInTheDocument();
+
+    await user.keyboard('2 = 2{Enter}');
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('2 = 2'));
+
+    await user.keyboard('{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}{Enter}');
+
+    await waitFor(() => expect(lastRowsInput()?.where).toBe(''));
+    expect(JSON.parse(sessionStorage.getItem(WHERE_HISTORY_KEY) ?? '[]')).toEqual([
+      '2 = 2',
+      '1 = 1'
+    ]);
+  });
+
+  test('suggests the columns of the table from the cached schema', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await waitFor(() => expect(getSchemaCalls()).toHaveLength(1));
+
+    await user.click(whereField());
+    await user.keyboard('ema');
+    await waitFor(() => expect(getSuggestions()).toContain('email'));
+
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(whereField()).toHaveTextContent('email'));
+    expect(lastRowsInput()?.where).toBe('');
+
+    await user.keyboard(' = 1 and Ful');
+    await waitFor(() => expect(getSuggestions()).toContain('Full Name'));
+    await user.keyboard('{Tab}');
+    await waitFor(() => expect(whereField()).toHaveTextContent('email = 1 and "Full Name"'));
+
+    expect(getSchemaCalls()).toHaveLength(1);
+  });
+
+  test('orders from the grid header writing in ORDER BY', async () => {
+    mockApi({
+      rows: {
+        tableRows: {
+          apiErrors: [],
+          tableRows: {
+            ...ROWS,
+            columns: [...ROWS.columns.slice(0, 2), { name: 'Plan', type: 'text' }]
+          }
+        }
+      }
+    });
+
+    renderTab();
+    const user = userEvent.setup();
+    expect(await screen.findByRole('columnheader', { name: /\bid uuid/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending'
+    );
 
     await user.click(screen.getByRole('button', { name: /^email/ }));
-    await waitFor(() =>
-      expect(lastRowsInput()?.orderBy).toEqual({ column: 'email', direction: 'ASC' })
-    );
+    await waitFor(() => expect(lastRowsInput()?.orderBy).toBe('email asc'));
+    expect(orderByField()).toHaveTextContent('email asc');
     expect(screen.getByRole('columnheader', { name: /^email/ })).toHaveAttribute(
       'aria-sort',
       'ascending'
     );
 
     await user.click(screen.getByRole('button', { name: /^email/ }));
-    await waitFor(() =>
-      expect(lastRowsInput()?.orderBy).toEqual({ column: 'email', direction: 'DESC' })
+    await waitFor(() => expect(lastRowsInput()?.orderBy).toBe('email desc'));
+    expect(orderByField()).toHaveTextContent('email desc');
+    expect(screen.getByRole('columnheader', { name: /^email/ })).toHaveAttribute(
+      'aria-sort',
+      'descending'
     );
 
-    await user.click(screen.getByRole('button', { name: 'Descendente' }));
-    await waitFor(() =>
-      expect(lastRowsInput()?.orderBy).toEqual({ column: 'email', direction: 'ASC' })
+    await user.click(screen.getByRole('button', { name: /^Plan/ }));
+    await waitFor(() => expect(lastRowsInput()?.orderBy).toBe('"Plan" asc'));
+    expect(orderByField()).toHaveTextContent('"Plan" asc');
+    expect(sessionStorage.getItem(ORDER_BY_HISTORY_KEY)).toBeNull();
+  });
+
+  test('shows the history of a field and applies the chosen text', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+
+    await user.click(screen.getByRole('button', { name: 'Historial de WHERE' }));
+    expect(await screen.findByText('Sin historial todavía')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+
+    await user.click(whereField());
+    await user.keyboard('1 = 1{Enter}');
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('1 = 1'));
+    await user.click(screen.getByRole('button', { name: 'Quitar WHERE' }));
+    await user.keyboard('2 = 2{Enter}');
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('2 = 2'));
+    await user.keyboard('{Enter}');
+
+    await user.click(screen.getByRole('button', { name: 'Historial de WHERE' }));
+    const items = await screen.findAllByRole('menuitem');
+    expect(items.map(item => item.textContent)).toEqual(['2 = 2', '1 = 1']);
+
+    await user.click(screen.getByRole('menuitem', { name: '1 = 1' }));
+
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('1 = 1'));
+    expect(whereField()).toHaveTextContent('1 = 1');
+  });
+
+  test('keeps at most 50 texts in the history', async () => {
+    sessionStorage.setItem(
+      WHERE_HISTORY_KEY,
+      JSON.stringify(Array.from({ length: 50 }, (_, index) => `id = ${index}`))
     );
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+
+    await user.click(whereField());
+    await user.keyboard('1 = 1{Enter}');
+
+    await waitFor(() => expect(lastRowsInput()?.where).toBe('1 = 1'));
+    const stored = JSON.parse(sessionStorage.getItem(WHERE_HISTORY_KEY) ?? '[]') as string[];
+    expect(stored).toHaveLength(50);
+    expect(stored[0]).toBe('1 = 1');
+    expect(stored).not.toContain('id = 49');
+  });
+
+  test('ignores a corrupted history', async () => {
+    sessionStorage.setItem(WHERE_HISTORY_KEY, '{');
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+
+    await user.click(screen.getByRole('button', { name: 'Historial de WHERE' }));
+
+    expect(await screen.findByText('Sin historial todavía')).toBeInTheDocument();
   });
 
   test('paginates', async () => {
@@ -319,7 +494,38 @@ describe('TableTab', () => {
     renderTab();
 
     expect(await screen.findByText('invalid input syntax for type uuid')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Agregar filtro' })).toBeInTheDocument();
+    expect(whereField()).toBeInTheDocument();
+    expect(orderByField()).toBeInTheDocument();
+  });
+
+  test('keeps the text and the focus when Postgres rejects the fragment', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+
+    mockApi({
+      rows: {
+        tableRows: {
+          apiErrors: [{ code: 'QUERY_FAILED', message: 'column "nope" does not exist' }],
+          tableRows: null
+        }
+      }
+    });
+    await user.click(whereField());
+    await user.keyboard('nope = 1{Enter}');
+
+    expect(await screen.findByText('column "nope" does not exist')).toBeInTheDocument();
+    expect(screen.queryByText('ana@acme.dev')).not.toBeInTheDocument();
+    expect(whereField()).toHaveTextContent('nope = 1');
+    expect(whereField()).toHaveFocus();
+
+    mockApi();
+    await user.keyboard('{Backspace}2{Enter}');
+
+    expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
+    expect(lastRowsInput()?.where).toBe('nope = 2');
   });
 
   test('shows a message when the table has no rows', async () => {
@@ -339,9 +545,9 @@ describe('TableTab', () => {
 
     renderTab();
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Agregar filtro' }));
-    await user.type(await screen.findByLabelText('Valor'), '9');
-    await user.click(screen.getByRole('button', { name: 'Aplicar' }));
+    await screen.findByText('Esta tabla no tiene filas');
+    await user.click(whereField());
+    await user.keyboard('1 = 2{Enter}');
 
     expect(await screen.findByText('Ninguna fila coincide con estos filtros')).toBeInTheDocument();
   });

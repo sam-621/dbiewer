@@ -7,10 +7,10 @@ import type { DbObjectInput } from '@/lib/api/types';
 import { DatabaseSchemaCacheKeys } from '../constants/cache-keys';
 import { getTableQueryError, type TableViewState } from '../utils/table-view.utils';
 
-type Params = DbObjectInput & Pick<TableViewState, 'filters' | 'orderBy' | 'page'>;
+type Params = DbObjectInput & Pick<TableViewState, 'where' | 'orderBy' | 'page'>;
 
-export const useGetTableRows = ({ filters, orderBy, ...input }: Params) => {
-  const variables = { input: { ...input, filters, orderBy } };
+export const useGetTableRows = (input: Params) => {
+  const variables = { input };
 
   const result = useQuery({
     queryKey: [DatabaseSchemaCacheKeys.TableRows, variables],

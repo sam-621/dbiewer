@@ -23,6 +23,18 @@ export const filterSchemas = (schemas: DbSchemaNode[], search: string) => {
     .filter(hasObjects);
 };
 
+export const getObjectColumnNames = (
+  schemas: DbSchemaNode[],
+  { schema, name }: { schema: string; name: string }
+) => {
+  const node = schemas.find(current => current.name === schema);
+  const object = [...(node?.tables ?? []), ...(node?.views ?? [])].find(
+    current => current.name === name
+  );
+
+  return object?.columns.map(column => column.name) ?? [];
+};
+
 const TYPE_ALIASES: [RegExp, string][] = [
   [/^character varying/, 'varchar'],
   [/^character/, 'char'],

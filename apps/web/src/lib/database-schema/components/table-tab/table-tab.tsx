@@ -28,7 +28,7 @@ export const TableTab = ({ connectionId, object, state, onStateChange, onPin }: 
   const structureResult = useGetTableStructure(input);
   const rowsResult = useGetTableRows({
     ...input,
-    filters: state.filters,
+    where: state.where,
     orderBy: state.orderBy,
     page: state.page
   });
@@ -68,7 +68,8 @@ export const TableTab = ({ connectionId, object, state, onStateChange, onPin }: 
             rowsResult={rowsResult}
             state={state}
             onStateChange={onStateChange}
-            objectName={object.name}
+            connectionId={connectionId}
+            object={object}
             onPin={onPin}
           />
         </TabsPanel>
