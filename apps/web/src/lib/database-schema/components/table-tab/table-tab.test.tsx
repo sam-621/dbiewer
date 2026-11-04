@@ -188,7 +188,7 @@ describe('TableTab', () => {
     renderTab();
 
     expect(await screen.findByRole('heading', { name: 'users' })).toBeInTheDocument();
-    expect(await screen.findByText('120 filas · 3 columnas')).toBeInTheDocument();
+    expect(await screen.findByText('120 filas')).toBeInTheDocument();
     expect(screen.getByText('ana@acme.dev')).toBeInTheDocument();
     const [, firstRow, secondRow] = screen.getAllByRole('row');
     expect(firstRow).toHaveTextContent('NULL');
@@ -621,7 +621,7 @@ describe('TableTab', () => {
     expect(screen.getByRole('button', { name: /^Columnas/, hidden: true })).toHaveTextContent(
       '2/3'
     );
-    expect(screen.getByText('120 filas · 3 columnas')).toBeInTheDocument();
+    expect(screen.getByText('120 filas')).toBeInTheDocument();
     expect(getRowsInputs()).toHaveLength(rowsCalls);
   });
 
@@ -662,8 +662,8 @@ describe('TableTab', () => {
     await user.click(within(menu).getByRole('button', { name: 'Mostrar todas' }));
 
     expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Columnas/, hidden: true })).not.toHaveTextContent(
-      '/'
+    expect(screen.getByRole('button', { name: /^Columnas/, hidden: true })).toHaveTextContent(
+      /(\d+)\/\1/
     );
   });
 

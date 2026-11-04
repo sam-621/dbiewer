@@ -1,6 +1,4 @@
 {
-  "{{count, number}} columns_one": "{{count, number}} column",
-  "{{count, number}} columns_other": "{{count, number}} columns",
   "{{count, number}} rows_one": "{{count, number}} row",
   "{{count, number}} rows_other": "{{count, number}} rows",
   "{{count, number}} rows · {{durationMs, number}} ms_one": "{{count, number}} row · {{durationMs, number}} ms",

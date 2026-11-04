@@ -42,11 +42,9 @@ export const TableColumnsMenu = ({ columns, hiddenColumns, onHiddenColumnsChange
         render={<Button variant="ghost" size="sm" className="font-normal text-muted-foreground" />}
       >
         {t('Columns')}
-        {hasHiddenColumns && (
-          <span className="tabular-nums">
-            {visibleCount}/{columns.length}
-          </span>
-        )}
+        <span className="tabular-nums">
+          {visibleCount}/{columns.length}
+        </span>
       </PopoverTrigger>
       <PopoverPopup align="end" className="w-80 max-w-(--available-width)">
         <div className="flex flex-col gap-2">

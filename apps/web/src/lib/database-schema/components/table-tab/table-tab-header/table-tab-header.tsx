@@ -33,15 +33,12 @@ export const TableTabHeader = ({
   onReload
 }: Props) => {
   const { t } = useTranslation();
-  const totalColumns = columns?.length ?? null;
 
   return (
     <header className="flex min-h-10.5 shrink-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1 ps-3.5 pe-2">
       <h2 className="min-w-0 truncate text-sm font-semibold">{object.name}</h2>
       <p className="text-xs text-muted-foreground">
         {totalRows !== null && t('{{count, number}} rows', { count: totalRows })}
-        {totalRows !== null && totalColumns !== null && ' · '}
-        {totalColumns !== null && t('{{count, number}} columns', { count: totalColumns })}
       </p>
       {object.kind === 'view' && <Badge variant="warning">{t('View · read only')}</Badge>}
       <div className="ms-auto flex items-center gap-1">

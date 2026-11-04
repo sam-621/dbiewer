@@ -69,3 +69,5 @@
 - (web) Grilla: los valores bajan de tono frente a los encabezados y `NULL` baja aún más. Aplica también a Results de la pestaña SQL.
 - (web) Grilla: suma líneas verticales para marcar la cuadrícula. Aplica también a Results de la pestaña SQL.
 - (web) Pestaña de tabla: botón "Columns" a la izquierda de Data / Structure para elegir las columnas visibles, con buscador y "Show all". La elección vive en memoria por pestaña: sobrevive a cambiar de pestaña o de conexión y se pierde al cerrarla o recargar.
+- (web) El botón "Columns" siempre muestra cuántas columnas se ven del total.
+- (web) El encabezado de la tabla ya no muestra la cantidad de columnas: esa información queda en el botón "Columns".
