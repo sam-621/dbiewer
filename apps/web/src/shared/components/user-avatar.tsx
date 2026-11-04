@@ -26,7 +26,8 @@ export const UserAvatar = ({ id, image, className }: Props) => {
           name={id}
           variant={AVATAR_VARIANT}
           colors={AVATAR_COLORS}
-          className="size-full shrink-0 rounded-full"
+          square
+          className="size-full shrink-0"
         />
       </AvatarFallback>
     </Avatar>

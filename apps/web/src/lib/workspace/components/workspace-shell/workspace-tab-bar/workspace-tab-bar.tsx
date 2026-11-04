@@ -49,10 +49,7 @@ export const WorkspaceTabBar = () => {
             >
               <Icon className="size-3.5" />
               <span
-                className={cn(
-                  'max-w-48 truncate font-mono text-xs',
-                  tab.key === provisionalKey && 'italic'
-                )}
+                className={cn('max-w-48 truncate text-xs', tab.key === provisionalKey && 'italic')}
               >
                 {name}
               </span>

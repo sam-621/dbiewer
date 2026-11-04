@@ -6,7 +6,6 @@ import { UserAvatar } from '@/shared/components/user-avatar';
 import { useTheme } from '@/shared/hooks/use-theme';
 import { LanguageFlag } from '@/shared/i18n/components/flags';
 import { LANGUAGES } from '@/shared/i18n/i18n';
-import { cn } from '@/shared/utils/cn';
 import { THEME_OPTIONS, THEMES } from '@/shared/utils/theme.utils';
 
 import { useGetMe } from '../../hooks/use-get-me';
@@ -25,12 +24,16 @@ export const UserMenu = () => {
     <Menu>
       <MenuTrigger
         aria-label={t('Open account menu')}
-        className="flex h-8 min-w-0 shrink-0 cursor-pointer items-center gap-2 rounded-md ps-1 pe-2 text-left outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent"
+        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-accent"
       >
-        <UserAvatar id={user?.id} image={user?.image} />
-        <span className="truncate text-sm text-foreground">{name || user?.email}</span>
+        <UserAvatar id={user?.id} image={user?.image} className="size-5" />
       </MenuTrigger>
       <MenuPopup className="w-58" side="bottom" align="end" sideOffset={4}>
+        <div className="flex flex-col gap-0.5 px-2.5 py-1">
+          {name && <span className="truncate text-[13px] font-medium text-foreground">{name}</span>}
+          <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
+        </div>
+        <MenuSeparator />
         <PreferenceRow
           label={t('Language')}
           value={i18n.resolvedLanguage}
@@ -41,10 +44,7 @@ export const UserMenu = () => {
             content: (
               <LanguageFlag
                 code={language.code}
-                className={cn(
-                  'size-5 rounded-full object-cover transition-opacity',
-                  language.code !== i18n.resolvedLanguage && 'opacity-75'
-                )}
+                className="size-5 rounded-full object-cover opacity-100"
               />
             )
           }))}
@@ -62,7 +62,7 @@ export const UserMenu = () => {
             content: (
               <ThemeIcon
                 theme={option.value}
-                className="size-4"
+                className="size-4 opacity-100"
                 variant={option.value === theme ? 'solid' : 'line'}
               />
             )

@@ -14,7 +14,7 @@ export const WorkspaceLayout = ({ hasConnections = false, children }: Props) => 
     <main className="flex h-svh flex-col bg-shell">
       <header className="flex h-11 shrink-0 items-center justify-between gap-3 px-3">
         <div className="flex min-w-0 items-center gap-3.5">
-          <Brand />
+          <Brand size="sm" />
           {hasConnections && <ConnectionSelector />}
         </div>
         <UserMenu />

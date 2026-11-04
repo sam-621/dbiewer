@@ -58,13 +58,36 @@ describe('UserMenu', () => {
     await i18n.changeLanguage('es');
   });
 
-  test('renders the user with the current language and theme pressed', async () => {
+  test('renders only the avatar in the trigger', async () => {
     renderMenu();
 
     const trigger = await screen.findByRole('button', { name: 'Abrir el menú de la cuenta' });
-    expect(trigger).toHaveTextContent('Ana');
-    expect(trigger).not.toHaveTextContent('ana@acme.dev');
 
+    expect(trigger).toHaveTextContent('');
+  });
+
+  test('shows the name and email in the popup', async () => {
+    renderMenu();
+    await openMenu();
+
+    expect(await screen.findByText('Ana')).toBeInTheDocument();
+    expect(screen.getByText('ana@acme.dev')).toBeInTheDocument();
+  });
+
+  test('shows only the email when the user has no name', async () => {
+    vi.mocked(gqlFetcher).mockImplementation(async () => ({
+      me: { ...ME, user: { ...ME.user, name: '' } }
+    }));
+
+    renderMenu();
+    await openMenu();
+
+    expect(await screen.findByText('ana@acme.dev')).toBeInTheDocument();
+    expect(screen.queryByText('Ana')).not.toBeInTheDocument();
+  });
+
+  test('renders the current language and theme pressed', async () => {
+    renderMenu();
     await openMenu();
 
     expect(await screen.findByRole('button', { name: 'Español' })).toHaveAttribute(

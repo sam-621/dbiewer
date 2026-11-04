@@ -24,7 +24,7 @@ export const ExplorerSchema = ({ schema, isSearching, onOpenObject }: Props) => 
   return (
     <SidebarMenuItem>
       <Collapsible open={isSearching || isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger render={<SidebarMenuButton size="sm" className="font-mono" />}>
+        <CollapsibleTrigger render={<SidebarMenuButton size="sm" />}>
           <ExplorerChevron />
           <span>{schema.name}</span>
         </CollapsibleTrigger>

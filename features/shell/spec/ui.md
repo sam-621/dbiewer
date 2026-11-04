@@ -25,7 +25,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Sidebar
 
 - **Ubicación:** a la izquierda del shell.
-- **Muestra:** arriba, dos tabs del mismo ancho, "Explorer" y "Queries", sin abarcar toda la fila, con "Reload" a la derecha en Explorer; debajo, un buscador a todo el ancho ("Search tables, views…" o "Filter queries…").
+- **Muestra:** arriba, dos tabs del mismo ancho, "Explorer" y "Queries", sin abarcar toda la fila, con "Reload" a la derecha en Explorer; debajo, un buscador a todo el ancho ("Search tables, views…" o "Filter queries…"). Los items del sidebar van en la tipografía normal de la aplicación, no en mono.
 - **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo; cambiar el ancho arrastrando el espacio entre los paneles (también con las flechas, y doble clic vuelve al ancho por defecto), entre 200 y 520 px. El ancho se recuerda en el navegador.
 
 ### Explorer
@@ -56,7 +56,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Barra de pestañas
 
 - **Ubicación:** arriba del área de pestañas.
-- **Muestra:** una pestaña por objeto o query abierta, con un ícono por tipo (tabla, vista, función, SQL) y el nombre. La activa es una píldora con fondo, sin subrayado. La provisional se distingue (por ejemplo, en cursiva). Una con cambios sin guardar muestra un indicador en lugar de cerrar. Al final, una acción "New query".
+- **Muestra:** una pestaña por objeto o query abierta, con un ícono por tipo (tabla, vista, función, SQL) y el nombre. El nombre va en la tipografía normal de la aplicación, no en mono. La activa es una píldora con fondo, sin subrayado. La provisional se distingue (por ejemplo, en cursiva). Una con cambios sin guardar muestra un indicador en lugar de cerrar. Al final, una acción "New query".
 - **Permite:** activar una pestaña; cerrarla; fijar la provisional con doble clic; crear una query nueva.
 - **Estados:** sin pestañas, un estado vacío en el área con las acciones "New query" y una línea que invita a abrir una tabla desde el explorador. Cerrar una con cambios sin guardar pide confirmación.
 
@@ -107,7 +107,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Header del workspace
 
 - **Ubicación:** `WorkspaceLayout`, arriba de `/`.
-- **Cambia:** header bajo, sin borde, sobre el fondo del shell. Suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil (avatar y nombre) va pegado a la derecha y abre un menú: fila Idioma (banderas), fila Tema (Sistema, Claro, Oscuro, con sus íconos), separador y Cerrar sesión en rojo.
+- **Cambia:** header bajo, sin borde, sobre el fondo del shell. Suma el selector de conexión a la derecha de la marca, solo cuando hay conexiones. El perfil (solo el avatar) va pegado a la derecha y abre un menú: arriba el nombre y el email del usuario, separador, fila Idioma (banderas), fila Tema (Sistema, Claro, Oscuro, con sus íconos), separador y Cerrar sesión en rojo.
 
 ### Workspace (inicio)
 

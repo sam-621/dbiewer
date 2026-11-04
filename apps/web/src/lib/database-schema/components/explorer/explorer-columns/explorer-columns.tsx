@@ -13,7 +13,7 @@ export const ExplorerColumns = ({ columns }: Props) => {
   return (
     <ul className="flex flex-col py-0.5 ps-5">
       {columns.map(column => (
-        <li key={column.name} className="flex h-6 items-center gap-1.5 px-2 font-mono text-xs">
+        <li key={column.name} className="flex h-6 items-center gap-1.5 px-2 text-xs">
           <span className="flex w-3.5 shrink-0 items-center">
             {column.isPrimaryKey && (
               <KeyIcon

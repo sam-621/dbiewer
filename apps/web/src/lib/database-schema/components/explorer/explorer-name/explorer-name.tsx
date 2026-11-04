@@ -53,7 +53,7 @@ export const ExplorerName = ({ name, className, isRowHighlighted = true }: Props
 
   return (
     <>
-      <span ref={nameRef} className={cn('truncate font-mono', className)}>
+      <span ref={nameRef} className={cn('truncate', className)}>
         {name}
       </span>
       {overlay &&
@@ -62,7 +62,7 @@ export const ExplorerName = ({ name, className, isRowHighlighted = true }: Props
             aria-hidden="true"
             style={overlay}
             className={cn(
-              'pointer-events-none fixed z-50 flex items-center rounded-e-lg bg-background pe-2 font-mono text-xs whitespace-pre',
+              'pointer-events-none fixed z-50 flex items-center rounded-e-lg bg-background pe-2 text-xs whitespace-pre',
               isRowHighlighted
                 ? 'bg-linear-to-r from-sidebar-accent to-sidebar-accent text-sidebar-accent-foreground'
                 : 'text-sidebar-foreground'

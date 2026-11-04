@@ -29,7 +29,7 @@ export const ConnectionSelector = () => {
       <Menu>
         <MenuTrigger render={<Button variant="ghost" size="sm" className="min-w-0" />}>
           <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-success" />
-          <span className="truncate">{activeConnection.name}</span>
+          <span className="truncate text-[13px]">{activeConnection.name}</span>
           <ChevronDownIcon className="size-3.5 text-muted-foreground" />
         </MenuTrigger>
         <MenuPopup align="start" className="max-w-72">
@@ -46,7 +46,7 @@ export const ConnectionSelector = () => {
                 <span className="flex min-w-0 items-center gap-2">
                   <PostgresIcon className="size-4 shrink-0" />
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate">{connection.name}</span>
+                    <span className="truncate text-[13px]">{connection.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
                       {connection.host}
                     </span>
@@ -56,7 +56,10 @@ export const ConnectionSelector = () => {
             ))}
           </MenuRadioGroup>
           <MenuSeparator />
-          <MenuItem onClick={() => setIsNewConnectionOpen(true)}>
+          <MenuItem
+            className="text-[13px] sm:text-[13px]"
+            onClick={() => setIsNewConnectionOpen(true)}
+          >
             <PlusIcon />
             {t('New connection')}
           </MenuItem>

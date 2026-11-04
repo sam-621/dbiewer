@@ -72,6 +72,11 @@
 - (web) El botón "Columns" siempre muestra cuántas columnas se ven del total.
 - (web) El encabezado de la tabla ya no muestra la cantidad de columnas: esa información queda en el botón "Columns".
 - (api) La tabla `saved_query` se reemplaza por `file`, genérica para archivos `sql` y `txt`: `content` en vez de `sql`, columna `type` (texto en la base, enum en el código) e índice único por `(connection_id, type, lower(name))`. Con su migración generada y la custom, sin backfill. Spec actualizado; el CRUD del paso 7 pasa a `File`.
+- (web) Los items del sidebar y los nombres de la barra de pestañas pasan a la tipografía normal. La mono queda para la grilla, `WHERE`, `ORDER BY`, el editor SQL y el DDL. `ui.md` actualizado.
+- (web) `workspace-shell.test.tsx` busca el botón "Columnas" con su contador. `design-system.md`: `font-mono` queda para el contenido de trabajo y la navegación va en `font-sans`.
 - (api) Casos de uso de archivos: `FileSaver` (crea sin `id`, actualiza con `id`), `FileFinder`, `FileLister` y `FileRemover`, con repositorio `file` y test de integración. Sin resolvers todavía. `createFile` y `updateFile` pasan a `saveFile` en el spec. Parte del paso 7.
+- (web) Header más chico y acorde al resto: logo de 22 px, textos de 13 px en la marca, el selector de conexión, el perfil y sus menús, y avatar de 20 px. Login y onboarding mantienen su tamaño.
+- (web) Perfil del header: el trigger muestra solo el avatar y el menú suma arriba el nombre y el email. Las banderas y los íconos de tema se ven a opacidad completa. `ui.md` actualizado.
 - (api) Se borran `FileFinder` y `FileLister`: `files` y `file` leerán del repositorio en el resolver, con lista vacía o `null` si no hay nada. Se quedan `FileSaver` y `FileRemover`. Regla en `architecture.md`: las queries no llevan use-case, salvo casos escasos.
+- (web) Avatar: el SVG se dibuja cuadrado y solo el contenedor recorta el círculo, para suavizar el borde.
 - (api) `FileRepository` queda sin métodos propios: se quitan `findByConnection` y `existsByName`. `FileSaver` valida el nombre con el `findOne` heredado y `files` usará `findMany`.

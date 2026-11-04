@@ -155,7 +155,7 @@ describe('WorkspaceShell', () => {
     renderShell();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'users' }));
-    await user.click(await screen.findByRole('button', { name: /^Columnas$/ }));
+    await user.click(await screen.findByRole('button', { name: /^Columnas\s*2\/2$/ }));
     await user.click(await screen.findByRole('checkbox', { name: /^email/ }));
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

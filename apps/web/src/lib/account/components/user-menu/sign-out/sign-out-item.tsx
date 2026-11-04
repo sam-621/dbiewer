@@ -8,7 +8,7 @@ import { MenuItem } from '@/shared/components/ui/menu';
 import { useSignOut } from '../../../hooks/use-sign-out';
 
 const MENU_ITEM =
-  'h-8 w-full justify-between gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-[background-color,color] duration-150 sm:min-h-8 data-highlighted:text-destructive-foreground [&>svg]:mx-0';
+  'h-8 w-full justify-between gap-2.5 rounded-lg px-2.5 text-[13px] font-medium sm:text-[13px] transition-[background-color,color] duration-150 sm:min-h-8 data-highlighted:text-destructive-foreground [&>svg]:mx-0';
 
 const MENU_ICON = 'ms-auto size-4 opacity-100';
 
@@ -37,7 +37,7 @@ export const SignOutItem = () => {
         <LogOutIcon className={MENU_ICON} />
       </MenuItem>
       {error && (
-        <Alert variant="error" className="mt-1">
+        <Alert variant="error" className="mt-1 text-[13px]">
           <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
