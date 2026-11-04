@@ -13,6 +13,15 @@ export class DbObjectNotFoundError extends BusinessError<ShellErrorCode> {
   }
 }
 
+export class DbFunctionNotFoundError extends BusinessError<ShellErrorCode> {
+  constructor(schema: string, name: string, functionArguments: string) {
+    super(
+      'OBJECT_NOT_FOUND',
+      `Function not found with name ${schema}.${name}(${functionArguments})`
+    );
+  }
+}
+
 export class QueryFailedError extends BusinessError<ShellErrorCode> {
   constructor(reason: string) {
     super('QUERY_FAILED', reason);

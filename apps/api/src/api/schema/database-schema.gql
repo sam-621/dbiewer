@@ -132,6 +132,18 @@ type TableRowsResult {
   tableRows: TableRows
 }
 
+input FunctionDefinitionInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+  arguments: String!
+}
+
+type FunctionDefinitionResult {
+  apiErrors: [ShellErrorResult!]!
+  definition: String
+}
+
 type ShellErrorResult {
   code: ShellErrorCode!
   message: String!
@@ -149,4 +161,5 @@ type Query {
   connectionSchema(connectionId: ID!): ConnectionSchemaResult!
   tableStructure(input: DbObjectInput!): TableStructureResult!
   tableRows(input: TableRowsInput!): TableRowsResult!
+  functionDefinition(input: FunctionDefinitionInput!): FunctionDefinitionResult!
 }

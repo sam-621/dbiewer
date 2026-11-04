@@ -163,6 +163,19 @@ export type DbView = {
   name: Scalars['String']['output'];
 };
 
+export type FunctionDefinitionInput = {
+  arguments: Scalars['String']['input'];
+  connectionId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  schema: Scalars['String']['input'];
+};
+
+export type FunctionDefinitionResult = {
+  __typename?: 'FunctionDefinitionResult';
+  apiErrors: Array<ShellErrorResult>;
+  definition?: Maybe<Scalars['String']['output']>;
+};
+
 export type Me = {
   __typename?: 'Me';
   user: User;
@@ -213,6 +226,7 @@ export type Query = {
   connection?: Maybe<Connection>;
   connectionSchema: ConnectionSchemaResult;
   connections: ConnectionList;
+  functionDefinition: FunctionDefinitionResult;
   health: Scalars['Boolean']['output'];
   me?: Maybe<Me>;
   tableRows: TableRowsResult;
@@ -225,6 +239,10 @@ export type QueryConnectionArgs = {
 
 export type QueryConnectionSchemaArgs = {
   connectionId: Scalars['ID']['input'];
+};
+
+export type QueryFunctionDefinitionArgs = {
+  input: FunctionDefinitionInput;
 };
 
 export type QueryTableRowsArgs = {
@@ -499,6 +517,8 @@ export type ResolversTypes = {
   DbTable: ResolverTypeWrapper<DbTable>;
   DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
+  FunctionDefinitionInput: FunctionDefinitionInput;
+  FunctionDefinitionResult: ResolverTypeWrapper<FunctionDefinitionResult>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Me: ResolverTypeWrapper<Me>;
@@ -553,6 +573,8 @@ export type ResolversParentTypes = {
   DbTable: DbTable;
   DbTableStructure: DbTableStructure;
   DbView: DbView;
+  FunctionDefinitionInput: FunctionDefinitionInput;
+  FunctionDefinitionResult: FunctionDefinitionResult;
   ID: Scalars['ID']['output'];
   Int: Scalars['Int']['output'];
   Me: Me;
@@ -732,6 +754,15 @@ export type DbViewResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type FunctionDefinitionResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['FunctionDefinitionResult'] =
+    ResolversParentTypes['FunctionDefinitionResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  definition?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+};
+
 export type MeResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['Me'] = ResolversParentTypes['Me']
@@ -805,6 +836,12 @@ export type QueryResolvers<
     RequireFields<QueryConnectionSchemaArgs, 'connectionId'>
   >;
   connections?: Resolver<ResolversTypes['ConnectionList'], ParentType, ContextType>;
+  functionDefinition?: Resolver<
+    ResolversTypes['FunctionDefinitionResult'],
+    ParentType,
+    ContextType,
+    RequireFields<QueryFunctionDefinitionArgs, 'input'>
+  >;
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
   tableRows?: Resolver<
@@ -966,6 +1003,7 @@ export type Resolvers<ContextType = RequestContext> = {
   DbTable?: DbTableResolvers<ContextType>;
   DbTableStructure?: DbTableStructureResolvers<ContextType>;
   DbView?: DbViewResolvers<ContextType>;
+  FunctionDefinitionResult?: FunctionDefinitionResultResolvers<ContextType>;
   Me?: MeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

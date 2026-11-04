@@ -44,6 +44,8 @@ export type PostgresSchema = {
 
 type PostgresObject = { schema: string; name: string };
 
+type PostgresFunction = PostgresObject & { arguments: string };
+
 type PostgresColumnDetail = {
   name: string;
   type: string;
@@ -289,6 +291,15 @@ export class PostgresService {
         as "viewDefinition"
     from relation r
   `;
+  private static readonly FUNCTION_DEFINITION_SQL = `
+    select pg_catalog.pg_get_functiondef(p.oid) as definition
+    from pg_catalog.pg_proc p
+    join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = $1
+      and p.proname = $2
+      and pg_catalog.pg_get_function_identity_arguments(p.oid) = $3
+      and p.prokind in ('f', 'p')
+  `;
   private static readonly VIEW_KINDS = ['v', 'm'];
   private static readonly PAGE_SIZE = 50;
   private static readonly MAX_RESULT_ROWS = 1_000;
@@ -369,6 +380,19 @@ export class PostgresService {
       foreignKeys: relation.foreignKeys,
       definition: this.toTableDefinition(object, relation)
     };
+  }
+
+  async readFunctionDefinition(
+    connection: PostgresConnection,
+    dbFunction: PostgresFunction
+  ): Promise<string | null> {
+    const result = await this.query<{ definition: string }>(
+      connection,
+      PostgresService.FUNCTION_DEFINITION_SQL,
+      [dbFunction.schema, dbFunction.name, dbFunction.arguments]
+    );
+
+    return result.rows[0]?.definition ?? null;
   }
 
   async readTableRows(

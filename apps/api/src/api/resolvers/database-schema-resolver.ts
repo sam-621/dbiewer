@@ -1,5 +1,6 @@
 import type {
   QueryConnectionSchemaArgs,
+  QueryFunctionDefinitionArgs,
   QueryTableRowsArgs,
   QueryTableStructureArgs,
   Resolvers
@@ -8,6 +9,7 @@ import type { SessionContext } from '@/api/middlewares/require-session';
 import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
 import { ConnectionSchemaReader } from '@/modules/database-schema/use-cases/connection-schema-reader';
+import { FunctionDefinitionReader } from '@/modules/database-schema/use-cases/function-definition-reader';
 import { TableRowsReader } from '@/modules/database-schema/use-cases/table-rows-reader';
 import { TableStructureReader } from '@/modules/database-schema/use-cases/table-structure-reader';
 import { UnitOfWork } from '@/persistence/unit-of-work';
@@ -68,6 +70,26 @@ async function tableRows(_parent: unknown, args: QueryTableRowsArgs, ctx: Sessio
   return apiResponse(result, 'tableRows');
 }
 
+async function functionDefinition(
+  _parent: unknown,
+  args: QueryFunctionDefinitionArgs,
+  ctx: SessionContext
+) {
+  const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+  const result = await uow.execute(async (_repositories, uowCtx) => {
+    const functionDefinitionReader = new FunctionDefinitionReader(
+      uowCtx,
+      ctx.services.encryptionService,
+      ctx.services.postgresService
+    );
+
+    return functionDefinitionReader.execute(args.input);
+  });
+
+  return apiResponse(result, 'definition');
+}
+
 export const DatabaseSchemaResolver: Resolvers = {
   DbFunctionKind: {
     FUNCTION: 'function',
@@ -76,6 +98,7 @@ export const DatabaseSchemaResolver: Resolvers = {
   Query: {
     connectionSchema: requireSession(connectionSchema),
     tableStructure: requireSession(tableStructure),
-    tableRows: requireSession(tableRows)
+    tableRows: requireSession(tableRows),
+    functionDefinition: requireSession(functionDefinition)
   }
 };

@@ -178,6 +178,13 @@ type TableRowsResult {
   tableRows: TableRows
 }
 
+input FunctionDefinitionInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+  arguments: String!
+}
+
 type FunctionDefinitionResult {
   apiErrors: [ShellErrorResult!]!
   definition: String
@@ -186,12 +193,12 @@ type FunctionDefinitionResult {
 type Query {
   tableStructure(input: DbObjectInput!): TableStructureResult!
   tableRows(input: TableRowsInput!): TableRowsResult!
-  functionDefinition(input: DbObjectInput!): FunctionDefinitionResult!
+  functionDefinition(input: FunctionDefinitionInput!): FunctionDefinitionResult!
 }
 ```
 
 - Sirven para tablas y vistas. `definition` es el DDL armado de las columnas y constraints en una tabla, y `pg_get_viewdef` en una vista. Una vista devuelve `indexes` y `foreignKeys` vacíos.
-- `functionDefinition` usa `pg_get_functiondef`.
+- `functionDefinition` usa `pg_get_functiondef`. Recibe `arguments`, el mismo texto de `DbFunction.arguments`, para distinguir funciones sobrecargadas. Si no existe, `OBJECT_NOT_FOUND`.
 - `tableRows` valida `filters` y `orderBy` contra las columnas reales: una columna que no existe es `INVALID_INPUT`. `CONTAINS` es `<col>::text ILIKE '%' || $n || '%'`. Los operadores de comparación y `CONTAINS` requieren `value`; sin él, `INVALID_INPUT`. Páginas de 50 con `LIMIT/OFFSET`, `page` desde 1. Sin `orderBy`, ordena por la PK si hay; con `orderBy`, desempata por la PK. El service arma el orden y la página, así lo cubre la integración.
 - `totalRows` es un `count(*)` con los mismos filtros.
 - Los valores salen como texto (`null` para `NULL`), tal como los devuelve `pg` con los parsers de tipo en texto, para no perder precisión en `numeric`, `bigint` o fechas.
@@ -319,5 +326,5 @@ Las operaciones que leen la base del usuario sí llevan use-case: tienen que lee
 ## Tests
 
 - **api, integración:** repositorio de `saved_query`, incluido el índice único por nombre.
-- **api, e2e:** contra la DB de test como base del usuario. `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (filtros, orden, paginación, columna inválida, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
+- **api, e2e:** con `PostgresService` mockeado, como pide `testing.md`; la ejecución real se cubre en la integración. `functionDefinition`; `connectionSchema` con esquemas, vistas y funciones de un fixture; `tableStructure`, `tableRows` (filtros, orden, paginación, columna inválida, `OBJECT_NOT_FOUND`); `runQuery` (varias sentencias, truncado, error de Postgres, SQL demasiado largo); CRUD de `saved_query` con sus errores; `CONNECTION_NOT_FOUND`, `CONNECTION_FAILED`, aislamiento entre workspaces y `UNAUTHENTICATED`.
 - **web, unit:** estado de pestañas (provisional, reemplazo, fijar, persistencia por conexión, `localStorage` que falla), sentencia bajo el cursor, explorador (buscador, un solo esquema), pestaña de tabla y pestaña SQL con el fetcher mockeado.

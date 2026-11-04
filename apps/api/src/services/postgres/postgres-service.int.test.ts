@@ -489,6 +489,105 @@ describe('PostgresService', () => {
     });
   });
 
+  describe('readFunctionDefinition', () => {
+    beforeAll(async () => {
+      await testDatabase.execute(
+        sql.raw(`
+          create schema library;
+          create function library.book_count() returns integer
+            language sql as 'select 0';
+          create function library.book_count(author integer) returns integer
+            language sql as 'select 1';
+          create function library.book_count(author text, shelf integer) returns integer
+            language sql as 'select 2';
+          create procedure library.archive_books(shelf integer)
+            language sql as 'select 3';
+          create aggregate library.total_price(numeric) (sfunc = numeric_add, stype = numeric);
+        `)
+      );
+    });
+
+    afterAll(async () => {
+      await testDatabase.execute(sql.raw('drop schema library cascade'));
+    });
+
+    test('returns the definition of a function', async () => {
+      const definition = await postgresService.readFunctionDefinition(getTestConnection(), {
+        schema: 'library',
+        name: 'book_count',
+        arguments: 'author integer'
+      });
+
+      expect(definition).toBe(
+        'CREATE OR REPLACE FUNCTION library.book_count(author integer)\n RETURNS integer\n LANGUAGE sql\nAS $function$select 1$function$\n'
+      );
+    });
+
+    test('returns the definition of a procedure', async () => {
+      const definition = await postgresService.readFunctionDefinition(getTestConnection(), {
+        schema: 'library',
+        name: 'archive_books',
+        arguments: 'IN shelf integer'
+      });
+
+      expect(definition).toBe(
+        'CREATE OR REPLACE PROCEDURE library.archive_books(IN shelf integer)\n LANGUAGE sql\nAS $procedure$select 3$procedure$\n'
+      );
+    });
+
+    test('returns the overload that matches the arguments of readSchemas', async () => {
+      const schemas = await postgresService.readSchemas(getTestConnection());
+      const library = schemas.find(schema => schema.name === 'library');
+      const overloads = library?.functions.filter(({ name }) => name === 'book_count') ?? [];
+
+      const definitions = await Promise.all(
+        overloads.map(overload =>
+          postgresService.readFunctionDefinition(getTestConnection(), {
+            schema: 'library',
+            name: overload.name,
+            arguments: overload.arguments
+          })
+        )
+      );
+
+      expect(definitions).toEqual([
+        'CREATE OR REPLACE FUNCTION library.book_count()\n RETURNS integer\n LANGUAGE sql\nAS $function$select 0$function$\n',
+        'CREATE OR REPLACE FUNCTION library.book_count(author integer)\n RETURNS integer\n LANGUAGE sql\nAS $function$select 1$function$\n',
+        'CREATE OR REPLACE FUNCTION library.book_count(author text, shelf integer)\n RETURNS integer\n LANGUAGE sql\nAS $function$select 2$function$\n'
+      ]);
+    });
+
+    test('returns null when the function does not exist', async () => {
+      const definition = await postgresService.readFunctionDefinition(getTestConnection(), {
+        schema: 'library',
+        name: 'missing_function',
+        arguments: ''
+      });
+
+      expect(definition).toBeNull();
+    });
+
+    test('returns null when no overload has the arguments', async () => {
+      const definition = await postgresService.readFunctionDefinition(getTestConnection(), {
+        schema: 'library',
+        name: 'book_count',
+        arguments: 'author boolean'
+      });
+
+      expect(definition).toBeNull();
+    });
+
+    test('returns null for an aggregate', async () => {
+      const definition = await postgresService.readFunctionDefinition(getTestConnection(), {
+        schema: 'library',
+        name: 'total_price',
+        arguments: 'numeric'
+      });
+
+      expect(definition).toBeNull();
+    });
+  });
+
   describe('runQuery', () => {
     beforeAll(async () => {
       await testDatabase.execute(
