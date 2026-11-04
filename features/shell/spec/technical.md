@@ -21,7 +21,7 @@ Reglas de negocio y decisiones en `product.md`.
 
 ## API GraphQL
 
-Todo requiere sesión con workspace (`requireSession`). Cada operación recibe `connectionId` y devuelve `CONNECTION_NOT_FOUND` si la conexión no existe o es de otro workspace.
+Todo requiere sesión con workspace (`requireSession`). Cada operación recibe `connectionId` y devuelve `CONNECTION_NOT_FOUND` si la conexión no existe o es de otro workspace, salvo las lecturas de archivos (`files`, `file`).
 
 Errores nuevos en `ConnectionErrorCode` o en un enum propio del módulo:
 
@@ -31,7 +31,7 @@ Errores nuevos en `ConnectionErrorCode` o en un enum propio del módulo:
 | `QUERY_FAILED` | Postgres devolvió un error. El `message` es el de Postgres. |
 | `OBJECT_NOT_FOUND` | La tabla, vista o función ya no existe. |
 | `FILE_NOT_FOUND` | El archivo no existe o es de otra conexión. |
-| `FILE_NAME_ALREADY_EXISTS` | Nombre repetido en la conexión para ese tipo. |
+| `FILE_NAME_ALREADY_EXISTS` | Nombre idéntico en la conexión para ese tipo. El índice único rechaza además los que solo cambian en mayúsculas. |
 
 ### Esquema
 
@@ -233,41 +233,37 @@ type FileList {
   items: [File!]!
 }
 
-input CreateFileInput {
+input SaveFileInput {
+  id: ID
   connectionId: ID!
   name: String!
   type: FileType!
   content: String!
 }
 
-input UpdateFileInput {
-  id: ID!
-  name: String!
-  content: String!
-}
-
 type FileResult {
-  apiErrors: [ShellErrorResult!]!
+  apiErrors: [FileErrorResult!]!
   file: File
 }
 
 type RemoveFileResult {
-  apiErrors: [ShellErrorResult!]!
+  apiErrors: [FileErrorResult!]!
   success: Boolean
 }
 
 type Query {
   files(connectionId: ID!): FileList!
+  file(id: ID!): File
 }
 
 type Mutation {
-  createFile(input: CreateFileInput!): FileResult!
-  updateFile(input: UpdateFileInput!): FileResult!
+  saveFile(input: SaveFileInput!): FileResult!
   removeFile(id: ID!): RemoveFileResult!
 }
 ```
 
-- `files` ordena por `updated_at desc, id`.
+- `files` y `file` no llevan use-case: el resolver llama directo al repositorio con los métodos heredados (`findMany`, `findOne`). `files` lista los archivos de la conexión y ordena por `updated_at desc, id`; si la conexión no existe, devuelve la lista vacía. `file` devuelve `null` si no existe.
+- `saveFile` crea el archivo si no recibe `id` y, si lo recibe, actualiza su nombre y contenido. No hay `create` y `update` por separado: un archivo nuevo vive en memoria hasta el primer guardado.
 - El tipo no cambia después de crear el archivo.
 - Nombre según `product.md`, validado con zod en el use-case. El nombre se guarda sin extensión; si el usuario escribe la de su tipo, se quita.
 
@@ -277,7 +273,7 @@ type Mutation {
 |------|---------|
 | Schema | `src/api/schema/database-schema.gql`, `query.gql`, `file.gql` |
 | Resolvers | uno por archivo de schema en `src/api/resolvers/` |
-| Use-cases | `src/modules/database-schema/use-cases/` (lectura del esquema, estructura, filas, definición), `src/modules/query/use-cases/` (`query-runner.ts`), `src/modules/file/use-cases/` (creator, updater, remover) |
+| Use-cases | `src/modules/database-schema/use-cases/` (lectura del esquema, estructura, filas, definición), `src/modules/query/use-cases/` (`query-runner.ts`), `src/modules/file/use-cases/` (saver, remover) |
 | Services | `src/services/postgres/`: pool, introspección y ejecución |
 | Repositorios | `src/persistence/repositories/file/` |
 

@@ -149,6 +149,9 @@ export type DbView = {
   name: Scalars['String']['output'];
 };
 
+export type FileErrorCode =
+  'CONNECTION_NOT_FOUND' | 'FILE_NAME_ALREADY_EXISTS' | 'FILE_NOT_FOUND' | 'INVALID_INPUT';
+
 export type FunctionDefinitionInput = {
   arguments: Scalars['String']['input'];
   connectionId: Scalars['ID']['input'];
@@ -498,6 +501,7 @@ export type ResolversTypes = {
   DbTable: ResolverTypeWrapper<DbTable>;
   DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
+  FileErrorCode: FileErrorCode;
   FunctionDefinitionInput: FunctionDefinitionInput;
   FunctionDefinitionResult: ResolverTypeWrapper<FunctionDefinitionResult>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
