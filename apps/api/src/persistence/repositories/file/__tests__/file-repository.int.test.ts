@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { FileRepository } from '@/persistence/repositories/file';
+import { OrderByKey } from '@/persistence/repositories/repository';
 import type { RLSContext } from '@/persistence/rls';
 import { file } from '@/persistence/schema';
 import { UnitOfWork } from '@/persistence/unit-of-work';
@@ -87,6 +88,26 @@ describe('FileRepository', () => {
 
       expect(row?.content).toBe('select 7');
       expect(row?.updatedAt.getTime()).toBeGreaterThan(new Date('2026-02-02T00:00:00Z').getTime());
+    });
+  });
+
+  describe('findMany', () => {
+    test('returns the files of the where sorted by the columns of the order by', async () => {
+      const files = await withRepository(
+        repository =>
+          repository.findMany({
+            where: { connectionId: ConnectionConstants.ProductionConnectionId },
+            orderBy: { updatedAt: OrderByKey.DESC, id: OrderByKey.ASC }
+          }),
+        ownerRlsContext
+      );
+
+      expect(files.map(row => row.id)).toEqual([
+        FileConstants.LatestOrdersFileId,
+        FileConstants.MonthlyReportFileId,
+        FileConstants.ActiveUsersFileId,
+        FileConstants.ReleaseNotesFileId
+      ]);
     });
   });
 
@@ -177,7 +198,7 @@ describe('FileRepository', () => {
   describe('tenant isolation', () => {
     test('does not find a file of another workspace', async () => {
       const found = await withRepository(
-        repository => repository.findOne({ id: FileConstants.OtherWorkspaceFileId }),
+        repository => repository.findOne({ where: { id: FileConstants.OtherWorkspaceFileId } }),
         ownerRlsContext
       );
 

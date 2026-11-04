@@ -22,7 +22,7 @@ export class WorkspaceRepository extends Repository<typeof workspace> {
   }
 
   async findByOwnerUserId(ownerUserId: string) {
-    return this.rls.runWithoutRLS(() => this.findOne({ ownerUserId }));
+    return this.rls.runWithoutRLS(() => this.findOne({ where: { ownerUserId } }));
   }
 
   async existsBySlug(slug: string) {

@@ -38,7 +38,7 @@ export class ConnectionUpdater extends UseCase<typeof UpdateConnectionSchema> {
     input: z.output<typeof UpdateConnectionSchema>
   ): Promise<Connection | ConnectionNotFoundError | ConnectionNameAlreadyExistsError> {
     const { id, password, ...values } = input;
-    const existing = await this.ctx.repositories.connection.findOne({ id });
+    const existing = await this.ctx.repositories.connection.findOne({ where: { id } });
 
     if (!existing) return new ConnectionNotFoundError(id);
     if (await this.ctx.repositories.connection.existsByName(values.name, id)) {

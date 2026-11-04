@@ -67,7 +67,9 @@ export class SavedQueryRenamer extends UseCase<typeof RenameSavedQuerySchema> {
   async run(
     input: z.output<typeof RenameSavedQuerySchema>
   ): Promise<SavedQuery | SavedQueryNotFoundError | SavedQueryNameAlreadyTakenError> {
-    const savedQuery = await this.ctx.repositories.savedQuery.findOne({ id: input.savedQueryId });
+    const savedQuery = await this.ctx.repositories.savedQuery.findOne({
+      where: { id: input.savedQueryId }
+    });
 
     if (!savedQuery) return new SavedQueryNotFoundError(input.savedQueryId);
     if (await this.ctx.repositories.savedQuery.existsByName(input.name)) {

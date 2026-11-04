@@ -22,7 +22,9 @@ export class ConnectionSchemaReader extends UseCase<typeof ReadConnectionSchemaS
   async run(
     connectionId: string
   ): Promise<PostgresSchema[] | ConnectionNotFoundError | ConnectionFailedError> {
-    const connection = await this.ctx.repositories.connection.findOne({ id: connectionId });
+    const connection = await this.ctx.repositories.connection.findOne({
+      where: { id: connectionId }
+    });
 
     if (!connection) return new ConnectionNotFoundError(connectionId);
 

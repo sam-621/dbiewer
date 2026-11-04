@@ -1,11 +1,16 @@
-import { and, eq, getTableColumns, getTableName, isNull } from 'drizzle-orm';
-import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { and, asc, desc, eq, getTableColumns, getTableName, isNull } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
 
 import type { Transaction } from '@/persistence/database';
 
-type TableWithId = PgTable & { id: AnyPgColumn };
-
-type Where<TTable extends TableWithId> = Partial<TTable['$inferSelect']>;
+import {
+  type FindManyInput,
+  type FindOneInput,
+  type OrderBy,
+  OrderByKey,
+  type TableWithId,
+  type Where
+} from './repository-types';
 
 export abstract class Repository<TTable extends TableWithId> {
   constructor(
@@ -13,14 +18,17 @@ export abstract class Repository<TTable extends TableWithId> {
     protected readonly table: TTable
   ) {}
 
-  async findMany(where: Where<TTable> = {}): Promise<TTable['$inferSelect'][]> {
+  async findMany({ where = {}, orderBy = {} }: FindManyInput<TTable> = {}): Promise<
+    TTable['$inferSelect'][]
+  > {
     return this.trx
       .select()
       .from(this.table as PgTable)
-      .where(this.buildWhere(where));
+      .where(this.buildWhere(where))
+      .orderBy(...this.buildOrderBy(orderBy));
   }
 
-  async findOne(where: Where<TTable>): Promise<TTable['$inferSelect'] | null> {
+  async findOne({ where }: FindOneInput<TTable>): Promise<TTable['$inferSelect'] | null> {
     const condition = this.buildWhere(where);
 
     if (!condition) throw new Error(`findOne on ${getTableName(this.table)} requires a where`);
@@ -68,5 +76,19 @@ export abstract class Repository<TTable extends TableWithId> {
     });
 
     return and(...conditions);
+  }
+
+  private buildOrderBy(orderBy: OrderBy<TTable>) {
+    const columns = getTableColumns(this.table);
+
+    return (Object.entries(orderBy) as [string, OrderByKey | undefined][]).flatMap(
+      ([key, direction]) => {
+        const column = columns[key];
+
+        if (!column || !direction) return [];
+
+        return [direction === OrderByKey.DESC ? desc(column) : asc(column)];
+      }
+    );
   }
 }

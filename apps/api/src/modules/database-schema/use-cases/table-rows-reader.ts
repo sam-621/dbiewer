@@ -51,7 +51,9 @@ export class TableRowsReader extends UseCase<typeof ReadTableRowsSchema> {
     | DbObjectNotFoundError
     | QueryFailedError
   > {
-    const connection = await this.ctx.repositories.connection.findOne({ id: input.connectionId });
+    const connection = await this.ctx.repositories.connection.findOne({
+      where: { id: input.connectionId }
+    });
 
     if (!connection) return new ConnectionNotFoundError(input.connectionId);
 

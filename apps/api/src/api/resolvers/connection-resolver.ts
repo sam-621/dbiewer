@@ -42,7 +42,9 @@ async function connections(_parent: unknown, _args: unknown, ctx: SessionContext
 async function connection(_parent: unknown, args: QueryConnectionArgs, ctx: SessionContext) {
   const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
 
-  const found = await uow.execute(repositories => repositories.connection.findOne({ id: args.id }));
+  const found = await uow.execute(repositories =>
+    repositories.connection.findOne({ where: { id: args.id } })
+  );
 
   return found ? toConnectionResponse(found) : null;
 }

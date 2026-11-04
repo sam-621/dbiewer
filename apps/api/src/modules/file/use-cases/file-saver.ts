@@ -30,7 +30,9 @@ export class FileSaver extends UseCase<typeof SaveFileSchema> {
   async run(
     input: SaveFileInput
   ): Promise<File | ConnectionNotFoundError | FileNotFoundError | FileNameAlreadyExistsError> {
-    const connection = await this.ctx.repositories.connection.findOne({ id: input.connectionId });
+    const connection = await this.ctx.repositories.connection.findOne({
+      where: { id: input.connectionId }
+    });
 
     if (!connection) return new ConnectionNotFoundError(input.connectionId);
 
@@ -40,7 +42,7 @@ export class FileSaver extends UseCase<typeof SaveFileSchema> {
   private async create(input: SaveFileInput): Promise<File | FileNameAlreadyExistsError> {
     const { connectionId, name, type, content } = input;
 
-    const taken = await this.ctx.repositories.file.findOne({ connectionId, type, name });
+    const taken = await this.ctx.repositories.file.findOne({ where: { connectionId, type, name } });
 
     if (taken) return new FileNameAlreadyExistsError(name);
 
@@ -58,14 +60,12 @@ export class FileSaver extends UseCase<typeof SaveFileSchema> {
     input: SaveFileInput
   ): Promise<File | FileNotFoundError | FileNameAlreadyExistsError> {
     const { connectionId, name, content } = input;
-    const existing = await this.ctx.repositories.file.findOne({ id, connectionId });
+    const existing = await this.ctx.repositories.file.findOne({ where: { id, connectionId } });
 
     if (!existing) return new FileNotFoundError(id);
 
     const taken = await this.ctx.repositories.file.findOne({
-      connectionId,
-      type: existing.type,
-      name
+      where: { connectionId, type: existing.type, name }
     });
 
     if (taken && taken.id !== id) return new FileNameAlreadyExistsError(name);

@@ -81,3 +81,6 @@
 - (web) Avatar: el SVG se dibuja cuadrado y solo el contenedor recorta el círculo, para suavizar el borde.
 - (api) `FileRepository` queda sin métodos propios: se quitan `findByConnection` y `existsByName`. `FileSaver` valida el nombre con el `findOne` heredado y `files` usará `findMany`.
 - (web) Explorer: botón "Collapse all" a la izquierda de "Reload" que contrae esquemas, grupos, tablas y vistas. `ui.md` actualizado.
+- (api) Repositorio base: `findOne({ where })` y `findMany({ where, orderBy })`, con `orderBy` tipado por columna y el enum `OrderByKey`. `update` y `remove` no cambian. Se actualizan todos los usos.
+- (api) Los tipos del repositorio base y `OrderByKey` pasan a `repository-types.ts`.
+- (api) `architecture.md` y `code-style.md` usan la firma nueva de `findOne` y `findMany`.

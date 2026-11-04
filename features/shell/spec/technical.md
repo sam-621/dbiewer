@@ -262,7 +262,7 @@ type Mutation {
 }
 ```
 
-- `files` y `file` no llevan use-case: el resolver llama directo al repositorio con los métodos heredados (`findMany`, `findOne`). `files` lista los archivos de la conexión y ordena por `updated_at desc, id`; si la conexión no existe, devuelve la lista vacía. `file` devuelve `null` si no existe.
+- `files` y `file` no llevan use-case: el resolver llama directo al repositorio con los métodos heredados (`findMany`, `findOne`). `files` lista los archivos de la conexión y ordena por `updated_at desc, id` con el `orderBy` de `findMany`; si la conexión no existe, devuelve la lista vacía. `file` devuelve `null` si no existe.
 - `saveFile` crea el archivo si no recibe `id` y, si lo recibe, actualiza su nombre y contenido. No hay `create` y `update` por separado: un archivo nuevo vive en memoria hasta el primer guardado.
 - El tipo no cambia después de crear el archivo.
 - Nombre según `product.md`, validado con zod en el use-case. El nombre se guarda sin extensión; si el usuario escribe la de su tipo, se quita.
