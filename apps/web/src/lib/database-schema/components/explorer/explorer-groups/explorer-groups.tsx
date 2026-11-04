@@ -10,16 +10,22 @@ import { ExplorerView } from '../explorer-view/explorer-view';
 type Props = {
   schema: DbSchemaNode;
   isSearching: boolean;
+  defaultOpen: boolean;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const ExplorerGroups = ({ schema, isSearching, onOpenObject }: Props) => {
+export const ExplorerGroups = ({ schema, isSearching, defaultOpen, onOpenObject }: Props) => {
   const { t } = useTranslation();
 
   return (
     <>
       {schema.tables.length > 0 && (
-        <ExplorerGroup label={t('Tables')} count={schema.tables.length} isSearching={isSearching}>
+        <ExplorerGroup
+          label={t('Tables')}
+          count={schema.tables.length}
+          isSearching={isSearching}
+          defaultOpen={defaultOpen}
+        >
           {schema.tables.map(table => (
             <ExplorerTable
               key={table.name}
@@ -31,7 +37,12 @@ export const ExplorerGroups = ({ schema, isSearching, onOpenObject }: Props) => 
         </ExplorerGroup>
       )}
       {schema.views.length > 0 && (
-        <ExplorerGroup label={t('Views')} count={schema.views.length} isSearching={isSearching}>
+        <ExplorerGroup
+          label={t('Views')}
+          count={schema.views.length}
+          isSearching={isSearching}
+          defaultOpen={defaultOpen}
+        >
           {schema.views.map(view => (
             <ExplorerView
               key={view.name}
@@ -47,6 +58,7 @@ export const ExplorerGroups = ({ schema, isSearching, onOpenObject }: Props) => 
           label={t('Functions')}
           count={schema.functions.length}
           isSearching={isSearching}
+          defaultOpen={defaultOpen}
         >
           {schema.functions.map(fn => (
             <ExplorerFunction

@@ -25,7 +25,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
 ### Sidebar
 
 - **Ubicación:** a la izquierda del shell.
-- **Muestra:** arriba, dos tabs del mismo ancho, "Explorer" y "Queries", sin abarcar toda la fila, con "Reload" a la derecha en Explorer; debajo, un buscador a todo el ancho ("Search tables, views…" o "Filter queries…"). Los items del sidebar van en la tipografía normal de la aplicación, no en mono.
+- **Muestra:** arriba, dos tabs del mismo ancho, "Explorer" y "Queries", sin abarcar toda la fila, con "Collapse all" y "Reload" a la derecha en Explorer; debajo, un buscador a todo el ancho ("Search tables, views…" o "Filter queries…"). Los items del sidebar van en la tipografía normal de la aplicación, no en mono.
 - **Permite:** cambiar de tab; filtrar lo que se ve en el tab activo; cambiar el ancho arrastrando el espacio entre los paneles (también con las flechas, y doble clic vuelve al ancho por defecto), entre 200 y 520 px. El ancho se recuerda en el navegador.
 
 ### Explorer
@@ -40,7 +40,7 @@ Maqueta de referencia: https://claude.ai/artifact/1xFf1W9L8owgCoSrEYNPhb. Es una
   - Los nombres largos de tablas, vistas, funciones y columnas se cortan. Al pasar el mouse, el nombre completo aparece al instante en el mismo lugar, sobrepasando el borde del sidebar, con fondo para que se lea. En una vista con el nombre cortado, tapa el botón "Open" hasta que el mouse llega a él.
   - Una acción "Reload" para volver a leer el esquema.
 - **Permite:**
-  - Expandir y contraer esquemas, grupos y tablas.
+  - Expandir y contraer esquemas, grupos y tablas. "Collapse all", un botón con ícono a la izquierda de "Reload", los contrae todos.
   - Tabla: un clic en la fila la abre en la pestaña provisional; la flechita expande o contrae sus columnas.
   - Vista: toda la fila es un solo botón: un clic expande o contrae sus columnas y un doble clic la abre en la pestaña provisional. Al pasar el mouse aparece a la derecha un botón "Open" que también la abre en la pestaña provisional. Con una función, un clic la abre en la pestaña provisional.
   - Buscar por nombre: filtra en todos los esquemas y expande los grupos con resultados.

@@ -13,11 +13,12 @@ type Props = {
   label: string;
   count: number;
   isSearching: boolean;
+  defaultOpen: boolean;
   children: ReactNode;
 };
 
-export const ExplorerGroup = ({ label, count, isSearching, children }: Props) => {
-  const [isOpen, setIsOpen] = useState(true);
+export const ExplorerGroup = ({ label, count, isSearching, defaultOpen, children }: Props) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <SidebarMenuItem>

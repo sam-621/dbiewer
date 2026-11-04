@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -6,6 +7,7 @@ import { gqlFetcher } from '@/lib/api/fetcher';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 
 import { render } from '../../../../../tests/render';
+import { ExplorerCollapseButton } from '../explorer-collapse-button/explorer-collapse-button';
 
 import { Explorer } from './explorer';
 import type { OpenExplorerObject } from './explorer-object';
@@ -61,6 +63,22 @@ const renderExplorer = (search = '') =>
       <Explorer connectionId="connection-1" search={search} onOpenObject={onOpenObject} />
     </SidebarProvider>
   );
+
+const CollapsibleExplorer = ({ search }: { search: string }) => {
+  const [collapseCount, setCollapseCount] = useState(0);
+
+  return (
+    <SidebarProvider>
+      <ExplorerCollapseButton onCollapse={() => setCollapseCount(collapseCount + 1)} />
+      <Explorer
+        connectionId="connection-1"
+        search={search}
+        collapseCount={collapseCount}
+        onOpenObject={onOpenObject}
+      />
+    </SidebarProvider>
+  );
+};
 
 describe('Explorer', () => {
   beforeEach(() => {
@@ -118,6 +136,56 @@ describe('Explorer', () => {
     expect(screen.getByText('varchar(255)')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Llave primaria' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Llave foránea' })).toBeInTheDocument();
+  });
+
+  test('collapses schemas, groups, tables and views with collapse all', async () => {
+    mockSchema(schemaResult([PUBLIC, BILLING]));
+
+    render(<CollapsibleExplorer search="" />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
+    await user.click(screen.getByRole('button', { name: 'monthly_revenue' }));
+    expect(screen.getByText('workspace_id')).toBeInTheDocument();
+    expect(screen.getByText('month')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
+
+    expect(screen.getByRole('button', { name: 'public' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'billing' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Tablas/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+    expect(screen.queryByText('monthly_revenue')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'public' }));
+    expect(screen.getByRole('button', { name: /^Tablas/ })).toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+  });
+
+  test('collapses the groups of a single schema with collapse all', async () => {
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<CollapsibleExplorer search="" />);
+    const user = userEvent.setup();
+    expect(await screen.findByText('users')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
+
+    expect(screen.getByRole('button', { name: /^Tablas/ })).toBeInTheDocument();
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+  });
+
+  test('keeps the groups with results expanded when collapsing during a search', async () => {
+    mockSchema(schemaResult([PUBLIC]));
+
+    render(<CollapsibleExplorer search="users" />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Columnas de users' }));
+    expect(screen.getByText('workspace_id')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Contraer todo' }));
+
+    expect(screen.getByText('users')).toBeInTheDocument();
+    expect(screen.queryByText('workspace_id')).not.toBeInTheDocument();
   });
 
   test('shows the functions with their arguments', async () => {

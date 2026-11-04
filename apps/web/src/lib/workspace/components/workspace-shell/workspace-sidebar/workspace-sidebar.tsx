@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Explorer } from '@/lib/database-schema/components/explorer/explorer';
+import { ExplorerCollapseButton } from '@/lib/database-schema/components/explorer-collapse-button/explorer-collapse-button';
 import { ExplorerReloadButton } from '@/lib/database-schema/components/explorer-reload-button/explorer-reload-button';
 import { SavedQueriesEmpty } from '@/lib/query/components/saved-queries-empty/saved-queries-empty';
 import { MagnifyingGlassIcon } from '@/shared/components/icons/icons';
@@ -26,6 +27,8 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
     explorer: '',
     queries: ''
   });
+  const [collapseCounts, setCollapseCounts] = useState<Record<string, number>>({});
+  const collapseCount = collapseCounts[connectionId] ?? 0;
 
   return (
     <Sidebar collapsible="none" className="overflow-hidden rounded-shell bg-background">
@@ -36,11 +39,24 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
       >
         <SidebarHeader>
           <div className="flex items-center justify-between gap-1">
-            <TabsList className="grid grid-cols-2">
-              <TabsTab value="explorer">{t('Explorer')}</TabsTab>
-              <TabsTab value="queries">{t('Queries')}</TabsTab>
+            <TabsList className="grid min-w-0 grid-cols-2">
+              <TabsTab value="explorer" className="min-w-0 shrink">
+                <span className="truncate">{t('Explorer')}</span>
+              </TabsTab>
+              <TabsTab value="queries" className="min-w-0 shrink">
+                <span className="truncate">{t('Queries')}</span>
+              </TabsTab>
             </TabsList>
-            {tab === 'explorer' && <ExplorerReloadButton connectionId={connectionId} />}
+            {tab === 'explorer' && (
+              <div className="flex shrink-0 items-center gap-1">
+                <ExplorerCollapseButton
+                  onCollapse={() =>
+                    setCollapseCounts({ ...collapseCounts, [connectionId]: collapseCount + 1 })
+                  }
+                />
+                <ExplorerReloadButton connectionId={connectionId} />
+              </div>
+            )}
           </div>
           <InputGroup>
             <InputGroupAddon>
@@ -61,6 +77,7 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
               key={connectionId}
               connectionId={connectionId}
               search={searches.explorer}
+              collapseCount={collapseCount}
               onOpenObject={openObject}
             />
           </TabsPanel>

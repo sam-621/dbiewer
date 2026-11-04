@@ -80,3 +80,4 @@
 - (api) Se borran `FileFinder` y `FileLister`: `files` y `file` leerán del repositorio en el resolver, con lista vacía o `null` si no hay nada. Se quedan `FileSaver` y `FileRemover`. Regla en `architecture.md`: las queries no llevan use-case, salvo casos escasos.
 - (web) Avatar: el SVG se dibuja cuadrado y solo el contenedor recorta el círculo, para suavizar el borde.
 - (api) `FileRepository` queda sin métodos propios: se quitan `findByConnection` y `existsByName`. `FileSaver` valida el nombre con el `findOne` heredado y `files` usará `findMany`.
+- (web) Explorer: botón "Collapse all" a la izquierda de "Reload" que contrae esquemas, grupos, tablas y vistas. `ui.md` actualizado.

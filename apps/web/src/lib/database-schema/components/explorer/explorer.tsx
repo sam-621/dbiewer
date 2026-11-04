@@ -14,10 +14,11 @@ import { ExplorerSchema } from './explorer-schema/explorer-schema';
 type Props = {
   connectionId: string;
   search: string;
+  collapseCount?: number;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const Explorer = ({ connectionId, search, onOpenObject }: Props) => {
+export const Explorer = ({ connectionId, search, collapseCount = 0, onOpenObject }: Props) => {
   const { t } = useTranslation();
   const { schemas, schemaError, isLoading, isFetching, refetch } =
     useGetConnectionSchema(connectionId);
@@ -63,15 +64,17 @@ export const Explorer = ({ connectionId, search, onOpenObject }: Props) => {
   }
 
   const isSearching = query.length > 0;
+  const defaultOpen = collapseCount === 0;
 
   return (
-    <SidebarMenu className="gap-0">
+    <SidebarMenu key={collapseCount} className="gap-0">
       {visibleSchemas.map(schema =>
         schemas.length > 1 ? (
           <ExplorerSchema
             key={schema.name}
             schema={schema}
             isSearching={isSearching}
+            defaultOpen={defaultOpen}
             onOpenObject={onOpenObject}
           />
         ) : (
@@ -79,6 +82,7 @@ export const Explorer = ({ connectionId, search, onOpenObject }: Props) => {
             key={schema.name}
             schema={schema}
             isSearching={isSearching}
+            defaultOpen={defaultOpen}
             onOpenObject={onOpenObject}
           />
         )

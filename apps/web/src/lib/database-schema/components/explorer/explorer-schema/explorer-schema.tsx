@@ -15,11 +15,12 @@ import type { OpenExplorerObject } from '../explorer-object';
 type Props = {
   schema: DbSchemaNode;
   isSearching: boolean;
+  defaultOpen: boolean;
   onOpenObject?: OpenExplorerObject;
 };
 
-export const ExplorerSchema = ({ schema, isSearching, onOpenObject }: Props) => {
-  const [isOpen, setIsOpen] = useState(true);
+export const ExplorerSchema = ({ schema, isSearching, defaultOpen, onOpenObject }: Props) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <SidebarMenuItem>
@@ -30,7 +31,12 @@ export const ExplorerSchema = ({ schema, isSearching, onOpenObject }: Props) => 
         </CollapsibleTrigger>
         <CollapsiblePanel>
           <SidebarMenuSub className="mx-0 ms-2 gap-0 border-none px-0">
-            <ExplorerGroups schema={schema} isSearching={isSearching} onOpenObject={onOpenObject} />
+            <ExplorerGroups
+              schema={schema}
+              isSearching={isSearching}
+              defaultOpen={defaultOpen}
+              onOpenObject={onOpenObject}
+            />
           </SidebarMenuSub>
         </CollapsiblePanel>
       </Collapsible>
