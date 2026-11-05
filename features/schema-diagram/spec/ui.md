@@ -23,6 +23,7 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
   - Recargar el diagrama.
   - Volver al acomodo automático.
   - Buscar por nombre de tabla: se resalta en amarillo el texto que coincide y se atenúan las tablas que no coinciden.
+  - Borrar la búsqueda con una `x` al final del input, visible solo si hay texto.
 - **Referencia:** pestaña de tabla, en la barra de pestañas y el manejo de errores.
 - **Estados:**
   - Carga mientras se lee el diagrama.
@@ -35,3 +36,4 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
 
 - **Ubicación:** controles del tab Explorer, junto a "Collapse all" y "Reload".
 - **Cambia:** se agrega la acción "Diagram", que abre la pestaña de diagrama.
+- **Cambia:** los inputs de búsqueda de los tabs Explorer y Files muestran una `x` al final si hay texto, para borrarlo.

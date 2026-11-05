@@ -18,6 +18,7 @@
 - (web) Se oculta la atribución de React Flow.
 - (api, web) Puertos propios del proyecto: web 3100, api 4100.
 - (web) El acomodo automático pasa de dagre a `d3-force`, con colisión rectangular y componentes empaquetados en filas.
+- (web) Componente `SearchInput` con una `x` para borrar el texto, en los buscadores del sidebar y del diagrama.
 
 **Decisiones:**
 - Primera etapa en solo lectura: el usuario solo acomoda las tablas. Los componentes se reutilizarán en los diagramas propios.

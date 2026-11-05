@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
 import { DiagramFitViewButton } from '@/lib/diagram/components/diagram/diagram-fit-view-button/diagram-fit-view-button';
-import { GridIcon, MagnifyingGlassIcon, ReloadIcon } from '@/shared/components/icons/icons';
+import { GridIcon, ReloadIcon } from '@/shared/components/icons/icons';
+import { SearchInput } from '@/shared/components/search-input';
 import { Button } from '@/shared/components/ui/button';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shared/components/ui/input-group';
 import {
   Select,
   SelectItem,
@@ -43,19 +43,12 @@ export const DiagramTabHeader = ({
       <h2 className="min-w-0 truncate text-sm font-semibold">{t('Diagram')}</h2>
       <div className="ms-auto flex items-center gap-1">
         {hasEntities && (
-          <InputGroup className="w-52">
-            <InputGroupAddon>
-              <MagnifyingGlassIcon />
-            </InputGroupAddon>
-            <InputGroupInput
-              type="search"
-              size="sm"
-              aria-label={t('Search tables…')}
-              placeholder={t('Search tables…')}
-              value={search}
-              onChange={event => onSearchChange(event.target.value)}
-            />
-          </InputGroup>
+          <SearchInput
+            className="w-52"
+            placeholder={t('Search tables…')}
+            value={search}
+            onValueChange={onSearchChange}
+          />
         )}
         {schemas.length > 1 && (
           <Select value={schema} onValueChange={value => value && onSchemaChange(value)}>

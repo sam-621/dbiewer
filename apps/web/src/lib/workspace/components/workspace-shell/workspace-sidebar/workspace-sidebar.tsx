@@ -7,8 +7,7 @@ import { ExplorerDiagramButton } from '@/lib/database-schema/components/explorer
 import { ExplorerReloadButton } from '@/lib/database-schema/components/explorer-reload-button/explorer-reload-button';
 import { useExplorerExpanded } from '@/lib/database-schema/hooks/use-explorer-expanded';
 import { FilesTab } from '@/lib/file/components/files-tab/files-tab';
-import { MagnifyingGlassIcon } from '@/shared/components/icons/icons';
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shared/components/ui/input-group';
+import { SearchInput } from '@/shared/components/search-input';
 import { Sidebar, SidebarContent, SidebarHeader } from '@/shared/components/ui/sidebar';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/shared/components/ui/tabs';
 
@@ -56,18 +55,11 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
               </div>
             )}
           </div>
-          <InputGroup>
-            <InputGroupAddon>
-              <MagnifyingGlassIcon />
-            </InputGroupAddon>
-            <InputGroupInput
-              type="search"
-              size="sm"
-              placeholder={t(SEARCH_PLACEHOLDERS[tab])}
-              value={searches[tab]}
-              onChange={event => setSearches({ ...searches, [tab]: event.target.value })}
-            />
-          </InputGroup>
+          <SearchInput
+            placeholder={t(SEARCH_PLACEHOLDERS[tab])}
+            value={searches[tab]}
+            onValueChange={search => setSearches({ ...searches, [tab]: search })}
+          />
         </SidebarHeader>
         <SidebarContent>
           <TabsPanel value="explorer" className="px-2 pb-2">

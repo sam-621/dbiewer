@@ -241,6 +241,27 @@ describe('DiagramTab', () => {
     expect(getEdgePath()).not.toHaveStyle({ opacity: '0.15' });
   });
 
+  test('removes the marks and the dimming when clearing the search with the button', async () => {
+    measureNodes();
+    mockDiagram([USERS, ORDERS], [RELATION]);
+
+    renderTab();
+    const user = userEvent.setup();
+    await getEntity('users');
+    await waitFor(() => expect(getEdges()).toHaveLength(1));
+    const search = screen.getByRole('searchbox', { name: 'Buscar tablas…' });
+    await user.type(search, 'user');
+    expect(await getEntity('orders')).toHaveAttribute('data-dimmed');
+
+    await user.click(screen.getByRole('button', { name: 'Borrar búsqueda' }));
+
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
+    expect(getMarks()).toEqual([]);
+    expect(await getEntity('orders')).not.toHaveAttribute('data-dimmed');
+    expect(getEdgePath()).not.toHaveStyle({ opacity: '0.15' });
+  });
+
   test('shows an empty state when the database has no tables', async () => {
     mockDiagram([]);
 

@@ -244,6 +244,37 @@ describe('WorkspaceShell', () => {
     expect(screen.getByText('invoices')).toBeInTheDocument();
   });
 
+  test('removes the explorer filter when clearing the search with the button', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await screen.findByText('users');
+    const search = screen.getByPlaceholderText('Buscar tablas, vistas…');
+    await user.type(search, 'orders');
+    expect(screen.queryByText('users')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Borrar búsqueda' }));
+
+    expect(search).toHaveValue('');
+    expect(search).toHaveFocus();
+    expect(screen.getByText('users')).toBeInTheDocument();
+  });
+
+  test('clears only the search of the active sidebar tab', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await screen.findByText('users');
+    await user.type(screen.getByPlaceholderText('Buscar tablas, vistas…'), 'orders');
+    await user.click(screen.getByRole('tab', { name: 'Archivos' }));
+    expect(screen.queryByRole('button', { name: 'Borrar búsqueda' })).not.toBeInTheDocument();
+
+    await user.type(screen.getByPlaceholderText('Filtrar archivos…'), 'report');
+    await user.click(screen.getByRole('button', { name: 'Borrar búsqueda' }));
+    expect(screen.getByPlaceholderText('Filtrar archivos…')).toHaveValue('');
+
+    await user.click(screen.getByRole('tab', { name: 'Explorador' }));
+    expect(screen.getByPlaceholderText('Buscar tablas, vistas…')).toHaveValue('orders');
+  });
+
   test('shows a message when the search has no results', async () => {
     renderShell();
     const user = userEvent.setup();
