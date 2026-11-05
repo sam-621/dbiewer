@@ -626,7 +626,7 @@ describe('WorkspaceShell', () => {
     await user.click(screen.getByRole('tab', { name: 'Diagrama' }));
 
     expect(await screen.findByRole('button', { name: 'Volver a payments' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
 
     await user.click(screen.getByRole('button', { name: 'Cerrar Diagrama' }));
     await user.click(screen.getByRole('button', { name: 'Diagrama' }));

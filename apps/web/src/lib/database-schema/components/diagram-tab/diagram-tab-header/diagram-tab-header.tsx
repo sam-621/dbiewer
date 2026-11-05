@@ -4,14 +4,9 @@ import { DiagramFitViewButton } from '@/lib/diagram/components/diagram/diagram-f
 import { GridIcon, ReloadIcon } from '@/shared/components/icons/icons';
 import { SearchInput } from '@/shared/components/search-input';
 import { Button } from '@/shared/components/ui/button';
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue
-} from '@/shared/components/ui/select';
 import { Tooltip, TooltipPopup, TooltipTrigger } from '@/shared/components/ui/tooltip';
+
+import { DiagramSchemaMenu } from './diagram-schema-menu/diagram-schema-menu';
 
 type Props = {
   schemas: string[];
@@ -51,18 +46,7 @@ export const DiagramTabHeader = ({
           />
         )}
         {schemas.length > 1 && (
-          <Select value={schema} onValueChange={value => value && onSchemaChange(value)}>
-            <SelectTrigger size="sm" aria-label={t('Schema')} className="w-40 font-mono text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectPopup>
-              {schemas.map(name => (
-                <SelectItem key={name} value={name} className="font-mono text-xs">
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectPopup>
-          </Select>
+          <DiagramSchemaMenu schemas={schemas} schema={schema} onSchemaChange={onSchemaChange} />
         )}
         {hasEntities && (
           <>

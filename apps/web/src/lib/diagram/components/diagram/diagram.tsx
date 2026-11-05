@@ -14,6 +14,7 @@ import { DiagramNavigationContext } from '../../contexts/diagram-navigation-cont
 import { DiagramSearchContext } from '../../contexts/diagram-search-context';
 import { DiagramViewContext } from '../../contexts/diagram-view-context';
 import { useCenterDiagramEntity } from '../../hooks/use-center-diagram-entity';
+import { usePreventPageZoom } from '../../hooks/use-prevent-page-zoom';
 import {
   advanceDiagramTrail,
   type DiagramEntity,
@@ -98,6 +99,8 @@ export const Diagram = ({
   );
 
   const centerEntity = useCenterDiagramEntity(entities, positions);
+
+  usePreventPageZoom();
 
   const highlightJump = useStableCallback((id: string) => {
     store.changeView({ jumpedId: id });

@@ -77,6 +77,7 @@ type Query {
 - Las líneas salen de la propiedad FK y llegan a la propiedad referenciada, con un handle de llegada por propiedad y uno de salida en cada FK. En FKs compuestas se usa la primera propiedad de cada lista.
 - `getDiagramHubs(model)` calcula las tablas centrales sobre las tablas visibles. El acomodo ignora las relaciones hacia ellas.
 - El foco usa eventos de nodo y de lienzo, no la selección de React Flow.
+- Mientras `Diagram` está montado, `usePreventPageZoom` cancela el `wheel` con `ctrlKey` en `document`: un pinch fuera del lienzo haría zoom de la página, y sobre el lienzo React Flow no deja deshacerlo.
 - El recorrido y el esquema elegido son estado de `DiagramTab`, y se copian a un ref de `WorkspaceTabsProvider` para sobrevivir al cambio de pestaña sin re-renderizar el workspace.
 - El resaltado y la pastilla viven en un store con selector por tabla, para que un salto solo re-renderice las tablas afectadas.
 - Las posiciones se guardan en `localStorage` en `dbiewer:diagram-positions:<connectionId>`, como un mapa de `entity.id` a `{ x, y }`.

@@ -59,7 +59,7 @@ Como usuario con una base Postgres conectada, quiero ver sus tablas y relaciones
 
 ### Esquemas
 
-- Se ve un solo esquema a la vez, y se elige con un select que aparece solo si hay más de uno.
+- Se ve un solo esquema a la vez, y se elige con un botón que muestra el esquema activo y abre un menú. Aparece solo si hay más de uno.
 - Al abrir se ve `public` si existe; si no, el primer esquema.
 - Una relación entre dos esquemas no se dibuja, porque sus dos tablas nunca están visibles a la vez.
 
@@ -71,7 +71,7 @@ Como usuario con una base Postgres conectada, quiero ver sus tablas y relaciones
 - Al saltar a una tabla, su caja se resalta por un momento para ubicarla, aunque el buscador la atenúe. Es solo visual.
 - Al llegar a una tabla por una FK o por el botón de relaciones, esa tabla ofrece volver a la anterior. El recorrido se guarda en memoria: con A → B → C se puede regresar paso a paso hasta A.
 - Ir a otra tabla desde la tabla actual del recorrido agrega un paso, salvo que sea la misma tabla. Ir desde otra tabla empieza un recorrido nuevo desde esa tabla.
-- El recorrido se borra con la `×`, al cambiar de esquema con el select, al volver al acomodo automático y al recargar.
+- El recorrido se borra con la `×`, al cambiar de esquema desde el botón, al volver al acomodo automático y al recargar.
 - Mover el lienzo, hacer zoom, arrastrar, enfocar, buscar o cambiar de pestaña no cambian el recorrido.
 
 ## Decisiones

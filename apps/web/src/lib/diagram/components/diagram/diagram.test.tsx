@@ -106,6 +106,13 @@ const getNode = async (name: string) =>
 
 const getMenuBackdrop = () => document.querySelector('[role="presentation"]') as HTMLElement;
 
+const dispatchWheel = (init: WheelEventInit) => {
+  const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, ...init });
+  document.dispatchEvent(event);
+
+  return event;
+};
+
 const findForeignKeyButton = () =>
   screen.findByRole('button', { name: 'Ir a la tabla referenciada por user_id' });
 
@@ -334,5 +341,17 @@ describe('Diagram', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'users' }));
 
     expect(onPinnedIdChange).not.toHaveBeenCalled();
+  });
+
+  test('prevents the page zoom from a pinch only while the diagram is mounted', async () => {
+    const { unmount } = render(<Harness />);
+    await getEntity('users');
+
+    expect(dispatchWheel({ ctrlKey: true }).defaultPrevented).toBe(true);
+    expect(dispatchWheel({ ctrlKey: false }).defaultPrevented).toBe(false);
+
+    unmount();
+
+    expect(dispatchWheel({ ctrlKey: true }).defaultPrevented).toBe(false);
   });
 });

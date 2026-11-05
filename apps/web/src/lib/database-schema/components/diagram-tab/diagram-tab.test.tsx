@@ -162,8 +162,8 @@ const expectCentered = (name: string, entity: { properties: unknown[] }) => {
 };
 
 const chooseSchema = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
-  await user.click(await screen.findByRole('combobox', { name: 'Esquema', hidden: true }));
-  await user.click(await screen.findByRole('option', { name }));
+  await user.click(await screen.findByRole('button', { name: 'Esquema', hidden: true }));
+  await user.click(await screen.findByRole('menuitemradio', { name }));
 };
 
 const getEdges = () => document.querySelectorAll('.react-flow__edge');
@@ -340,22 +340,22 @@ describe('DiagramTab', () => {
     expect(getStoredPositions()).toEqual({});
   });
 
-  test('does not offer the schema select with only one schema', async () => {
+  test('does not offer the schema menu with only one schema', async () => {
     mockDiagram([USERS, ORDERS], [RELATION]);
 
     renderTab();
     await getEntity('users');
 
-    expect(screen.queryByRole('combobox', { name: 'Esquema' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Esquema' })).not.toBeInTheDocument();
   });
 
-  test('shows public first and changes the tables with the select', async () => {
+  test('shows public first and changes the tables with the menu', async () => {
     mockDiagram([INVOICES, USERS]);
 
     renderTab();
     const user = userEvent.setup();
     await getEntity('users');
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('public');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('public');
     expect(screen.queryByRole('article', { name: 'invoices' })).not.toBeInTheDocument();
 
     await chooseSchema(user, 'billing');
@@ -366,13 +366,31 @@ describe('DiagramTab', () => {
     expect(screen.queryByRole('article', { name: 'users', hidden: true })).not.toBeInTheDocument();
   });
 
+  test('marks the active schema and closes the menu after choosing one', async () => {
+    mockDiagram([INVOICES, USERS]);
+
+    renderTab();
+    const user = userEvent.setup();
+    await getEntity('users');
+
+    await user.click(screen.getByRole('button', { name: 'Esquema' }));
+
+    expect(await screen.findByRole('menuitemradio', { name: 'public' })).toBeChecked();
+    expect(screen.getByRole('menuitemradio', { name: 'billing' })).not.toBeChecked();
+
+    await user.click(screen.getByRole('menuitemradio', { name: 'billing' }));
+
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
+  });
+
   test('shows the first schema when there is no public schema', async () => {
     mockDiagram([INVOICES, { ...USERS, id: 'auth.users', schema: 'auth' }]);
 
     renderTab();
 
     expect(await getEntity('invoices')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
   });
 
   test('centers the referenced table', async () => {
@@ -442,7 +460,7 @@ describe('DiagramTab', () => {
 
     expect(await getEntity('invoices')).toBeInTheDocument();
     expect(await getEntity('invoices')).toHaveAttribute('data-jumped');
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
     await waitFor(() => expectCentered('invoices', INVOICES));
   });
 
@@ -522,12 +540,12 @@ describe('DiagramTab', () => {
     renderTab();
     const user = userEvent.setup();
     await followForeignKey(user, 'invoice_id');
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
 
     await user.click(await findBackButton('payments'));
 
     expect(await getEntity('payments')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('public');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('public');
     expect(queryBackButton('payments')).not.toBeInTheDocument();
   });
 
@@ -549,7 +567,7 @@ describe('DiagramTab', () => {
     expect(queryBackButton('orders')).not.toBeInTheDocument();
   });
 
-  test('clears the route when changing the schema with the select', async () => {
+  test('clears the route when changing the schema with the menu', async () => {
     mockDiagram([USERS, ORDERS, INVOICES], [RELATION]);
 
     renderTab();
@@ -686,7 +704,7 @@ describe('DiagramTab', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'billing.invoices' }));
 
     expect(await getEntity('invoices')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+    expect(screen.getByRole('button', { name: 'Esquema' })).toHaveTextContent('billing');
     expect(await findBackButton('orders')).toBeInTheDocument();
   });
 

@@ -19,6 +19,8 @@
 - (api, web) Puertos propios del proyecto: web 3100, api 4100.
 - (web) El acomodo automático pasa de dagre a `d3-force`, con colisión rectangular y componentes empaquetados en filas.
 - (web) Componente `SearchInput` con una `x` para borrar el texto, en los buscadores del sidebar y del diagrama.
+- (web) El select de esquema pasa a ser un botón como los demás, con un menú de opción única y el check a la derecha.
+- (web) Con el diagrama visible, el pinch fuera del lienzo ya no hace zoom de la página.
 
 **Decisiones:**
 - Primera etapa en solo lectura: el usuario solo acomoda las tablas. Los componentes se reutilizarán en los diagramas propios.
