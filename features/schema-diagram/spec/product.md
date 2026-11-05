@@ -73,7 +73,7 @@ Como usuario con una base Postgres conectada, quiero ver sus tablas y relaciones
 
 ## Plan de trabajo recomendado
 
-1. [ ] api: lectura del diagrama en `PostgresService` y query `schemaDiagram`, con sus tests e2e e integración.
+1. [x] api: lectura del diagrama en `PostgresService` y query `schemaDiagram`, con sus tests e2e e integración.
 2. [ ] web: componentes del diagrama con React Flow, que reciben entidades y relaciones sin depender de la api.
 3. [ ] web: pestaña de diagrama, entrada desde el Explorer, acomodo automático y posiciones por conexión.
 4. [ ] web: filtro de esquemas, recarga y volver al acomodo automático.

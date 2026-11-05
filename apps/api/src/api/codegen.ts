@@ -150,6 +150,36 @@ export type DbView = {
   name: Scalars['String']['output'];
 };
 
+export type DiagramEntity = {
+  __typename?: 'DiagramEntity';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  properties: Array<DiagramProperty>;
+  schema: Scalars['String']['output'];
+};
+
+export type DiagramProperty = {
+  __typename?: 'DiagramProperty';
+  default?: Maybe<Scalars['String']['output']>;
+  isForeignKey: Scalars['Boolean']['output'];
+  isNullable: Scalars['Boolean']['output'];
+  isPrimaryKey: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type DiagramRelation = {
+  __typename?: 'DiagramRelation';
+  fromEntityId: Scalars['ID']['output'];
+  fromProperties: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  toEntityId: Scalars['ID']['output'];
+  toProperties: Array<Scalars['String']['output']>;
+  type: DiagramRelationType;
+};
+
+export type DiagramRelationType = 'MANY_TO_MANY' | 'MANY_TO_ONE' | 'ONE_TO_ONE';
+
 export type File = {
   __typename?: 'File';
   content: Scalars['String']['output'];
@@ -259,6 +289,7 @@ export type Query = {
   functionDefinition: FunctionDefinitionResult;
   health: Scalars['Boolean']['output'];
   me?: Maybe<Me>;
+  schemaDiagram: SchemaDiagramResult;
   tableRows: TableRowsResult;
   tableStructure: TableStructureResult;
 };
@@ -281,6 +312,10 @@ export type QueryFilesArgs = {
 
 export type QueryFunctionDefinitionArgs = {
   input: FunctionDefinitionInput;
+};
+
+export type QuerySchemaDiagramArgs = {
+  connectionId: Scalars['ID']['input'];
 };
 
 export type QueryTableRowsArgs = {
@@ -330,6 +365,18 @@ export type SaveFileInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
   type: FileType;
+};
+
+export type SchemaDiagram = {
+  __typename?: 'SchemaDiagram';
+  entities: Array<DiagramEntity>;
+  relations: Array<DiagramRelation>;
+};
+
+export type SchemaDiagramResult = {
+  __typename?: 'SchemaDiagramResult';
+  apiErrors: Array<ShellErrorResult>;
+  diagram?: Maybe<SchemaDiagram>;
 };
 
 export type ShellErrorCode =
@@ -565,6 +612,10 @@ export type ResolversTypes = {
   DbTable: ResolverTypeWrapper<DbTable>;
   DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
+  DiagramEntity: ResolverTypeWrapper<DiagramEntity>;
+  DiagramProperty: ResolverTypeWrapper<DiagramProperty>;
+  DiagramRelation: ResolverTypeWrapper<DiagramRelation>;
+  DiagramRelationType: DiagramRelationType;
   File: ResolverTypeWrapper<File>;
   FileErrorCode: FileErrorCode;
   FileErrorResult: ResolverTypeWrapper<FileErrorResult>;
@@ -584,6 +635,8 @@ export type ResolversTypes = {
   RunQueryInput: RunQueryInput;
   RunQueryResult: ResolverTypeWrapper<RunQueryResult>;
   SaveFileInput: SaveFileInput;
+  SchemaDiagram: ResolverTypeWrapper<SchemaDiagram>;
+  SchemaDiagramResult: ResolverTypeWrapper<SchemaDiagramResult>;
   ShellErrorCode: ShellErrorCode;
   ShellErrorResult: ResolverTypeWrapper<ShellErrorResult>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -627,6 +680,9 @@ export type ResolversParentTypes = {
   DbTable: DbTable;
   DbTableStructure: DbTableStructure;
   DbView: DbView;
+  DiagramEntity: DiagramEntity;
+  DiagramProperty: DiagramProperty;
+  DiagramRelation: DiagramRelation;
   File: File;
   FileErrorResult: FileErrorResult;
   FileList: FileList;
@@ -644,6 +700,8 @@ export type ResolversParentTypes = {
   RunQueryInput: RunQueryInput;
   RunQueryResult: RunQueryResult;
   SaveFileInput: SaveFileInput;
+  SchemaDiagram: SchemaDiagram;
+  SchemaDiagramResult: SchemaDiagramResult;
   ShellErrorResult: ShellErrorResult;
   String: Scalars['String']['output'];
   TableRows: TableRows;
@@ -821,6 +879,42 @@ export type DbViewResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type DiagramEntityResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DiagramEntity'] = ResolversParentTypes['DiagramEntity']
+> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  properties?: Resolver<Array<ResolversTypes['DiagramProperty']>, ParentType, ContextType>;
+  schema?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DiagramPropertyResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DiagramProperty'] =
+    ResolversParentTypes['DiagramProperty']
+> = {
+  default?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  isForeignKey?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isNullable?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  isPrimaryKey?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DiagramRelationResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DiagramRelation'] =
+    ResolversParentTypes['DiagramRelation']
+> = {
+  fromEntityId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  fromProperties?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  toEntityId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  toProperties?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['DiagramRelationType'], ParentType, ContextType>;
+};
+
 export type FileResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['File'] = ResolversParentTypes['File']
@@ -972,6 +1066,12 @@ export type QueryResolvers<
   >;
   health?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;
+  schemaDiagram?: Resolver<
+    ResolversTypes['SchemaDiagramResult'],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySchemaDiagramArgs, 'connectionId'>
+  >;
   tableRows?: Resolver<
     ResolversTypes['TableRowsResult'],
     ParentType,
@@ -1022,6 +1122,23 @@ export type RunQueryResultResolvers<
 > = {
   apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
   execution?: Resolver<Maybe<ResolversTypes['QueryExecution']>, ParentType, ContextType>;
+};
+
+export type SchemaDiagramResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['SchemaDiagram'] = ResolversParentTypes['SchemaDiagram']
+> = {
+  entities?: Resolver<Array<ResolversTypes['DiagramEntity']>, ParentType, ContextType>;
+  relations?: Resolver<Array<ResolversTypes['DiagramRelation']>, ParentType, ContextType>;
+};
+
+export type SchemaDiagramResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['SchemaDiagramResult'] =
+    ResolversParentTypes['SchemaDiagramResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  diagram?: Resolver<Maybe<ResolversTypes['SchemaDiagram']>, ParentType, ContextType>;
 };
 
 export type ShellErrorResultResolvers<
@@ -1141,6 +1258,9 @@ export type Resolvers<ContextType = RequestContext> = {
   DbTable?: DbTableResolvers<ContextType>;
   DbTableStructure?: DbTableStructureResolvers<ContextType>;
   DbView?: DbViewResolvers<ContextType>;
+  DiagramEntity?: DiagramEntityResolvers<ContextType>;
+  DiagramProperty?: DiagramPropertyResolvers<ContextType>;
+  DiagramRelation?: DiagramRelationResolvers<ContextType>;
   File?: FileResolvers<ContextType>;
   FileErrorResult?: FileErrorResultResolvers<ContextType>;
   FileList?: FileListResolvers<ContextType>;
@@ -1154,6 +1274,8 @@ export type Resolvers<ContextType = RequestContext> = {
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
   RemoveFileResult?: RemoveFileResultResolvers<ContextType>;
   RunQueryResult?: RunQueryResultResolvers<ContextType>;
+  SchemaDiagram?: SchemaDiagramResolvers<ContextType>;
+  SchemaDiagramResult?: SchemaDiagramResultResolvers<ContextType>;
   ShellErrorResult?: ShellErrorResultResolvers<ContextType>;
   TableRows?: TableRowsResolvers<ContextType>;
   TableRowsResult?: TableRowsResultResolvers<ContextType>;

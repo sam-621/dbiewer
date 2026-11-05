@@ -87,6 +87,36 @@ type PostgresRowsQuery = PostgresObject & {
   page: number;
 };
 
+type PostgresDiagramProperty = {
+  name: string;
+  type: string;
+  default: string | null;
+  isNullable: boolean;
+  isPrimaryKey: boolean;
+  isForeignKey: boolean;
+};
+
+type PostgresDiagramEntity = {
+  id: string;
+  schema: string;
+  name: string;
+  properties: PostgresDiagramProperty[];
+};
+
+type PostgresDiagramRelation = {
+  id: string;
+  type: 'ONE_TO_ONE' | 'MANY_TO_ONE';
+  fromEntityId: string;
+  fromProperties: string[];
+  toEntityId: string;
+  toProperties: string[];
+};
+
+export type PostgresDiagram = {
+  entities: PostgresDiagramEntity[];
+  relations: PostgresDiagramRelation[];
+};
+
 export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: number };
 
 type PostgresResultColumn = { name: string; type: string };
@@ -105,14 +135,17 @@ export class PostgresService {
   private static readonly STATEMENT_TIMEOUT_MS = 30_000;
   private static readonly POOL_MAX_CLIENTS = 3;
   private static readonly POOL_IDLE_TIMEOUT_MS = 5 * 60_000;
-  private static readonly SCHEMAS_SQL = `
-    with namespaces as (
+  private static readonly NAMESPACES_SQL = `
+    namespaces as (
       select n.oid, n.nspname
       from pg_catalog.pg_namespace n
       where n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
         and n.nspname not like 'pg\\_temp\\_%'
         and n.nspname not like 'pg\\_toast\\_temp\\_%'
-    ),
+    )
+  `;
+  private static readonly SCHEMAS_SQL = `
+    with ${PostgresService.NAMESPACES_SQL},
     relations as (
       select c.oid, c.relnamespace, c.relname, c.relkind, c.reltuples
       from pg_catalog.pg_class c
@@ -187,6 +220,99 @@ export class PostgresService {
     left join schema_functions sf on sf.pronamespace = n.oid
     where sr.relnamespace is not null or sf.pronamespace is not null
     order by n.nspname
+  `;
+  private static readonly DIAGRAM_SQL = `
+    with ${PostgresService.NAMESPACES_SQL},
+    tables as (
+      select c.oid, n.nspname, c.relname
+      from pg_catalog.pg_class c
+      join namespaces n on n.oid = c.relnamespace
+      where c.relkind in ('r', 'p')
+    )
+    select
+      (
+        select coalesce(
+          json_agg(
+            json_build_object(
+              'id', t.nspname || '.' || t.relname,
+              'schema', t.nspname,
+              'name', t.relname,
+              'properties', (
+                select coalesce(
+                  json_agg(
+                    json_build_object(
+                      'name', a.attname,
+                      'type', pg_catalog.format_type(a.atttypid, a.atttypmod),
+                      'default', pg_catalog.pg_get_expr(d.adbin, d.adrelid),
+                      'isNullable', not a.attnotnull,
+                      'isPrimaryKey', exists (
+                        select 1 from pg_catalog.pg_constraint k
+                        where k.conrelid = a.attrelid and k.contype = 'p' and a.attnum = any (k.conkey)
+                      ),
+                      'isForeignKey', exists (
+                        select 1 from pg_catalog.pg_constraint k
+                        where k.conrelid = a.attrelid and k.contype = 'f' and a.attnum = any (k.conkey)
+                      )
+                    )
+                    order by a.attnum
+                  ),
+                  '[]'::json
+                )
+                from pg_catalog.pg_attribute a
+                left join pg_catalog.pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
+                where a.attrelid = t.oid and a.attnum > 0 and not a.attisdropped
+              )
+            )
+            order by t.nspname, t.relname
+          ),
+          '[]'::json
+        )
+        from tables t
+      ) as entities,
+      (
+        select coalesce(
+          json_agg(
+            json_build_object(
+              'id', source.nspname || '.' || source.relname || '.' || c.conname,
+              'type', case
+                when exists (
+                  select 1
+                  from pg_catalog.pg_index x
+                  cross join lateral (
+                    select array_agg(k.attnum) as attnums
+                    from unnest(x.indkey::int2[]) with ordinality k (attnum, position)
+                    where k.position <= x.indnkeyatts
+                  ) index_key
+                  where x.indrelid = c.conrelid
+                    and x.indisunique
+                    and x.indpred is null
+                    and index_key.attnums @> c.conkey
+                    and index_key.attnums <@ c.conkey
+                ) then 'ONE_TO_ONE'
+                else 'MANY_TO_ONE'
+              end,
+              'fromEntityId', source.nspname || '.' || source.relname,
+              'fromProperties', (
+                select json_agg(a.attname order by k.position)
+                from unnest(c.conkey) with ordinality k (attnum, position)
+                join pg_catalog.pg_attribute a on a.attrelid = c.conrelid and a.attnum = k.attnum
+              ),
+              'toEntityId', target.nspname || '.' || target.relname,
+              'toProperties', (
+                select json_agg(a.attname order by k.position)
+                from unnest(c.confkey) with ordinality k (attnum, position)
+                join pg_catalog.pg_attribute a on a.attrelid = c.confrelid and a.attnum = k.attnum
+              )
+            )
+            order by source.nspname, source.relname, c.conname
+          ),
+          '[]'::json
+        )
+        from pg_catalog.pg_constraint c
+        join tables source on source.oid = c.conrelid
+        join tables target on target.oid = c.confrelid
+        where c.contype = 'f'
+      ) as relations
   `;
   private static readonly RELATION_SQL = `
     with relation as (
@@ -338,6 +464,12 @@ export class PostgresService {
     const result = await this.query<PostgresSchema>(connection, PostgresService.SCHEMAS_SQL);
 
     return result.rows;
+  }
+
+  async readDiagram(connection: PostgresConnection): Promise<PostgresDiagram> {
+    const result = await this.query<PostgresDiagram>(connection, PostgresService.DIAGRAM_SQL);
+
+    return result.rows[0] ?? { entities: [], relations: [] };
   }
 
   async readTableStructure(

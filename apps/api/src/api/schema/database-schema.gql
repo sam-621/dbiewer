@@ -116,6 +116,47 @@ type FunctionDefinitionResult {
   definition: String
 }
 
+enum DiagramRelationType {
+  ONE_TO_ONE
+  MANY_TO_ONE
+  MANY_TO_MANY
+}
+
+type DiagramProperty {
+  name: String!
+  type: String!
+  default: String
+  isNullable: Boolean!
+  isPrimaryKey: Boolean!
+  isForeignKey: Boolean!
+}
+
+type DiagramEntity {
+  id: ID!
+  schema: String!
+  name: String!
+  properties: [DiagramProperty!]!
+}
+
+type DiagramRelation {
+  id: ID!
+  type: DiagramRelationType!
+  fromEntityId: ID!
+  fromProperties: [String!]!
+  toEntityId: ID!
+  toProperties: [String!]!
+}
+
+type SchemaDiagram {
+  entities: [DiagramEntity!]!
+  relations: [DiagramRelation!]!
+}
+
+type SchemaDiagramResult {
+  apiErrors: [ShellErrorResult!]!
+  diagram: SchemaDiagram
+}
+
 type ShellErrorResult {
   code: ShellErrorCode!
   message: String!
@@ -134,4 +175,5 @@ type Query {
   tableStructure(input: DbObjectInput!): TableStructureResult!
   tableRows(input: TableRowsInput!): TableRowsResult!
   functionDefinition(input: FunctionDefinitionInput!): FunctionDefinitionResult!
+  schemaDiagram(connectionId: ID!): SchemaDiagramResult!
 }

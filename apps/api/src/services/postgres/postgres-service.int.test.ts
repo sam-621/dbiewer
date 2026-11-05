@@ -643,6 +643,340 @@ describe('PostgresService', () => {
     });
   });
 
+  describe('readDiagram', () => {
+    const findRelation = async (id: string) => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      return diagram.relations.find(relation => relation.id === id);
+    };
+
+    beforeAll(async () => {
+      await testDatabase.execute(
+        sql.raw(`
+          create schema library;
+          create schema sales;
+          create table information_schema.dbiewer_regions (id integer primary key);
+          create table library.authors (
+            id integer primary key,
+            name varchar(100) not null,
+            status text not null default 'active',
+            joined_at timestamp with time zone default now()
+          );
+          create table library.books (
+            id integer primary key,
+            author_id integer references library.authors (id),
+            title text not null
+          );
+          create table library.author_profiles (
+            author_id integer primary key references library.authors (id)
+          );
+          create table library.passports (
+            id integer primary key,
+            author_id integer unique references library.authors (id)
+          );
+          create table library.badges (
+            id integer primary key,
+            author_id integer references library.authors (id)
+          );
+          create unique index badges_author_id_idx on library.badges (author_id);
+          create table library.memberships (
+            id integer primary key,
+            author_id integer references library.authors (id),
+            is_active boolean not null
+          );
+          create unique index memberships_author_id_idx on library.memberships (author_id)
+            where is_active;
+          create table library.lockers (
+            id integer primary key,
+            code integer not null,
+            author_id integer references library.authors (id),
+            unique (author_id) include (code)
+          );
+          create table library.tags (id integer primary key);
+          create table library.book_tags (
+            book_id integer references library.books (id),
+            tag_id integer references library.tags (id),
+            primary key (book_id, tag_id)
+          );
+          create table library.editions (
+            book_id integer references library.books (id),
+            number integer,
+            primary key (book_id, number)
+          );
+          create table library.prints (
+            id integer primary key,
+            edition_number integer,
+            edition_book_id integer,
+            foreign key (edition_number, edition_book_id)
+              references library.editions (number, book_id)
+          );
+          create table library.covers (
+            id integer primary key,
+            edition_book_id integer,
+            edition_number integer,
+            unique (edition_number, edition_book_id),
+            foreign key (edition_book_id, edition_number)
+              references library.editions (book_id, number)
+          );
+          create table library.stores (
+            id integer primary key,
+            region_id integer references information_schema.dbiewer_regions (id)
+          );
+          create table library.events (id integer, happened_on date)
+            partition by range (happened_on);
+          create view library.book_titles as select id, title from library.books;
+          create function library.book_count() returns bigint
+            language sql as 'select count(*) from library.books';
+          create table sales.orders (
+            id integer primary key,
+            book_id integer,
+            constraint book_fk foreign key (book_id) references library.books (id)
+          );
+          create table sales.refunds (
+            id integer primary key,
+            book_id integer,
+            constraint book_fk foreign key (book_id) references library.books (id)
+          );
+        `)
+      );
+    });
+
+    afterAll(async () => {
+      await testDatabase.execute(
+        sql.raw(`
+          drop schema library cascade;
+          drop schema sales cascade;
+          drop table information_schema.dbiewer_regions;
+        `)
+      );
+    });
+
+    test('returns the tables of every schema without views or functions', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(
+        diagram.entities
+          .filter(entity => ['library', 'sales'].includes(entity.schema))
+          .map(entity => entity.id)
+      ).toEqual([
+        'library.author_profiles',
+        'library.authors',
+        'library.badges',
+        'library.book_tags',
+        'library.books',
+        'library.covers',
+        'library.editions',
+        'library.events',
+        'library.lockers',
+        'library.memberships',
+        'library.passports',
+        'library.prints',
+        'library.stores',
+        'library.tags',
+        'sales.orders',
+        'sales.refunds'
+      ]);
+    });
+
+    test('returns the properties of a table', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(diagram.entities.find(entity => entity.id === 'library.authors')).toEqual({
+        id: 'library.authors',
+        schema: 'library',
+        name: 'authors',
+        properties: [
+          {
+            name: 'id',
+            type: 'integer',
+            default: null,
+            isNullable: false,
+            isPrimaryKey: true,
+            isForeignKey: false
+          },
+          {
+            name: 'name',
+            type: 'character varying(100)',
+            default: null,
+            isNullable: false,
+            isPrimaryKey: false,
+            isForeignKey: false
+          },
+          {
+            name: 'status',
+            type: 'text',
+            default: "'active'::text",
+            isNullable: false,
+            isPrimaryKey: false,
+            isForeignKey: false
+          },
+          {
+            name: 'joined_at',
+            type: 'timestamp with time zone',
+            default: 'now()',
+            isNullable: true,
+            isPrimaryKey: false,
+            isForeignKey: false
+          }
+        ]
+      });
+    });
+
+    test('marks the properties that belong to a foreign key', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(diagram.entities.find(entity => entity.id === 'library.book_tags')).toEqual({
+        id: 'library.book_tags',
+        schema: 'library',
+        name: 'book_tags',
+        properties: [
+          {
+            name: 'book_id',
+            type: 'integer',
+            default: null,
+            isNullable: false,
+            isPrimaryKey: true,
+            isForeignKey: true
+          },
+          {
+            name: 'tag_id',
+            type: 'integer',
+            default: null,
+            isNullable: false,
+            isPrimaryKey: true,
+            isForeignKey: true
+          }
+        ]
+      });
+    });
+
+    test('returns MANY_TO_ONE from the table that has the foreign key', async () => {
+      expect(await findRelation('library.books.books_author_id_fkey')).toEqual({
+        id: 'library.books.books_author_id_fkey',
+        type: 'MANY_TO_ONE',
+        fromEntityId: 'library.books',
+        fromProperties: ['author_id'],
+        toEntityId: 'library.authors',
+        toProperties: ['id']
+      });
+    });
+
+    test('returns ONE_TO_ONE when the foreign key is the primary key', async () => {
+      expect(await findRelation('library.author_profiles.author_profiles_author_id_fkey')).toEqual({
+        id: 'library.author_profiles.author_profiles_author_id_fkey',
+        type: 'ONE_TO_ONE',
+        fromEntityId: 'library.author_profiles',
+        fromProperties: ['author_id'],
+        toEntityId: 'library.authors',
+        toProperties: ['id']
+      });
+    });
+
+    test('returns ONE_TO_ONE when the foreign key has a unique constraint', async () => {
+      const relation = await findRelation('library.passports.passports_author_id_fkey');
+
+      expect(relation?.type).toBe('ONE_TO_ONE');
+    });
+
+    test('returns ONE_TO_ONE when the foreign key has a unique index', async () => {
+      const relation = await findRelation('library.badges.badges_author_id_fkey');
+
+      expect(relation?.type).toBe('ONE_TO_ONE');
+    });
+
+    test('returns ONE_TO_ONE when the unique index includes other columns', async () => {
+      const relation = await findRelation('library.lockers.lockers_author_id_fkey');
+
+      expect(relation?.type).toBe('ONE_TO_ONE');
+    });
+
+    test('returns MANY_TO_ONE when the unique index is partial', async () => {
+      const relation = await findRelation('library.memberships.memberships_author_id_fkey');
+
+      expect(relation?.type).toBe('MANY_TO_ONE');
+    });
+
+    test('returns two MANY_TO_ONE for an intermediate table', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(
+        diagram.relations.filter(relation => relation.fromEntityId === 'library.book_tags')
+      ).toEqual([
+        {
+          id: 'library.book_tags.book_tags_book_id_fkey',
+          type: 'MANY_TO_ONE',
+          fromEntityId: 'library.book_tags',
+          fromProperties: ['book_id'],
+          toEntityId: 'library.books',
+          toProperties: ['id']
+        },
+        {
+          id: 'library.book_tags.book_tags_tag_id_fkey',
+          type: 'MANY_TO_ONE',
+          fromEntityId: 'library.book_tags',
+          fromProperties: ['tag_id'],
+          toEntityId: 'library.tags',
+          toProperties: ['id']
+        }
+      ]);
+    });
+
+    test('returns the properties of a composite foreign key in the same order', async () => {
+      expect(
+        await findRelation('library.prints.prints_edition_number_edition_book_id_fkey')
+      ).toEqual({
+        id: 'library.prints.prints_edition_number_edition_book_id_fkey',
+        type: 'MANY_TO_ONE',
+        fromEntityId: 'library.prints',
+        fromProperties: ['edition_number', 'edition_book_id'],
+        toEntityId: 'library.editions',
+        toProperties: ['number', 'book_id']
+      });
+    });
+
+    test('returns ONE_TO_ONE when a unique constraint has the columns of a composite foreign key in another order', async () => {
+      expect(
+        await findRelation('library.covers.covers_edition_book_id_edition_number_fkey')
+      ).toEqual({
+        id: 'library.covers.covers_edition_book_id_edition_number_fkey',
+        type: 'ONE_TO_ONE',
+        fromEntityId: 'library.covers',
+        fromProperties: ['edition_book_id', 'edition_number'],
+        toEntityId: 'library.editions',
+        toProperties: ['book_id', 'number']
+      });
+    });
+
+    test('returns the relations between tables of different schemas', async () => {
+      expect(await findRelation('sales.orders.book_fk')).toEqual({
+        id: 'sales.orders.book_fk',
+        type: 'MANY_TO_ONE',
+        fromEntityId: 'sales.orders',
+        fromProperties: ['book_id'],
+        toEntityId: 'library.books',
+        toProperties: ['id']
+      });
+    });
+
+    test('returns a relation per table when they share the name of the constraint', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(
+        diagram.relations
+          .filter(relation => relation.id.endsWith('.book_fk'))
+          .map(relation => relation.id)
+      ).toEqual(['sales.orders.book_fk', 'sales.refunds.book_fk']);
+    });
+
+    test('does not return the relations to a table outside the diagram', async () => {
+      const diagram = await postgresService.readDiagram(getTestConnection());
+
+      expect(
+        diagram.relations.filter(relation => relation.fromEntityId === 'library.stores')
+      ).toEqual([]);
+    });
+  });
+
   describe('runQuery', () => {
     beforeAll(async () => {
       await testDatabase.execute(

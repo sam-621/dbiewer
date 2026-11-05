@@ -1,6 +1,7 @@
 import type {
   QueryConnectionSchemaArgs,
   QueryFunctionDefinitionArgs,
+  QuerySchemaDiagramArgs,
   QueryTableRowsArgs,
   QueryTableStructureArgs,
   Resolvers
@@ -10,6 +11,7 @@ import { requireSession } from '@/api/middlewares/require-session';
 import { apiResponse } from '@/api/utils/api-response';
 import { ConnectionSchemaReader } from '@/modules/database-schema/use-cases/connection-schema-reader';
 import { FunctionDefinitionReader } from '@/modules/database-schema/use-cases/function-definition-reader';
+import { SchemaDiagramReader } from '@/modules/database-schema/use-cases/schema-diagram-reader';
 import { TableRowsReader } from '@/modules/database-schema/use-cases/table-rows-reader';
 import { TableStructureReader } from '@/modules/database-schema/use-cases/table-structure-reader';
 import { UnitOfWork } from '@/persistence/unit-of-work';
@@ -90,6 +92,22 @@ async function functionDefinition(
   return apiResponse(result, 'definition');
 }
 
+async function schemaDiagram(_parent: unknown, args: QuerySchemaDiagramArgs, ctx: SessionContext) {
+  const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+  const result = await uow.execute(async (_repositories, uowCtx) => {
+    const schemaDiagramReader = new SchemaDiagramReader(
+      uowCtx,
+      ctx.services.encryptionService,
+      ctx.services.postgresService
+    );
+
+    return schemaDiagramReader.execute(args.connectionId);
+  });
+
+  return apiResponse(result, 'diagram');
+}
+
 export const DatabaseSchemaResolver: Resolvers = {
   DbFunctionKind: {
     FUNCTION: 'function',
@@ -99,6 +117,7 @@ export const DatabaseSchemaResolver: Resolvers = {
     connectionSchema: requireSession(connectionSchema),
     tableStructure: requireSession(tableStructure),
     tableRows: requireSession(tableRows),
-    functionDefinition: requireSession(functionDefinition)
+    functionDefinition: requireSession(functionDefinition),
+    schemaDiagram: requireSession(schemaDiagram)
   }
 };
