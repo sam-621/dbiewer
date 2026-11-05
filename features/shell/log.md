@@ -95,3 +95,9 @@
 - (web) Sidebar: la fila de la tabla, vista, función o archivo de la pestaña activa queda marcada con el estilo del hover, sin cambiar el tab del sidebar. `ui.md` actualizado.
 - (web) Editor SQL: la columna de números de línea reserva 3 dígitos, así el texto no salta al pasar de 9 a 10 líneas.
 - (web) Explorer: arranca con todo contraído y recuerda lo expandido por conexión en `localStorage` (`dbiewer:explorer-expanded:<connectionId>`). "Collapse all" lo vacía y la expansión automática de la búsqueda no lo cambia. Se quita `collapseCount`.
+
+## 2026-11-04 — samuel.corrales621
+
+**Hecho:**
+- (web) Animaciones de apertura y cierre en `menu`, `context-menu` y `select`, y del indicador en `checkbox`, tomadas de vendyx. En `checkbox` se quita `data-unchecked:hidden` para que se vea la salida.
+- (api, web) Feature `shell` cerrada: `status: done` en `spec/product.md`.

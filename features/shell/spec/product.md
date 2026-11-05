@@ -1,5 +1,5 @@
 ---
-status: active
+status: done
 apps: [api, web]
 created: 2026-10-26
 ---
