@@ -2,8 +2,10 @@ import type { ComponentProps, ComponentType, FC } from 'react';
 import ArrowDownSvg from 'amicons/icons/round/line/arrow-down.svg?react';
 import LogOutSvg from 'amicons/icons/round/line/arrow-from-bracket-right.svg?react';
 import OpenSvg from 'amicons/icons/round/line/arrow-from-square-up-right.svg?react';
+import ArrowLeftSvg from 'amicons/icons/round/line/arrow-left.svg?react';
 import ReloadSvg from 'amicons/icons/round/line/arrow-rotate-cw-up.svg?react';
 import ArrowUpSvg from 'amicons/icons/round/line/arrow-up.svg?react';
+import ExpandSvg from 'amicons/icons/round/line/arrows-down-left-up-right.svg?react';
 import ArrowsUpDownSvg from 'amicons/icons/round/line/arrows-up-down.svg?react';
 import BinSvg from 'amicons/icons/round/line/bin.svg?react';
 import CheckSvg from 'amicons/icons/round/line/check.svg?react';
@@ -29,6 +31,7 @@ import CollapseAllSvg from 'amicons/icons/round/line/minus-square.svg?react';
 import PencilSvg from 'amicons/icons/round/line/pencil.svg?react';
 import PlaySvg from 'amicons/icons/round/line/play.svg?react';
 import PlusSvg from 'amicons/icons/round/line/plus.svg?react';
+import DiagramSvg from 'amicons/icons/round/line/share-network.svg?react';
 import StickyNoteSvg from 'amicons/icons/round/line/sticky-note.svg?react';
 import SunSvg from 'amicons/icons/round/line/sun.svg?react';
 import TableSvg from 'amicons/icons/round/line/table.svg?react';
@@ -37,8 +40,10 @@ import XCircleSvg from 'amicons/icons/round/line/x-circle.svg?react';
 import ArrowDownSolidSvg from 'amicons/icons/round/solid/arrow-down.svg?react';
 import LogOutSolidSvg from 'amicons/icons/round/solid/arrow-from-bracket-right.svg?react';
 import OpenSolidSvg from 'amicons/icons/round/solid/arrow-from-square-up-right.svg?react';
+import ArrowLeftSolidSvg from 'amicons/icons/round/solid/arrow-left.svg?react';
 import ReloadSolidSvg from 'amicons/icons/round/solid/arrow-rotate-cw-up.svg?react';
 import ArrowUpSolidSvg from 'amicons/icons/round/solid/arrow-up.svg?react';
+import ExpandSolidSvg from 'amicons/icons/round/solid/arrows-down-left-up-right.svg?react';
 import ArrowsUpDownSolidSvg from 'amicons/icons/round/solid/arrows-up-down.svg?react';
 import BinSolidSvg from 'amicons/icons/round/solid/bin.svg?react';
 import CheckSolidSvg from 'amicons/icons/round/solid/check.svg?react';
@@ -64,6 +69,7 @@ import CollapseAllSolidSvg from 'amicons/icons/round/solid/minus-square.svg?reac
 import PencilSolidSvg from 'amicons/icons/round/solid/pencil.svg?react';
 import PlaySolidSvg from 'amicons/icons/round/solid/play.svg?react';
 import PlusSolidSvg from 'amicons/icons/round/solid/plus.svg?react';
+import DiagramSolidSvg from 'amicons/icons/round/solid/share-network.svg?react';
 import StickyNoteSolidSvg from 'amicons/icons/round/solid/sticky-note.svg?react';
 import SunSolidSvg from 'amicons/icons/round/solid/sun.svg?react';
 import TableSolidSvg from 'amicons/icons/round/solid/table.svg?react';
@@ -86,6 +92,7 @@ const createIcon = (LineSvg: Svg, SolidSvg: Svg): Icon =>
   };
 
 export const ArrowDownIcon = createIcon(ArrowDownSvg, ArrowDownSolidSvg);
+export const ArrowLeftIcon = createIcon(ArrowLeftSvg, ArrowLeftSolidSvg);
 export const ArrowUpIcon = createIcon(ArrowUpSvg, ArrowUpSolidSvg);
 export const ArrowsUpDownIcon = createIcon(ArrowsUpDownSvg, ArrowsUpDownSolidSvg);
 export const BinIcon = createIcon(BinSvg, BinSolidSvg);
@@ -97,10 +104,12 @@ export const ChevronRightIcon = createIcon(ChevronRightSvg, ChevronRightSolidSvg
 export const CodeIcon = createIcon(CodeSvg, CodeSolidSvg);
 export const CollapseAllIcon = createIcon(CollapseAllSvg, CollapseAllSolidSvg);
 export const CopyIcon = createIcon(CopySvg, CopySolidSvg);
+export const DiagramIcon = createIcon(DiagramSvg, DiagramSolidSvg);
 export const DotsThreeHorizontalIcon = createIcon(
   DotsThreeHorizontalSvg,
   DotsThreeHorizontalSolidSvg
 );
+export const ExpandIcon = createIcon(ExpandSvg, ExpandSolidSvg);
 export const EyeIcon = createIcon(EyeSvg, EyeSolidSvg);
 export const EyeSlashIcon = createIcon(EyeSlashSvg, EyeSlashSolidSvg);
 export const FileIcon = createIcon(FileSvg, FileSolidSvg);

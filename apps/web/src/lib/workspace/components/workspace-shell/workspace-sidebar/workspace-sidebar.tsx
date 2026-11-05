@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Explorer } from '@/lib/database-schema/components/explorer/explorer';
 import { ExplorerCollapseButton } from '@/lib/database-schema/components/explorer-collapse-button/explorer-collapse-button';
+import { ExplorerDiagramButton } from '@/lib/database-schema/components/explorer-diagram-button/explorer-diagram-button';
 import { ExplorerReloadButton } from '@/lib/database-schema/components/explorer-reload-button/explorer-reload-button';
 import { useExplorerExpanded } from '@/lib/database-schema/hooks/use-explorer-expanded';
 import { FilesTab } from '@/lib/file/components/files-tab/files-tab';
@@ -22,7 +23,7 @@ const SEARCH_PLACEHOLDERS: Record<SidebarTab, string> = {
 
 export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => {
   const { t } = useTranslation();
-  const { activeKey, openObject } = useWorkspaceTabs();
+  const { activeKey, openObject, openDiagram } = useWorkspaceTabs();
   const [tab, setTab] = useState<SidebarTab>('explorer');
   const [searches, setSearches] = useState<Record<SidebarTab, string>>({
     explorer: '',
@@ -49,6 +50,7 @@ export const WorkspaceSidebar = ({ connectionId }: { connectionId: string }) => 
             </TabsList>
             {tab === 'explorer' && (
               <div className="flex shrink-0 items-center gap-1">
+                <ExplorerDiagramButton onOpen={openDiagram} />
                 <ExplorerCollapseButton onCollapse={collapseAll} />
                 <ExplorerReloadButton connectionId={connectionId} />
               </div>

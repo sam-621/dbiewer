@@ -6,6 +6,8 @@ import {
   TableViewStateSchema
 } from '@/lib/database-schema/utils/table-view.utils';
 
+import { DIAGRAM_TAB_KEY } from '../constants/workspace-tabs';
+
 const ObjectTabSchema = z.object({
   key: z.string(),
   kind: z.enum(['table', 'view']),
@@ -42,11 +44,17 @@ const FileTabSchema = z.object({
   draftKey: z.string().optional()
 });
 
+const DiagramTabSchema = z.object({
+  key: z.string(),
+  kind: z.literal('diagram')
+});
+
 const WorkspaceTabSchema = z.discriminatedUnion('kind', [
   ObjectTabSchema,
   FunctionTabSchema,
   DraftTabSchema,
-  FileTabSchema
+  FileTabSchema,
+  DiagramTabSchema
 ]);
 
 export const WorkspaceTabsSchema = z.object({
@@ -146,6 +154,18 @@ export const openFileTab = (
   };
 
   return { ...current, tabs: [...current.tabs, tab], activeKey: key };
+};
+
+export const openDiagramTab = (current: WorkspaceTabs): WorkspaceTabs => {
+  if (current.tabs.some(tab => tab.key === DIAGRAM_TAB_KEY)) {
+    return { ...current, activeKey: DIAGRAM_TAB_KEY };
+  }
+
+  return {
+    ...current,
+    tabs: [...current.tabs, { key: DIAGRAM_TAB_KEY, kind: 'diagram' }],
+    activeKey: DIAGRAM_TAB_KEY
+  };
 };
 
 export const replaceDraftTab = (

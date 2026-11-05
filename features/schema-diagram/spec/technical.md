@@ -70,10 +70,14 @@ type Query {
 
 ## Diagrama (web)
 
-- Dependencias nuevas: `@xyflow/react` para el lienzo y `@dagrejs/dagre` para el acomodo automático.
-- Los componentes del diagrama reciben `{ entities, relations }` con tipos propios y no importan de `lib/api` ni conocen la conexión. La pestaña es la que usa el hook de la query y les pasa los datos.
+- Dependencias nuevas: `@xyflow/react` para el lienzo y `d3-force` para el acomodo automático.
+- Acomodo automático: simulación de fuerzas por componente conexo, con colisión rectangular según el tamaño de cada caja, y componentes empaquetados en filas con proporción de pantalla ancha. Es síncrono y determinista.
+- Los componentes del diagrama reciben `{ entities, relations }` con tipos propios y no importan de `lib/api` ni conocen la conexión. `Diagram` también recibe el modelo completo, para ubicar la tabla de una FK aunque no esté visible, y delega en la pestaña lo que no está visible: la pestaña cambia el esquema, remonta `Diagram` por `key` y le indica qué tabla centrar. La pestaña es la que usa el hook de la query y les pasa los datos.
 - Read only en React Flow: sin crear ni reconectar edges y sin borrar con teclado. Solo se arrastran nodos.
-- Las líneas salen de la propiedad FK y llegan a la propiedad referenciada, con un handle por propiedad. En FKs compuestas se usa la primera propiedad de cada lista.
+- Las líneas salen de la propiedad FK y llegan a la propiedad referenciada, con un handle de llegada por propiedad y uno de salida en cada FK. En FKs compuestas se usa la primera propiedad de cada lista.
+- `getDiagramHubs(model)` calcula las tablas centrales sobre las tablas visibles. El acomodo ignora las relaciones hacia ellas.
+- El foco usa eventos de nodo y de lienzo, no la selección de React Flow.
+- El recorrido y el esquema elegido se guardan por pestaña en memoria en `WorkspaceTabsProvider`, como `hiddenColumns`.
 - Las posiciones se guardan en `localStorage` en `dbiewer:diagram-positions:<connectionId>`, como un mapa de `entity.id` a `{ x, y }`.
 
 ## Impacto en código existente

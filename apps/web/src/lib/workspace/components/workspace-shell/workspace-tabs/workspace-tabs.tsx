@@ -1,3 +1,4 @@
+import { DiagramTab } from '@/lib/database-schema/components/diagram-tab/diagram-tab';
 import { FunctionTab } from '@/lib/database-schema/components/function-tab/function-tab';
 import { TableTab } from '@/lib/database-schema/components/table-tab/table-tab';
 import { FileEditorTab } from '@/lib/file/components/file-editor-tab/file-editor-tab';
@@ -18,7 +19,9 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
     pinTab,
     changeTabState,
     getHiddenColumns,
-    changeHiddenColumns
+    changeHiddenColumns,
+    getDiagramNavigation,
+    changeDiagramNavigation
   } = useWorkspaceTabs();
   const activeTab = tabs.find(tab => tab.key === activeKey);
 
@@ -34,6 +37,17 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
           connectionId={connectionId}
           connectionName={connectionName}
           tab={tab}
+        />
+      );
+    }
+
+    if (tab.kind === 'diagram') {
+      return (
+        <DiagramTab
+          key={key}
+          connectionId={connectionId}
+          navigation={getDiagramNavigation(tab.key)}
+          onNavigationChange={change => changeDiagramNavigation(tab.key, change)}
         />
       );
     }

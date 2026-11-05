@@ -76,6 +76,72 @@ const NOTES = {
   updatedAt: '2026-11-01T12:00:00.000Z'
 };
 
+const DIAGRAM = {
+  entities: [
+    {
+      id: 'public.users',
+      schema: 'public',
+      name: 'users',
+      properties: [
+        {
+          name: 'id',
+          type: 'uuid',
+          default: null,
+          isNullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false
+        }
+      ]
+    }
+  ],
+  relations: []
+};
+
+const ROUTE_DIAGRAM = {
+  entities: [
+    {
+      id: 'public.payments',
+      schema: 'public',
+      name: 'payments',
+      properties: [
+        {
+          name: 'invoice_id',
+          type: 'uuid',
+          default: null,
+          isNullable: false,
+          isPrimaryKey: false,
+          isForeignKey: true
+        }
+      ]
+    },
+    {
+      id: 'billing.invoices',
+      schema: 'billing',
+      name: 'invoices',
+      properties: [
+        {
+          name: 'id',
+          type: 'uuid',
+          default: null,
+          isNullable: false,
+          isPrimaryKey: true,
+          isForeignKey: false
+        }
+      ]
+    }
+  ],
+  relations: [
+    {
+      id: 'public.payments.fk',
+      type: 'MANY_TO_ONE',
+      fromEntityId: 'public.payments',
+      fromProperties: ['invoice_id'],
+      toEntityId: 'billing.invoices',
+      toProperties: ['id']
+    }
+  ]
+};
+
 const getSchemaCalls = () =>
   vi
     .mocked(gqlFetcher)
@@ -119,6 +185,9 @@ describe('WorkspaceShell', () => {
       }
       if (query.includes('query GetTableRows')) {
         return { tableRows: { apiErrors: [], tableRows: ROWS } };
+      }
+      if (query.includes('query GetSchemaDiagram')) {
+        return { schemaDiagram: { apiErrors: [], diagram: DIAGRAM } };
       }
       if (query.includes('query GetFiles')) return { files: { items: [] } };
       if (query.includes('query GetFile')) return { file: NOTES };
@@ -485,6 +554,54 @@ describe('WorkspaceShell', () => {
 
     expect(getLocation()).toEqual(['Acme prod', 'Sin título 1.sql']);
     expect(screen.getByRole('textbox', { name: 'Editor SQL' })).toBeInTheDocument();
+  });
+
+  test('opens the diagram from the explorer and activates it when it is already open', async () => {
+    renderShell();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Diagrama' }));
+
+    expect(await screen.findByRole('article', { name: 'users' })).toBeInTheDocument();
+    expect(getTabs()).toEqual(['Diagrama']);
+    expect(getLocation()).toEqual(['Acme prod', 'Diagrama']);
+
+    await user.click(screen.getByRole('button', { name: 'users' }));
+    await user.dblClick(await screen.findByRole('tab', { name: 'users' }));
+    await user.click(screen.getByRole('button', { name: 'Diagrama' }));
+
+    expect(getTabs()).toEqual(['Diagrama', 'users']);
+    expect(screen.getByRole('tab', { name: 'Diagrama' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('keeps the route and the schema of the diagram between tabs until closing it', async () => {
+    const baseFetcher = vi.mocked(gqlFetcher).getMockImplementation();
+    vi.mocked(gqlFetcher).mockImplementation(async (document, variables) =>
+      document.toString().includes('query GetSchemaDiagram')
+        ? { schemaDiagram: { apiErrors: [], diagram: ROUTE_DIAGRAM } }
+        : baseFetcher?.(document, variables)
+    );
+
+    renderShell();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Diagrama' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Ir a la tabla referenciada por invoice_id' })
+    );
+    expect(await screen.findByRole('button', { name: 'Volver a payments' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'users' }));
+    await screen.findByRole('heading', { name: 'users' });
+    await user.click(screen.getByRole('tab', { name: 'Diagrama' }));
+
+    expect(await screen.findByRole('button', { name: 'Volver a payments' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Esquema' })).toHaveTextContent('billing');
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar Diagrama' }));
+    await user.click(screen.getByRole('button', { name: 'Diagrama' }));
+
+    expect(await screen.findByRole('article', { name: 'payments' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Volver a payments' })).not.toBeInTheDocument();
   });
 
   test('opens SQL and text drafts from the Files tab', async () => {

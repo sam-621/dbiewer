@@ -7,6 +7,7 @@ import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), svgr()],
+  server: { port: 3100 },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
   }

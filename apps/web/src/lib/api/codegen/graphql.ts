@@ -38,6 +38,11 @@ export type DbObjectInput = {
   schema: string;
 };
 
+export type DiagramRelationType =
+  | 'MANY_TO_MANY'
+  | 'MANY_TO_ONE'
+  | 'ONE_TO_ONE';
+
 export type FileErrorCode =
   | 'CONNECTION_NOT_FOUND'
   | 'FILE_NAME_ALREADY_EXISTS'
@@ -171,6 +176,13 @@ export type GetFunctionDefinitionQueryVariables = Exact<{
 
 
 export type GetFunctionDefinitionQuery = { functionDefinition: { definition: string | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
+
+export type GetSchemaDiagramQueryVariables = Exact<{
+  connectionId: string | number;
+}>;
+
+
+export type GetSchemaDiagramQuery = { schemaDiagram: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, diagram: { entities: Array<{ id: string, schema: string, name: string, properties: Array<{ name: string, type: string, default: string | null, isNullable: boolean, isPrimaryKey: boolean, isForeignKey: boolean }> }>, relations: Array<{ id: string, type: DiagramRelationType, fromEntityId: string, fromProperties: Array<string>, toEntityId: string, toProperties: Array<string> }> } | null } };
 
 export type CommonFileFragment = { id: string, name: string, type: FileType, content: string, updatedAt: string } & { ' $fragmentName'?: 'CommonFileFragment' };
 
@@ -440,6 +452,39 @@ export const GetFunctionDefinitionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetFunctionDefinitionQuery, GetFunctionDefinitionQueryVariables>;
+export const GetSchemaDiagramDocument = new TypedDocumentString(`
+    query GetSchemaDiagram($connectionId: ID!) {
+  schemaDiagram(connectionId: $connectionId) {
+    apiErrors {
+      code
+      message
+    }
+    diagram {
+      entities {
+        id
+        schema
+        name
+        properties {
+          name
+          type
+          default
+          isNullable
+          isPrimaryKey
+          isForeignKey
+        }
+      }
+      relations {
+        id
+        type
+        fromEntityId
+        fromProperties
+        toEntityId
+        toProperties
+      }
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<GetSchemaDiagramQuery, GetSchemaDiagramQueryVariables>;
 export const GetFilesDocument = new TypedDocumentString(`
     query GetFiles($connectionId: ID!) {
   files(connectionId: $connectionId) {

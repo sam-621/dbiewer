@@ -100,3 +100,37 @@ export const GET_FUNCTION_DEFINITION_QUERY = graphql(`
     }
   }
 `);
+
+export const GET_SCHEMA_DIAGRAM_QUERY = graphql(`
+  query GetSchemaDiagram($connectionId: ID!) {
+    schemaDiagram(connectionId: $connectionId) {
+      apiErrors {
+        code
+        message
+      }
+      diagram {
+        entities {
+          id
+          schema
+          name
+          properties {
+            name
+            type
+            default
+            isNullable
+            isPrimaryKey
+            isForeignKey
+          }
+        }
+        relations {
+          id
+          type
+          fromEntityId
+          fromProperties
+          toEntityId
+          toProperties
+        }
+      }
+    }
+  }
+`);

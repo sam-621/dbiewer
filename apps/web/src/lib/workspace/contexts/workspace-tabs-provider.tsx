@@ -1,6 +1,10 @@
 import { type ReactNode, useState } from 'react';
 
 import type { OpenExplorerObject } from '@/lib/database-schema/components/explorer/explorer-object';
+import {
+  DEFAULT_DIAGRAM_NAVIGATION,
+  type DiagramNavigation
+} from '@/lib/database-schema/constants/diagram-navigation';
 import type { TableViewState } from '@/lib/database-schema/utils/table-view.utils';
 import { removeStoredDraft } from '@/lib/file/hooks/use-file-draft';
 import { Logger } from '@/shared/utils/logger';
@@ -13,6 +17,7 @@ import {
   EMPTY_WORKSPACE_TABS,
   getRemovedTabKeys,
   hasStoredDraft,
+  openDiagramTab,
   openDraftTab,
   openFileTab,
   openTab,
@@ -29,6 +34,8 @@ type Props = { connectionId: string; children: ReactNode };
 
 type HiddenColumns = Record<string, string[]>;
 
+type DiagramNavigations = Record<string, DiagramNavigation>;
+
 export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   const [stored, setStored] = useState(() => ({
     connectionId,
@@ -40,6 +47,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   }
 
   const [hiddenColumns, setHiddenColumns] = useState<HiddenColumns>({});
+  const [diagramNavigations, setDiagramNavigations] = useState<DiagramNavigations>({});
 
   const { workspaceTabs } = stored;
 
@@ -49,7 +57,8 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
 
     const removedKeys = getRemovedTabKeys(workspaceTabs, next);
     if (removedKeys.length) {
-      setHiddenColumns(current => removeHiddenColumns(current, connectionId, removedKeys));
+      setHiddenColumns(current => removeTabEntries(current, connectionId, removedKeys));
+      setDiagramNavigations(current => removeTabEntries(current, connectionId, removedKeys));
     }
   };
 
@@ -68,6 +77,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
         openObject,
         openDraft: type => update(openDraftTab(workspaceTabs, crypto.randomUUID(), type)),
         openFile: file => update(openFileTab(workspaceTabs, file)),
+        openDiagram: () => update(openDiagramTab(workspaceTabs)),
         replaceDraftTab: (key, file) => update(replaceDraftTab(workspaceTabs, key, file)),
         renameFileTab: (key, name) => update(renameFileTab(workspaceTabs, key, name)),
         changeTabDirty: (key, isDirty) => {
@@ -79,13 +89,23 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
         closeTab: closeWorkspaceTab,
         changeTabState: (key: string, state: TableViewState) =>
           update(changeTabState(workspaceTabs, key, state)),
-        getHiddenColumns: key => hiddenColumns[getHiddenColumnsKey(connectionId, key)] ?? [],
+        getHiddenColumns: key => hiddenColumns[getTabEntryKey(connectionId, key)] ?? [],
         changeHiddenColumns: (key, columns) => {
           setHiddenColumns(current => ({
             ...current,
-            [getHiddenColumnsKey(connectionId, key)]: columns
+            [getTabEntryKey(connectionId, key)]: columns
           }));
           update(pinTab(workspaceTabs, key));
+        },
+        getDiagramNavigation: key =>
+          diagramNavigations[getTabEntryKey(connectionId, key)] ?? DEFAULT_DIAGRAM_NAVIGATION,
+        changeDiagramNavigation: (key, change) => {
+          const entryKey = getTabEntryKey(connectionId, key);
+
+          setDiagramNavigations(current => ({
+            ...current,
+            [entryKey]: { ...(current[entryKey] ?? DEFAULT_DIAGRAM_NAVIGATION), ...change }
+          }));
         }
       }}
     >
@@ -94,10 +114,10 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   );
 };
 
-const getHiddenColumnsKey = (connectionId: string, key: string) => `${connectionId}:${key}`;
+const getTabEntryKey = (connectionId: string, key: string) => `${connectionId}:${key}`;
 
-const removeHiddenColumns = (current: HiddenColumns, connectionId: string, keys: string[]) => {
-  const removed = keys.map(key => getHiddenColumnsKey(connectionId, key));
+const removeTabEntries = <T,>(current: Record<string, T>, connectionId: string, keys: string[]) => {
+  const removed = keys.map(key => getTabEntryKey(connectionId, key));
 
   return Object.fromEntries(Object.entries(current).filter(([key]) => !removed.includes(key)));
 };

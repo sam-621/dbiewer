@@ -26,6 +26,24 @@ if (!Range.prototype.getClientRects) {
   Range.prototype.getBoundingClientRect = () => new DOMRect();
 }
 
+if (!window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+if (!Element.prototype.getAnimations) {
+  Element.prototype.getAnimations = () => [];
+}
+
+if (!window.DOMMatrixReadOnly) {
+  window.DOMMatrixReadOnly = class {
+    m22 = 1;
+  } as unknown as typeof DOMMatrixReadOnly;
+}
+
 afterEach(() => {
   cleanup();
 });

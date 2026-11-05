@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FILE_ICONS } from '@/lib/file/constants/file-types';
-import { CodeIcon, EyeIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
+import { CodeIcon, DiagramIcon, EyeIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
@@ -13,7 +13,12 @@ import type { WorkspaceTab } from '../../../utils/workspace-tabs.utils';
 
 import { CloseTabDialog } from './close-tab-dialog/close-tab-dialog';
 
-const OBJECT_ICONS = { table: TableIcon, view: EyeIcon, function: CodeIcon };
+const OBJECT_ICONS = {
+  table: TableIcon,
+  view: EyeIcon,
+  function: CodeIcon,
+  diagram: DiagramIcon
+};
 
 const getTabIcon = (tab: WorkspaceTab) =>
   tab.kind === 'draft' || tab.kind === 'file' ? FILE_ICONS[tab.type] : OBJECT_ICONS[tab.kind];
