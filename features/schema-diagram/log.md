@@ -14,6 +14,8 @@
 - (web) Se quita el botón de foco y queda apagado, conservando la lógica. Cada tabla tiene un botón con menú para ir a sus tablas relacionadas.
 - (web) La tabla de destino se resalta por un momento al saltar a ella.
 - (web) Optimización de renders: en un salto ninguna fila se re-renderiza y las cajas pasan de 140 a 3 renders.
+- (web) Se quita el tooltip del valor por defecto en las propiedades.
+- (web) Se oculta la atribución de React Flow.
 - (api, web) Puertos propios del proyecto: web 3100, api 4100.
 - (web) El acomodo automático pasa de dagre a `d3-force`, con colisión rectangular y componentes empaquetados en filas.
 

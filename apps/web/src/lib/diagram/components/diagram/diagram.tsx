@@ -60,6 +60,8 @@ type Props = {
   onPositionChange: (id: string, position: DiagramPosition) => void;
 };
 
+const PRO_OPTIONS = { hideAttribution: true };
+
 export const Diagram = ({
   entities,
   relations,
@@ -199,7 +201,8 @@ export const Diagram = ({
         <DiagramNavigationContext value={navigationContext}>
           <DiagramViewContext value={store}>
             <ReactFlow
-              className="[--xy-attribution-background-color:transparent] [--xy-edge-stroke:var(--muted-foreground)]"
+              proOptions={PRO_OPTIONS}
+              className="[--xy-edge-stroke:var(--muted-foreground)]"
               nodes={nodes}
               edges={edges}
               nodeTypes={NODE_TYPES}

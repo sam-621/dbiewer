@@ -4,7 +4,6 @@ import { Handle, Position } from '@xyflow/react';
 
 import { KeyIcon, LinkIcon } from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
-import { Tooltip, TooltipPopup, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
 import { DIAGRAM_ROW_HEIGHT } from '../../../../constants/diagram-sizes';
 import { DiagramNavigationContext } from '../../../../contexts/diagram-navigation-context';
@@ -26,8 +25,8 @@ export const DiagramPropertyRow = memo(({ entityId, property }: Props) => {
   const { t } = useTranslation();
   const { goToReferencedEntity } = use(DiagramNavigationContext);
 
-  const content = (
-    <>
+  return (
+    <li style={{ height: DIAGRAM_ROW_HEIGHT }} className={ROW_CLASS_NAME}>
       <Handle
         id={property.name}
         type="target"
@@ -79,27 +78,6 @@ export const DiagramPropertyRow = memo(({ entityId, property }: Props) => {
           style={HANDLE_STYLE}
         />
       )}
-    </>
-  );
-
-  if (!property.default) {
-    return (
-      <li style={{ height: DIAGRAM_ROW_HEIGHT }} className={ROW_CLASS_NAME}>
-        {content}
-      </li>
-    );
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={<li style={{ height: DIAGRAM_ROW_HEIGHT }} className={ROW_CLASS_NAME} />}
-      >
-        {content}
-      </TooltipTrigger>
-      <TooltipPopup className="font-mono">
-        {t('Default: {{value}}', { value: property.default })}
-      </TooltipPopup>
-    </Tooltip>
+    </li>
   );
 });

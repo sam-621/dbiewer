@@ -213,16 +213,6 @@ describe('DiagramTab', () => {
     expect(gqlFetcher).toHaveBeenCalledWith(expect.anything(), { connectionId: CONNECTION_ID });
   });
 
-  test('shows the default value when hovering the property', async () => {
-    mockDiagram([USERS]);
-
-    renderTab();
-    const user = userEvent.setup();
-    await user.hover(within(await getEntity('users')).getByText('created_at'));
-
-    expect(await screen.findByText('Default: now()')).toBeInTheDocument();
-  });
-
   test('marks the table names that match and dims the tables that do not', async () => {
     measureNodes();
     mockDiagram([USERS, ORDERS], [RELATION]);

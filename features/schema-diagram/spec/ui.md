@@ -11,7 +11,6 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
 - **Ubicación:** pestaña fija del workspace, una por conexión. Se llega desde la acción "Diagram" del Explorer; si ya está abierta, se activa.
 - **Muestra:** un lienzo con una caja por tabla y una línea por relación, salvo las relaciones hacia tablas centrales (ver `product.md`), y una barra con las acciones.
   - Caja: nombre de la tabla y una fila por propiedad con su nombre, tipo y marcas de PK, FK y nullable. Ejemplo: `orders` con `id uuid PK`, `user_id uuid FK`, `status text`, `created_at timestamptz`.
-  - Valor por defecto: se ve en la fila de la propiedad o al pasar sobre ella. Ejemplo: `now()`.
   - Línea: une la propiedad FK con la propiedad referenciada e indica el tipo de relación en sus extremos. Ejemplo: `orders.user_id` → `users.id`, muchos a uno.
 - **Permite:**
   - Arrastrar tablas.

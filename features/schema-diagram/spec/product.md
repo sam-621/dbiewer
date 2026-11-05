@@ -35,7 +35,7 @@ Como usuario con una base Postgres conectada, quiero ver sus tablas y relaciones
 
 - El diagrama se lee en vivo de la base del usuario y no se guarda en dbiewer, igual que el esquema.
 - Incluye las tablas de los mismos esquemas que muestra el Explorer. Las vistas y las funciones no entran.
-- Cada tabla muestra sus propiedades con nombre, tipo, valor por defecto, si acepta nulos y si es PK o FK.
+- Cada tabla muestra sus propiedades con nombre, tipo, si acepta nulos y si es PK o FK. El valor por defecto viene en la api, pero no se muestra.
 - Cada FK es una relación. Una FK apunta siempre desde la tabla que la tiene hacia la tabla referenciada.
 - Una relación es `ONE_TO_ONE` si las columnas de la FK son PK o tienen un unique; si no, es `MANY_TO_ONE`.
 - `MANY_TO_MANY` no se deriva del esquema: una tabla intermedia se muestra como tabla, con sus dos relaciones `MANY_TO_ONE`. El valor queda para los diagramas propios.
