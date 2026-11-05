@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
@@ -169,22 +168,14 @@ const chooseSchema = async (user: ReturnType<typeof userEvent.setup>, name: stri
 
 const getEdges = () => document.querySelectorAll('.react-flow__edge');
 
-const Harness = () => {
-  const [navigation, setNavigation] = useState(DEFAULT_DIAGRAM_NAVIGATION);
-
-  return (
-    <DiagramTab
-      connectionId={CONNECTION_ID}
-      navigation={navigation}
-      onNavigationChange={change => setNavigation(current => ({ ...current, ...change }))}
-    />
-  );
-};
-
 const renderTab = () =>
   render(
     <div style={{ width: 800, height: 600 }}>
-      <Harness />
+      <DiagramTab
+        connectionId={CONNECTION_ID}
+        initialNavigation={DEFAULT_DIAGRAM_NAVIGATION}
+        onNavigationChange={() => {}}
+      />
     </div>
   );
 

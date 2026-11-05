@@ -132,16 +132,30 @@ export const getReferencedEntityId = (
 
 export const getDiagramNodes = (
   entities: DiagramEntity[],
-  positions: DiagramPositions
-): DiagramEntityNode[] =>
-  entities.map(entity => ({
-    id: entity.id,
-    type: 'entity',
-    position: positions[entity.id] ?? { x: 0, y: 0 },
-    width: DIAGRAM_ENTITY_WIDTH,
-    height: getEntityHeight(entity),
-    data: { entity }
-  }));
+  positions: DiagramPositions,
+  previous: DiagramEntityNode[] = []
+): DiagramEntityNode[] => {
+  const previousById = new Map(previous.map(node => [node.id, node]));
+
+  return entities.map(entity => {
+    const position = positions[entity.id] ?? { x: 0, y: 0 };
+    const node = previousById.get(entity.id);
+
+    if (node?.data.entity === entity) {
+      const isSamePosition = node.position.x === position.x && node.position.y === position.y;
+      return isSamePosition ? node : { ...node, position };
+    }
+
+    return {
+      id: entity.id,
+      type: 'entity',
+      position,
+      width: DIAGRAM_ENTITY_WIDTH,
+      height: getEntityHeight(entity),
+      data: { entity }
+    };
+  });
+};
 
 export const getDiagramHubs = ({ entities, relations }: DiagramModel) => {
   const sources = new Map(entities.map(entity => [entity.id, new Set<string>()]));

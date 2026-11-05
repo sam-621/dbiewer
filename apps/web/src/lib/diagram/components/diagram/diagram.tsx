@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   applyNodeChanges,
   Background,
@@ -7,11 +7,12 @@ import {
   ReactFlow
 } from '@xyflow/react';
 
+import { useStableCallback } from '@/shared/hooks/use-stable-callback';
+
 import { DiagramFocusContext } from '../../contexts/diagram-focus-context';
-import { DiagramJumpContext } from '../../contexts/diagram-jump-context';
 import { DiagramNavigationContext } from '../../contexts/diagram-navigation-context';
 import { DiagramSearchContext } from '../../contexts/diagram-search-context';
-import { DiagramTrailContext } from '../../contexts/diagram-trail-context';
+import { DiagramViewContext } from '../../contexts/diagram-view-context';
 import { useCenterDiagramEntity } from '../../hooks/use-center-diagram-entity';
 import {
   advanceDiagramTrail,
@@ -28,6 +29,7 @@ import {
   getDiagramNodes,
   getReferencedEntityId
 } from '../../utils/diagram.utils';
+import { createDiagramViewStore } from '../../utils/diagram-view-store.utils';
 
 import { DiagramEntityNode } from './diagram-entity-node/diagram-entity-node';
 import { DiagramRelationEdge } from './diagram-relation-edge/diagram-relation-edge';
@@ -76,7 +78,8 @@ export const Diagram = ({
   const [source, setSource] = useState({ entities, positions });
   const [nodes, setNodes] = useState(() => getDiagramNodes(entities, positions));
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [jump, setJump] = useState(() => (initialCenterId ? { id: initialCenterId } : null));
+  const [store] = useState(() => createDiagramViewStore({ jumpedId: initialCenterId }));
+  const jumpTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isPinnedVisible = entities.some(entity => entity.id === pinnedId);
   const activeId = isPinnedVisible ? pinnedId : hoveredId;
@@ -93,102 +96,137 @@ export const Diagram = ({
   );
 
   const centerEntity = useCenterDiagramEntity(entities, positions);
-  const goToEntity = useCallback(
-    (id: string) => {
-      if (!entities.some(entity => entity.id === id)) {
-        onHiddenEntityRequest(id);
-        return;
-      }
 
-      centerEntity(id);
-      setJump({ id });
-    },
-    [entities, centerEntity, onHiddenEntityRequest]
-  );
-  const navigationContext = useMemo(() => {
-    const goToRelatedEntity = (entityId: string, relatedId: string) => {
-      onTrailChange(advanceDiagramTrail(trail, entityId, relatedId));
-      goToEntity(relatedId);
-    };
+  const highlightJump = useStableCallback((id: string) => {
+    store.changeView({ jumpedId: id });
+    clearTimeout(jumpTimeout.current);
+    jumpTimeout.current = setTimeout(
+      () => store.changeView({ jumpedId: null }),
+      JUMP_HIGHLIGHT_DURATION
+    );
+  });
 
-    return {
-      fullModel,
-      goToRelatedEntity,
-      goToReferencedEntity: (entityId: string, propertyName: string) => {
-        const referencedId = getReferencedEntityId(fullModel.relations, entityId, propertyName);
-        if (referencedId) goToRelatedEntity(entityId, referencedId);
-      }
-    };
-  }, [fullModel, trail, onTrailChange, goToEntity]);
-  const trailContext = useMemo(() => {
-    const currentId = trail.at(-1);
+  const goToEntity = useStableCallback((id: string) => {
+    if (!entities.some(entity => entity.id === id)) {
+      onHiddenEntityRequest(id);
+      return;
+    }
+
+    centerEntity(id);
+    highlightJump(id);
+  });
+
+  const goToRelatedEntity = useStableCallback((entityId: string, relatedId: string) => {
+    onTrailChange(advanceDiagramTrail(trail, entityId, relatedId));
+    goToEntity(relatedId);
+  });
+
+  const goToReferencedEntity = useStableCallback((entityId: string, propertyName: string) => {
+    const referencedId = getReferencedEntityId(fullModel.relations, entityId, propertyName);
+    if (referencedId) goToRelatedEntity(entityId, referencedId);
+  });
+
+  const goBack = useStableCallback(() => {
     const backId = trail.at(-2);
-    const back = fullModel.entities.find(entity => entity.id === backId);
-    if (!currentId || !back) return null;
+    if (!backId) return;
 
-    return {
-      currentId,
-      backName: back.name,
-      goBack: () => {
-        onTrailChange(trail.slice(0, -1));
-        goToEntity(back.id);
-      },
-      clear: () => onTrailChange([])
-    };
-  }, [fullModel, trail, onTrailChange, goToEntity]);
+    onTrailChange(trail.slice(0, -1));
+    goToEntity(backId);
+  });
+
+  const clearTrail = useStableCallback(() => onTrailChange([]));
+
+  const navigationContext = useMemo(
+    () => ({ fullModel, goToReferencedEntity, goToRelatedEntity, goBack, clearTrail }),
+    [fullModel, goToReferencedEntity, goToRelatedEntity, goBack, clearTrail]
+  );
+
+  const trailCurrentId = trail.at(-1) ?? null;
+  const trailBackId = trail.at(-2);
+  const trailBackName = fullModel.entities.find(entity => entity.id === trailBackId)?.name ?? null;
+
+  useLayoutEffect(() => {
+    store.changeView({
+      trailCurrentId: trailBackName ? trailCurrentId : null,
+      trailBackName
+    });
+  }, [store, trailCurrentId, trailBackName]);
 
   useEffect(() => {
-    if (!jump) return;
+    if (initialCenterId) highlightJump(initialCenterId);
 
-    const timeout = setTimeout(() => setJump(null), JUMP_HIGHLIGHT_DURATION);
-
-    return () => clearTimeout(timeout);
-  }, [jump]);
+    return () => clearTimeout(jumpTimeout.current);
+  }, [initialCenterId, highlightJump]);
 
   if (source.entities !== entities || source.positions !== positions) {
     setSource({ entities, positions });
-    setNodes(getDiagramNodes(entities, positions));
+    setNodes(current => getDiagramNodes(entities, positions, current));
   }
 
-  const changeNodes = (changes: NodeChange<DiagramEntityFlowNode>[]) =>
-    setNodes(current => applyNodeChanges(changes, current));
+  const changeNodes = useCallback(
+    (changes: NodeChange<DiagramEntityFlowNode>[]) =>
+      setNodes(current => applyNodeChanges(changes, current)),
+    []
+  );
+
+  const centerInitialEntity = useStableCallback(() => {
+    if (initialCenterId) centerEntity(initialCenterId);
+  });
+
+  const savePosition = useStableCallback((_event: unknown, node: DiagramEntityFlowNode) =>
+    onPositionChange(node.id, node.position)
+  );
+
+  const hoverNode = useStableCallback((_event: unknown, node: DiagramEntityFlowNode) => {
+    if (isFocusEnabled) setHoveredId(node.id);
+  });
+
+  const leaveNode = useStableCallback(() => {
+    if (isFocusEnabled) setHoveredId(null);
+  });
+
+  const pinNode = useStableCallback((_event: unknown, node: DiagramEntityFlowNode) => {
+    if (isFocusEnabled) onPinnedIdChange(node.id);
+  });
+
+  const unpinNode = useStableCallback(() => {
+    if (isFocusEnabled) onPinnedIdChange(null);
+  });
 
   return (
     <DiagramFocusContext value={focus}>
       <DiagramSearchContext value={searchContext}>
         <DiagramNavigationContext value={navigationContext}>
-          <DiagramTrailContext value={trailContext}>
-            <DiagramJumpContext value={jump?.id ?? null}>
-              <ReactFlow
-                className="[--xy-attribution-background-color:transparent] [--xy-edge-stroke:var(--muted-foreground)]"
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={NODE_TYPES}
-                edgeTypes={EDGE_TYPES}
-                minZoom={MIN_ZOOM}
-                panOnScroll
-                fitView={!initialCenterId}
-                onInit={() => initialCenterId && centerEntity(initialCenterId)}
-                nodesConnectable={false}
-                edgesReconnectable={false}
-                elementsSelectable={false}
-                nodesFocusable={false}
-                edgesFocusable={false}
-                disableKeyboardA11y
-                deleteKeyCode={null}
-                selectionKeyCode={null}
-                multiSelectionKeyCode={null}
-                onNodesChange={changeNodes}
-                onNodeDragStop={(_event, node) => onPositionChange(node.id, node.position)}
-                onNodeMouseEnter={(_event, node) => setHoveredId(node.id)}
-                onNodeMouseLeave={() => setHoveredId(null)}
-                onNodeClick={(_event, node) => isFocusEnabled && onPinnedIdChange(node.id)}
-                onPaneClick={() => isFocusEnabled && onPinnedIdChange(null)}
-              >
-                <Background color="var(--border)" />
-              </ReactFlow>
-            </DiagramJumpContext>
-          </DiagramTrailContext>
+          <DiagramViewContext value={store}>
+            <ReactFlow
+              className="[--xy-attribution-background-color:transparent] [--xy-edge-stroke:var(--muted-foreground)]"
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={NODE_TYPES}
+              edgeTypes={EDGE_TYPES}
+              minZoom={MIN_ZOOM}
+              panOnScroll
+              fitView={!initialCenterId}
+              onInit={centerInitialEntity}
+              nodesConnectable={false}
+              edgesReconnectable={false}
+              elementsSelectable={false}
+              nodesFocusable={false}
+              edgesFocusable={false}
+              disableKeyboardA11y
+              deleteKeyCode={null}
+              selectionKeyCode={null}
+              multiSelectionKeyCode={null}
+              onNodesChange={changeNodes}
+              onNodeDragStop={savePosition}
+              onNodeMouseEnter={hoverNode}
+              onNodeMouseLeave={leaveNode}
+              onNodeClick={pinNode}
+              onPaneClick={unpinNode}
+            >
+              <Background color="var(--border)" />
+            </ReactFlow>
+          </DiagramViewContext>
         </DiagramNavigationContext>
       </DiagramSearchContext>
     </DiagramFocusContext>

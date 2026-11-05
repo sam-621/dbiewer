@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 
 import type { OpenExplorerObject } from '@/lib/database-schema/components/explorer/explorer-object';
 import {
@@ -47,7 +47,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   }
 
   const [hiddenColumns, setHiddenColumns] = useState<HiddenColumns>({});
-  const [diagramNavigations, setDiagramNavigations] = useState<DiagramNavigations>({});
+  const diagramNavigations = useRef<DiagramNavigations>({});
 
   const { workspaceTabs } = stored;
 
@@ -58,7 +58,11 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
     const removedKeys = getRemovedTabKeys(workspaceTabs, next);
     if (removedKeys.length) {
       setHiddenColumns(current => removeTabEntries(current, connectionId, removedKeys));
-      setDiagramNavigations(current => removeTabEntries(current, connectionId, removedKeys));
+      diagramNavigations.current = removeTabEntries(
+        diagramNavigations.current,
+        connectionId,
+        removedKeys
+      );
     }
   };
 
@@ -98,14 +102,17 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
           update(pinTab(workspaceTabs, key));
         },
         getDiagramNavigation: key =>
-          diagramNavigations[getTabEntryKey(connectionId, key)] ?? DEFAULT_DIAGRAM_NAVIGATION,
+          diagramNavigations.current[getTabEntryKey(connectionId, key)] ??
+          DEFAULT_DIAGRAM_NAVIGATION,
         changeDiagramNavigation: (key, change) => {
           const entryKey = getTabEntryKey(connectionId, key);
 
-          setDiagramNavigations(current => ({
-            ...current,
-            [entryKey]: { ...(current[entryKey] ?? DEFAULT_DIAGRAM_NAVIGATION), ...change }
-          }));
+          const current = diagramNavigations.current[entryKey] ?? DEFAULT_DIAGRAM_NAVIGATION;
+
+          diagramNavigations.current = {
+            ...diagramNavigations.current,
+            [entryKey]: { ...current, ...change }
+          };
         }
       }}
     >

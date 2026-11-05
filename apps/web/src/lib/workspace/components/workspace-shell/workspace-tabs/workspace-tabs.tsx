@@ -46,7 +46,7 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
         <DiagramTab
           key={key}
           connectionId={connectionId}
-          navigation={getDiagramNavigation(tab.key)}
+          initialNavigation={getDiagramNavigation(tab.key)}
           onNavigationChange={change => changeDiagramNavigation(tab.key, change)}
         />
       );

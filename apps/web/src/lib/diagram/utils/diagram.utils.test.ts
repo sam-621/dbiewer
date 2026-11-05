@@ -69,6 +69,23 @@ describe('getDiagramNodes', () => {
   });
 });
 
+describe('getDiagramNodes with previous nodes', () => {
+  test('keeps the nodes that did not change and the data of the moved ones', () => {
+    const positions = { 'public.users': { x: 1, y: 2 }, 'public.orders': { x: 3, y: 4 } };
+    const previous = getDiagramNodes(MODEL.entities, positions);
+
+    const [users, orders] = getDiagramNodes(
+      MODEL.entities,
+      { ...positions, 'public.orders': { x: 5, y: 6 } },
+      previous
+    );
+
+    expect(users).toBe(previous[0]);
+    expect(orders?.position).toEqual({ x: 5, y: 6 });
+    expect(orders?.data).toBe(previous[1]?.data);
+  });
+});
+
 describe('getDiagramEdges', () => {
   test('joins the first property of each list of a composite FK', () => {
     expect(getDiagramEdges(MODEL.relations, new Set(), null, null)[0]).toMatchObject({

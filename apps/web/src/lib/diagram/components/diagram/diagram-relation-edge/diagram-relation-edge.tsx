@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { type CSSProperties, memo } from 'react';
 import { BaseEdge, type EdgeProps, getSmoothStepPath } from '@xyflow/react';
 
 import {
@@ -17,29 +17,33 @@ const getEdgeStyle = ({ isFocused, isDimmed }: DiagramRelationFlowEdge['data']) 
   return isFocused ? FOCUSED_STYLE : undefined;
 };
 
-export const DiagramRelationEdge = ({
-  sourceX,
-  sourceY,
-  sourcePosition,
-  targetX,
-  targetY,
-  targetPosition,
-  data
-}: EdgeProps<DiagramRelationFlowEdge>) => {
-  const [path] = getSmoothStepPath({
+export const DiagramRelationEdge = memo(
+  ({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    borderRadius: BORDER_RADIUS
-  });
-  const endsPath = getRelationEndsPath(
-    data.type,
-    { x: sourceX, y: sourceY, side: sourcePosition },
-    { x: targetX, y: targetY, side: targetPosition }
-  );
+    data
+  }: EdgeProps<DiagramRelationFlowEdge>) => {
+    const [path] = getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      borderRadius: BORDER_RADIUS
+    });
+    const endsPath = getRelationEndsPath(
+      data.type,
+      { x: sourceX, y: sourceY, side: sourcePosition },
+      { x: targetX, y: targetY, side: targetPosition }
+    );
 
-  return <BaseEdge path={`${path} ${endsPath}`} interactionWidth={0} style={getEdgeStyle(data)} />;
-};
+    return (
+      <BaseEdge path={`${path} ${endsPath}`} interactionWidth={0} style={getEdgeStyle(data)} />
+    );
+  }
+);

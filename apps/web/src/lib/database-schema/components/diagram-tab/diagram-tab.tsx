@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ReactFlowProvider } from '@xyflow/react';
 
@@ -20,11 +20,11 @@ const IS_FOCUS_ENABLED = false;
 
 type Props = {
   connectionId: string;
-  navigation: DiagramNavigation;
+  initialNavigation: DiagramNavigation;
   onNavigationChange: (change: Partial<DiagramNavigation>) => void;
 };
 
-export const DiagramTab = ({ connectionId, navigation, onNavigationChange }: Props) => {
+export const DiagramTab = ({ connectionId, initialNavigation, onNavigationChange }: Props) => {
   const { t } = useTranslation();
   const { diagram, diagramError, isLoading, isFetching, refetch } =
     useGetSchemaDiagram(connectionId);
@@ -33,6 +33,7 @@ export const DiagramTab = ({ connectionId, navigation, onNavigationChange }: Pro
     changePositions,
     resetPositions
   } = useDiagramPositions(connectionId);
+  const [navigation, setNavigation] = useState(initialNavigation);
   const [centerId, setCenterId] = useState<string | null>(null);
   const [layoutVersion, setLayoutVersion] = useState(0);
   const [search, setSearch] = useState('');
@@ -56,31 +57,33 @@ export const DiagramTab = ({ connectionId, navigation, onNavigationChange }: Pro
 
   const hasEntities = !diagramError && Boolean(diagram?.entities.length);
 
+  const changeNavigation = (change: Partial<DiagramNavigation>) => {
+    setNavigation(current => ({ ...current, ...change }));
+    onNavigationChange(change);
+  };
+
   const changeSchema = (nextSchema: string) => {
-    onNavigationChange({ schema: nextSchema, trail: [] });
+    changeNavigation({ schema: nextSchema, trail: [] });
     setCenterId(null);
   };
 
-  const goToEntity = useCallback(
-    (id: string) => {
-      const entity = diagram?.entities.find(current => current.id === id);
-      if (!entity) return;
+  const goToEntity = (id: string) => {
+    const entity = diagram?.entities.find(current => current.id === id);
+    if (!entity) return;
 
-      onNavigationChange({ schema: entity.schema });
-      setCenterId(id);
-    },
-    [diagram, onNavigationChange]
-  );
+    changeNavigation({ schema: entity.schema });
+    setCenterId(id);
+  };
 
   const reload = () => {
-    onNavigationChange({ trail: [] });
+    changeNavigation({ trail: [] });
     void refetch();
   };
 
   const resetLayout = () => {
     resetPositions();
     setCenterId(null);
-    onNavigationChange({ trail: [] });
+    changeNavigation({ trail: [] });
     setLayoutVersion(version => version + 1);
   };
 
@@ -119,7 +122,7 @@ export const DiagramTab = ({ connectionId, navigation, onNavigationChange }: Pro
           positions={positions}
           initialCenterId={centerId}
           trail={navigation.trail}
-          onTrailChange={trail => onNavigationChange({ trail })}
+          onTrailChange={trail => changeNavigation({ trail })}
           search={search}
           isFocusEnabled={IS_FOCUS_ENABLED}
           pinnedId={pinnedId}

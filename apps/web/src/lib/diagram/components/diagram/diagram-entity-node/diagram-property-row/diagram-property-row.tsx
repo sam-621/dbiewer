@@ -1,4 +1,4 @@
-import { type CSSProperties, use } from 'react';
+import { type CSSProperties, memo, use } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Handle, Position } from '@xyflow/react';
 
@@ -22,7 +22,7 @@ const ROW_CLASS_NAME = 'relative flex items-center gap-2 px-2.5 font-mono text-x
 
 type Props = { entityId: string; property: DiagramProperty };
 
-export const DiagramPropertyRow = ({ entityId, property }: Props) => {
+export const DiagramPropertyRow = memo(({ entityId, property }: Props) => {
   const { t } = useTranslation();
   const { goToReferencedEntity } = use(DiagramNavigationContext);
 
@@ -102,4 +102,4 @@ export const DiagramPropertyRow = ({ entityId, property }: Props) => {
       </TooltipPopup>
     </Tooltip>
   );
-};
+});
