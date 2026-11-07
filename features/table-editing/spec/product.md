@@ -93,7 +93,7 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 
 ## Plan de trabajo recomendado
 
-1. [ ] api: mutations `saveTableChanges` y `deleteTableRows` en una transacción, con sus tests de integración y e2e.
+1. [x] api: mutations `saveTableChanges` y `deleteTableRows` en una transacción, con sus tests de integración y e2e.
 2. [ ] web: selección de filas desde el numeral y borrado con confirmación.
 3. [ ] web: edición de celdas con cambios pendientes, Guardar y Deshacer.
 4. [ ] web: agregar filas nuevas con `+`.

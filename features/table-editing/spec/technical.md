@@ -65,7 +65,7 @@ type Mutation {
 ## Escritura (api)
 
 - `PostgresService` suma `saveTableChanges` y `deleteTableRows`. Cada uno abre un cliente del pool, corre `BEGIN`, las sentencias y `COMMIT`; si una falla, `ROLLBACK` y `PostgresQueryFailedError`.
-- Antes de escribir, lee de `pg_catalog` las columnas de la tabla y su PK, en el mismo cliente. Si la tabla no existe o no es `relkind in ('r', 'p')`, `OBJECT_NOT_FOUND`. Una columna que no existe la rechaza Postgres con `QUERY_FAILED`.
+- Antes de escribir, el use-case lee de `pg_catalog` las columnas de la PK con `PostgresService.readPrimaryKeyColumns` (`null` si la tabla no existe o no es `relkind in ('r', 'p')` → `OBJECT_NOT_FOUND`) y valida `PRIMARY_KEY_REQUIRED`; el service no lleva esa regla. Una columna que no existe la rechaza Postgres con `QUERY_FAILED`.
 - Identificadores con `escapeIdentifier` y valores siempre como parámetros (`$1`, `$2`…). Postgres convierte el texto al tipo de la columna.
 - Update: `UPDATE <tabla> SET a = $1, b = $2 WHERE pk1 = $3 AND pk2 = $4`, en el orden en que llegan. Delete: un `DELETE ... WHERE` por key; `deletedRows` es la suma de filas afectadas.
 - Use-cases `TableChangesSaver` y `TableRowsDeleter` en `src/modules/database-schema/use-cases/`, igual a `TableRowsReader`.

@@ -27,3 +27,20 @@ export class QueryFailedError extends BusinessError<ShellErrorCode> {
     super('QUERY_FAILED', reason);
   }
 }
+
+export class DbTableNotFoundError extends BusinessError<ShellErrorCode> {
+  constructor(schema: string, name: string) {
+    super('OBJECT_NOT_FOUND', `Table not found with name ${schema}.${name}`);
+  }
+}
+
+export class PrimaryKeyRequiredError extends BusinessError<ShellErrorCode> {
+  constructor(schema: string, name: string, primaryKeyColumns: string[]) {
+    super(
+      'PRIMARY_KEY_REQUIRED',
+      primaryKeyColumns.length
+        ? `Row key must have exactly the primary key columns of ${schema}.${name}: ${primaryKeyColumns.join(', ')}`
+        : `Table ${schema}.${name} has no primary key`
+    );
+  }
+}

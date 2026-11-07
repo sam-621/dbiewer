@@ -157,6 +157,45 @@ type SchemaDiagramResult {
   diagram: SchemaDiagram
 }
 
+input DbCellValueInput {
+  column: String!
+  value: String
+}
+
+input DbRowUpdateInput {
+  key: [DbCellValueInput!]!
+  values: [DbCellValueInput!]!
+}
+
+input DbRowInsertInput {
+  values: [DbCellValueInput!]!
+}
+
+input SaveTableChangesInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+  updates: [DbRowUpdateInput!]!
+  inserts: [DbRowInsertInput!]!
+}
+
+input DeleteTableRowsInput {
+  connectionId: ID!
+  schema: String!
+  name: String!
+  keys: [[DbCellValueInput!]!]!
+}
+
+type SaveTableChangesResult {
+  apiErrors: [ShellErrorResult!]!
+  success: Boolean
+}
+
+type DeleteTableRowsResult {
+  apiErrors: [ShellErrorResult!]!
+  deletedRows: Int
+}
+
 type ShellErrorResult {
   code: ShellErrorCode!
   message: String!
@@ -168,6 +207,7 @@ enum ShellErrorCode {
   CONNECTION_FAILED
   OBJECT_NOT_FOUND
   QUERY_FAILED
+  PRIMARY_KEY_REQUIRED
 }
 
 type Query {
@@ -176,4 +216,9 @@ type Query {
   tableRows(input: TableRowsInput!): TableRowsResult!
   functionDefinition(input: FunctionDefinitionInput!): FunctionDefinitionResult!
   schemaDiagram(connectionId: ID!): SchemaDiagramResult!
+}
+
+type Mutation {
+  saveTableChanges(input: SaveTableChangesInput!): SaveTableChangesResult!
+  deleteTableRows(input: DeleteTableRowsInput!): DeleteTableRowsResult!
 }

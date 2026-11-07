@@ -117,6 +117,15 @@ export type PostgresDiagram = {
   relations: PostgresDiagramRelation[];
 };
 
+type PostgresCellValue = { column: string; value: string | null };
+
+type PostgresTableChanges = PostgresObject & {
+  updates: Array<{ key: PostgresCellValue[]; values: PostgresCellValue[] }>;
+  inserts: Array<{ values: PostgresCellValue[] }>;
+};
+
+type PostgresRowsDeletion = PostgresObject & { keys: PostgresCellValue[][] };
+
 export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: number };
 
 type PostgresResultColumn = { name: string; type: string };
@@ -417,6 +426,21 @@ export class PostgresService {
       and pg_catalog.pg_get_function_identity_arguments(p.oid) = $3
       and p.prokind in ('f', 'p')
   `;
+  private static readonly PRIMARY_KEY_SQL = `
+    select coalesce(
+      (
+        select json_agg(a.attname order by k.position)
+        from pg_catalog.pg_constraint p
+        cross join lateral unnest(p.conkey) with ordinality k (attnum, position)
+        join pg_catalog.pg_attribute a on a.attrelid = p.conrelid and a.attnum = k.attnum
+        where p.conrelid = c.oid and p.contype = 'p'
+      ),
+      '[]'::json
+    ) as "primaryKeyColumns"
+    from pg_catalog.pg_class c
+    join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = $1 and c.relname = $2 and c.relkind in ('r', 'p')
+  `;
   private static readonly VIEW_KINDS = ['v', 'm'];
   private static readonly PAGE_SIZE = 50;
   private static readonly MAX_RESULT_ROWS = 1_000;
@@ -581,6 +605,71 @@ export class PostgresService {
     );
   }
 
+  async readPrimaryKeyColumns(
+    connection: PostgresConnection,
+    object: PostgresObject
+  ): Promise<string[] | null> {
+    const result = await this.query<{ primaryKeyColumns: string[] }>(
+      connection,
+      PostgresService.PRIMARY_KEY_SQL,
+      [object.schema, object.name]
+    );
+
+    return result.rows[0]?.primaryKeyColumns ?? null;
+  }
+
+  async saveTableChanges(connection: PostgresConnection, changes: PostgresTableChanges) {
+    const table = this.toTableName(changes);
+
+    await this.withTransaction(connection, async client => {
+      for (const update of changes.updates) {
+        const assignments = update.values
+          .map((cell, index) => `${escapeIdentifier(cell.column)} = $${index + 1}`)
+          .join(', ');
+        const condition = this.toKeyCondition(update.key, update.values.length);
+
+        await client.query(
+          `update ${table} set ${assignments} where ${condition}`,
+          [...update.values, ...update.key].map(cell => cell.value)
+        );
+      }
+
+      for (const insert of changes.inserts) {
+        if (!insert.values.length) {
+          await client.query(`insert into ${table} default values`);
+          continue;
+        }
+
+        const columns = insert.values.map(cell => escapeIdentifier(cell.column)).join(', ');
+        const placeholders = insert.values.map((_cell, index) => `$${index + 1}`).join(', ');
+
+        await client.query(
+          `insert into ${table} (${columns}) values (${placeholders})`,
+          insert.values.map(cell => cell.value)
+        );
+      }
+    });
+  }
+
+  async deleteTableRows(connection: PostgresConnection, deletion: PostgresRowsDeletion) {
+    const table = this.toTableName(deletion);
+
+    return this.withTransaction(connection, async client => {
+      let deletedRows = 0;
+
+      for (const key of deletion.keys) {
+        const result = await client.query(
+          `delete from ${table} where ${this.toKeyCondition(key, 0)}`,
+          key.map(cell => cell.value)
+        );
+
+        deletedRows += result.rowCount ?? 0;
+      }
+
+      return deletedRows;
+    });
+  }
+
   async discardPool(connectionId: string) {
     const pool = this.pools.get(connectionId);
 
@@ -617,6 +706,37 @@ export class PostgresService {
     } finally {
       client.release(options?.discardClient);
     }
+  }
+
+  private async withTransaction<T>(
+    connection: PostgresConnection,
+    run: (client: PoolClient) => Promise<T>
+  ): Promise<T> {
+    return this.withClient(connection, async client => {
+      await client.query('begin');
+
+      try {
+        const result = await run(client);
+
+        await client.query('commit');
+
+        return result;
+      } catch (error) {
+        await client.query('rollback');
+
+        throw error;
+      }
+    });
+  }
+
+  private toTableName(object: PostgresObject) {
+    return `${escapeIdentifier(object.schema)}.${escapeIdentifier(object.name)}`;
+  }
+
+  private toKeyCondition(key: PostgresCellValue[], offset: number) {
+    return key
+      .map((cell, index) => `${escapeIdentifier(cell.column)} = $${offset + index + 1}`)
+      .join(' and ');
   }
 
   private async readResultColumns(

@@ -1,4 +1,6 @@
 import type {
+  MutationDeleteTableRowsArgs,
+  MutationSaveTableChangesArgs,
   QueryConnectionSchemaArgs,
   QueryFunctionDefinitionArgs,
   QuerySchemaDiagramArgs,
@@ -12,6 +14,8 @@ import { apiResponse } from '@/api/utils/api-response';
 import { ConnectionSchemaReader } from '@/modules/database-schema/use-cases/connection-schema-reader';
 import { FunctionDefinitionReader } from '@/modules/database-schema/use-cases/function-definition-reader';
 import { SchemaDiagramReader } from '@/modules/database-schema/use-cases/schema-diagram-reader';
+import { TableChangesSaver } from '@/modules/database-schema/use-cases/table-changes-saver';
+import { TableRowsDeleter } from '@/modules/database-schema/use-cases/table-rows-deleter';
 import { TableRowsReader } from '@/modules/database-schema/use-cases/table-rows-reader';
 import { TableStructureReader } from '@/modules/database-schema/use-cases/table-structure-reader';
 import { UnitOfWork } from '@/persistence/unit-of-work';
@@ -108,6 +112,46 @@ async function schemaDiagram(_parent: unknown, args: QuerySchemaDiagramArgs, ctx
   return apiResponse(result, 'diagram');
 }
 
+async function saveTableChanges(
+  _parent: unknown,
+  args: MutationSaveTableChangesArgs,
+  ctx: SessionContext
+) {
+  const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+  const result = await uow.execute(async (_repositories, uowCtx) => {
+    const tableChangesSaver = new TableChangesSaver(
+      uowCtx,
+      ctx.services.encryptionService,
+      ctx.services.postgresService
+    );
+
+    return tableChangesSaver.execute(args.input);
+  });
+
+  return apiResponse(result, 'success');
+}
+
+async function deleteTableRows(
+  _parent: unknown,
+  args: MutationDeleteTableRowsArgs,
+  ctx: SessionContext
+) {
+  const uow = new UnitOfWork(ctx.database, ctx.rlsContext);
+
+  const result = await uow.execute(async (_repositories, uowCtx) => {
+    const tableRowsDeleter = new TableRowsDeleter(
+      uowCtx,
+      ctx.services.encryptionService,
+      ctx.services.postgresService
+    );
+
+    return tableRowsDeleter.execute(args.input);
+  });
+
+  return apiResponse(result, 'deletedRows');
+}
+
 export const DatabaseSchemaResolver: Resolvers = {
   DbFunctionKind: {
     FUNCTION: 'function',
@@ -119,5 +163,9 @@ export const DatabaseSchemaResolver: Resolvers = {
     tableRows: requireSession(tableRows),
     functionDefinition: requireSession(functionDefinition),
     schemaDiagram: requireSession(schemaDiagram)
+  },
+  Mutation: {
+    saveTableChanges: requireSession(saveTableChanges),
+    deleteTableRows: requireSession(deleteTableRows)
   }
 };

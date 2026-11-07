@@ -67,6 +67,11 @@ export type CreateWorkspaceInput = {
   name: Scalars['String']['input'];
 };
 
+export type DbCellValueInput = {
+  column: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type DbColumn = {
   __typename?: 'DbColumn';
   isForeignKey: Scalars['Boolean']['output'];
@@ -121,6 +126,15 @@ export type DbResultColumn = {
   type: Scalars['String']['output'];
 };
 
+export type DbRowInsertInput = {
+  values: Array<DbCellValueInput>;
+};
+
+export type DbRowUpdateInput = {
+  key: Array<DbCellValueInput>;
+  values: Array<DbCellValueInput>;
+};
+
 export type DbSchema = {
   __typename?: 'DbSchema';
   functions: Array<DbFunction>;
@@ -148,6 +162,19 @@ export type DbView = {
   __typename?: 'DbView';
   columns: Array<DbColumn>;
   name: Scalars['String']['output'];
+};
+
+export type DeleteTableRowsInput = {
+  connectionId: Scalars['ID']['input'];
+  keys: Array<Array<DbCellValueInput>>;
+  name: Scalars['String']['input'];
+  schema: Scalars['String']['input'];
+};
+
+export type DeleteTableRowsResult = {
+  __typename?: 'DeleteTableRowsResult';
+  apiErrors: Array<ShellErrorResult>;
+  deletedRows?: Maybe<Scalars['Int']['output']>;
 };
 
 export type DiagramEntity = {
@@ -234,10 +261,12 @@ export type Mutation = {
   __typename?: 'Mutation';
   createConnection: ConnectionResult;
   createWorkspace: WorkspaceResult;
+  deleteTableRows: DeleteTableRowsResult;
   removeConnection: RemoveConnectionResult;
   removeFile: RemoveFileResult;
   runQuery: RunQueryResult;
   saveFile: FileResult;
+  saveTableChanges: SaveTableChangesResult;
   testConnection: TestConnectionResult;
   updateConnection: ConnectionResult;
   updateUserProfile: UserResult;
@@ -249,6 +278,10 @@ export type MutationCreateConnectionArgs = {
 
 export type MutationCreateWorkspaceArgs = {
   input: CreateWorkspaceInput;
+};
+
+export type MutationDeleteTableRowsArgs = {
+  input: DeleteTableRowsInput;
 };
 
 export type MutationRemoveConnectionArgs = {
@@ -265,6 +298,10 @@ export type MutationRunQueryArgs = {
 
 export type MutationSaveFileArgs = {
   input: SaveFileInput;
+};
+
+export type MutationSaveTableChangesArgs = {
+  input: SaveTableChangesInput;
 };
 
 export type MutationTestConnectionArgs = {
@@ -367,6 +404,20 @@ export type SaveFileInput = {
   type: FileType;
 };
 
+export type SaveTableChangesInput = {
+  connectionId: Scalars['ID']['input'];
+  inserts: Array<DbRowInsertInput>;
+  name: Scalars['String']['input'];
+  schema: Scalars['String']['input'];
+  updates: Array<DbRowUpdateInput>;
+};
+
+export type SaveTableChangesResult = {
+  __typename?: 'SaveTableChangesResult';
+  apiErrors: Array<ShellErrorResult>;
+  success?: Maybe<Scalars['Boolean']['output']>;
+};
+
 export type SchemaDiagram = {
   __typename?: 'SchemaDiagram';
   entities: Array<DiagramEntity>;
@@ -384,6 +435,7 @@ export type ShellErrorCode =
   | 'CONNECTION_NOT_FOUND'
   | 'INVALID_INPUT'
   | 'OBJECT_NOT_FOUND'
+  | 'PRIMARY_KEY_REQUIRED'
   | 'QUERY_FAILED';
 
 export type ShellErrorResult = {
@@ -600,6 +652,7 @@ export type ResolversTypes = {
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  DbCellValueInput: DbCellValueInput;
   DbColumn: ResolverTypeWrapper<DbColumn>;
   DbColumnDetail: ResolverTypeWrapper<DbColumnDetail>;
   DbForeignKey: ResolverTypeWrapper<DbForeignKey>;
@@ -608,10 +661,14 @@ export type ResolversTypes = {
   DbIndex: ResolverTypeWrapper<DbIndex>;
   DbObjectInput: DbObjectInput;
   DbResultColumn: ResolverTypeWrapper<DbResultColumn>;
+  DbRowInsertInput: DbRowInsertInput;
+  DbRowUpdateInput: DbRowUpdateInput;
   DbSchema: ResolverTypeWrapper<DbSchema>;
   DbTable: ResolverTypeWrapper<DbTable>;
   DbTableStructure: ResolverTypeWrapper<DbTableStructure>;
   DbView: ResolverTypeWrapper<DbView>;
+  DeleteTableRowsInput: DeleteTableRowsInput;
+  DeleteTableRowsResult: ResolverTypeWrapper<DeleteTableRowsResult>;
   DiagramEntity: ResolverTypeWrapper<DiagramEntity>;
   DiagramProperty: ResolverTypeWrapper<DiagramProperty>;
   DiagramRelation: ResolverTypeWrapper<DiagramRelation>;
@@ -635,6 +692,8 @@ export type ResolversTypes = {
   RunQueryInput: RunQueryInput;
   RunQueryResult: ResolverTypeWrapper<RunQueryResult>;
   SaveFileInput: SaveFileInput;
+  SaveTableChangesInput: SaveTableChangesInput;
+  SaveTableChangesResult: ResolverTypeWrapper<SaveTableChangesResult>;
   SchemaDiagram: ResolverTypeWrapper<SchemaDiagram>;
   SchemaDiagramResult: ResolverTypeWrapper<SchemaDiagramResult>;
   ShellErrorCode: ShellErrorCode;
@@ -669,6 +728,7 @@ export type ResolversParentTypes = {
   CreateConnectionInput: CreateConnectionInput;
   CreateWorkspaceInput: CreateWorkspaceInput;
   DateTime: Scalars['DateTime']['output'];
+  DbCellValueInput: DbCellValueInput;
   DbColumn: DbColumn;
   DbColumnDetail: DbColumnDetail;
   DbForeignKey: DbForeignKey;
@@ -676,10 +736,14 @@ export type ResolversParentTypes = {
   DbIndex: DbIndex;
   DbObjectInput: DbObjectInput;
   DbResultColumn: DbResultColumn;
+  DbRowInsertInput: DbRowInsertInput;
+  DbRowUpdateInput: DbRowUpdateInput;
   DbSchema: DbSchema;
   DbTable: DbTable;
   DbTableStructure: DbTableStructure;
   DbView: DbView;
+  DeleteTableRowsInput: DeleteTableRowsInput;
+  DeleteTableRowsResult: DeleteTableRowsResult;
   DiagramEntity: DiagramEntity;
   DiagramProperty: DiagramProperty;
   DiagramRelation: DiagramRelation;
@@ -700,6 +764,8 @@ export type ResolversParentTypes = {
   RunQueryInput: RunQueryInput;
   RunQueryResult: RunQueryResult;
   SaveFileInput: SaveFileInput;
+  SaveTableChangesInput: SaveTableChangesInput;
+  SaveTableChangesResult: SaveTableChangesResult;
   SchemaDiagram: SchemaDiagram;
   SchemaDiagramResult: SchemaDiagramResult;
   ShellErrorResult: ShellErrorResult;
@@ -879,6 +945,15 @@ export type DbViewResolvers<
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type DeleteTableRowsResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['DeleteTableRowsResult'] =
+    ResolversParentTypes['DeleteTableRowsResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  deletedRows?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+};
+
 export type DiagramEntityResolvers<
   ContextType = RequestContext,
   ParentType extends ResolversParentTypes['DiagramEntity'] = ResolversParentTypes['DiagramEntity']
@@ -985,6 +1060,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateWorkspaceArgs, 'input'>
   >;
+  deleteTableRows?: Resolver<
+    ResolversTypes['DeleteTableRowsResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteTableRowsArgs, 'input'>
+  >;
   removeConnection?: Resolver<
     ResolversTypes['RemoveConnectionResult'],
     ParentType,
@@ -1008,6 +1089,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationSaveFileArgs, 'input'>
+  >;
+  saveTableChanges?: Resolver<
+    ResolversTypes['SaveTableChangesResult'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSaveTableChangesArgs, 'input'>
   >;
   testConnection?: Resolver<
     ResolversTypes['TestConnectionResult'],
@@ -1122,6 +1209,15 @@ export type RunQueryResultResolvers<
 > = {
   apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
   execution?: Resolver<Maybe<ResolversTypes['QueryExecution']>, ParentType, ContextType>;
+};
+
+export type SaveTableChangesResultResolvers<
+  ContextType = RequestContext,
+  ParentType extends ResolversParentTypes['SaveTableChangesResult'] =
+    ResolversParentTypes['SaveTableChangesResult']
+> = {
+  apiErrors?: Resolver<Array<ResolversTypes['ShellErrorResult']>, ParentType, ContextType>;
+  success?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
 };
 
 export type SchemaDiagramResolvers<
@@ -1258,6 +1354,7 @@ export type Resolvers<ContextType = RequestContext> = {
   DbTable?: DbTableResolvers<ContextType>;
   DbTableStructure?: DbTableStructureResolvers<ContextType>;
   DbView?: DbViewResolvers<ContextType>;
+  DeleteTableRowsResult?: DeleteTableRowsResultResolvers<ContextType>;
   DiagramEntity?: DiagramEntityResolvers<ContextType>;
   DiagramProperty?: DiagramPropertyResolvers<ContextType>;
   DiagramRelation?: DiagramRelationResolvers<ContextType>;
@@ -1274,6 +1371,7 @@ export type Resolvers<ContextType = RequestContext> = {
   RemoveConnectionResult?: RemoveConnectionResultResolvers<ContextType>;
   RemoveFileResult?: RemoveFileResultResolvers<ContextType>;
   RunQueryResult?: RunQueryResultResolvers<ContextType>;
+  SaveTableChangesResult?: SaveTableChangesResultResolvers<ContextType>;
   SchemaDiagram?: SchemaDiagramResolvers<ContextType>;
   SchemaDiagramResult?: SchemaDiagramResultResolvers<ContextType>;
   ShellErrorResult?: ShellErrorResultResolvers<ContextType>;
