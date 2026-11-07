@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { countTableChanges } from '@/lib/database-schema/utils/table-changes.utils';
 import { FILE_ICONS } from '@/lib/file/constants/file-types';
 import { CodeIcon, DiagramIcon, EyeIcon, TableIcon, XIcon } from '@/shared/components/icons/icons';
 import { Button } from '@/shared/components/ui/button';
@@ -25,7 +26,7 @@ const getTabIcon = (tab: WorkspaceTab) =>
 
 export const WorkspaceTabBar = () => {
   const { t } = useTranslation();
-  const { tabs, activeKey, provisionalKey, pinTab, closeTab } = useWorkspaceTabs();
+  const { tabs, activeKey, provisionalKey, pinTab, closeTab, getTableChanges } = useWorkspaceTabs();
   const getTabName = useTabName();
   const [closingTab, setClosingTab] = useState<WorkspaceTab | null>(null);
 
@@ -38,7 +39,9 @@ export const WorkspaceTabBar = () => {
       >
         {tabs.map(tab => {
           const isActive = tab.key === activeKey;
-          const isDirty = 'isDirty' in tab && tab.isDirty;
+          const isDirty =
+            ('isDirty' in tab && tab.isDirty) ||
+            (tab.kind === 'table' && countTableChanges(getTableChanges(tab.key)) > 0);
           const Icon = getTabIcon(tab);
           const name = getTabName(tab);
 

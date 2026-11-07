@@ -431,6 +431,25 @@ describe('WorkspaceShell', () => {
     );
   });
 
+  test('keeps the pending table changes across tabs and asks before closing the table', async () => {
+    renderShell();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'users' }));
+    await user.dblClick(await screen.findByRole('cell', { name: /ana@acme\.dev/ }));
+    await user.keyboard('x{Enter}');
+    expect(screen.getByRole('img', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'orders' }));
+    await screen.findByRole('heading', { name: /orders/ });
+    await user.click(screen.getByRole('tab', { name: 'users' }));
+    expect(await screen.findByRole('button', { name: 'Guardar (1)' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cerrar users' }));
+    expect(
+      await screen.findByRole('alertdialog', { name: '¿Descartar los cambios?' })
+    ).toBeInTheDocument();
+  });
+
   test('opens a table in the provisional tab and replaces it with the next one', async () => {
     renderShell();
     const user = userEvent.setup();
@@ -538,14 +557,13 @@ describe('WorkspaceShell', () => {
     expect(await screen.findByRole('tab', { name: 'users' })).toBeInTheDocument();
   });
 
-  test('pins the provisional tab when opening a row detail', async () => {
+  test('pins the provisional tab when editing a cell', async () => {
     renderShell();
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole('button', { name: 'users' }));
-    const cell = await screen.findByRole('cell', { name: /user-1/ });
-    await user.click(cell);
-    await user.keyboard('{Escape}');
+    await user.dblClick(await screen.findByRole('cell', { name: /ana@acme\.dev/ }));
+    await user.keyboard('x{Enter}');
     await user.click(screen.getByRole('button', { name: 'orders' }));
 
     expect(getTabs()).toEqual(['users', 'orders']);

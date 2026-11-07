@@ -146,3 +146,15 @@ export const DELETE_TABLE_ROWS_MUTATION = graphql(`
     }
   }
 `);
+
+export const SAVE_TABLE_CHANGES_MUTATION = graphql(`
+  mutation SaveTableChanges($input: SaveTableChangesInput!) {
+    saveTableChanges(input: $input) {
+      apiErrors {
+        code
+        message
+      }
+      success
+    }
+  }
+`);

@@ -1,10 +1,14 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Empty, EmptyHeader, EmptyTitle } from '@/shared/components/ui/empty';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 
 import type { useGetTableRows } from '../../../hooks/use-get-table-rows';
+import {
+  editTableCell,
+  editTableNewRowCell,
+  type TableChanges
+} from '../../../utils/table-changes.utils';
 import {
   formatTableOrder,
   getPrimaryKeyColumns,
@@ -21,9 +25,8 @@ import {
 import { TableTabMessage } from '../table-tab-message/table-tab-message';
 
 import { TableFilterBar } from './table-filter-bar/table-filter-bar';
-import { TableGrid } from './table-grid/table-grid';
+import { type TableCellRef, TableGrid } from './table-grid/table-grid';
 import { TablePagination } from './table-pagination/table-pagination';
-import { type TableRowDetail, TableRowSheet } from './table-row-sheet/table-row-sheet';
 
 type Props = {
   structure: Pick<TableStructureNode, 'columns'>;
@@ -36,6 +39,14 @@ type Props = {
   onPin: () => void;
   selectedRowKeys: TableRowKey[];
   onSelectedRowKeysChange: (keys: TableRowKey[]) => void;
+  selectedNewRowIds: string[];
+  onSelectedNewRowIdsChange: (ids: string[]) => void;
+  changes: TableChanges;
+  onChangesChange: (changes: TableChanges) => void;
+  selectedCell: TableCellRef | null;
+  onSelectedCellChange: (cell: TableCellRef | null) => void;
+  editingCell: TableCellRef | null;
+  onEditingCellChange: (cell: TableCellRef | null) => void;
 };
 
 export const TableData = ({
@@ -48,7 +59,15 @@ export const TableData = ({
   onStateChange,
   onPin,
   selectedRowKeys,
-  onSelectedRowKeysChange
+  onSelectedRowKeysChange,
+  selectedNewRowIds,
+  onSelectedNewRowIdsChange,
+  changes,
+  onChangesChange,
+  selectedCell,
+  onSelectedCellChange,
+  editingCell,
+  onEditingCellChange
 }: Props) => {
   const { t } = useTranslation();
   const { tableRows, rowsError, durationMs, isLoading, isFetching, isPlaceholderData, refetch } =
@@ -58,25 +77,30 @@ export const TableData = ({
   const defaultOrder: TableOrder | null = primaryKey
     ? { column: primaryKey, direction: 'ASC' }
     : null;
-  const canSelectRows = object.kind === 'table' && primaryKeys.length > 0;
+  const isTable = object.kind === 'table';
+  const canSelectRows = isTable && primaryKeys.length > 0;
   const rowKeys = tableRows
     ? tableRows.rows.map(row => getTableRowKey(tableRows.columns, row, primaryKeys))
     : [];
   const selectedIds = new Set(selectedRowKeys.map(getTableRowKeyId));
+  const rowEdits = rowKeys.map(key => changes.edits[getTableRowKeyId(key)]?.values ?? {});
+  const columns = tableRows?.columns ?? [];
+  const shownRows = (tableRows?.rows ?? []).map((row, rowIndex) =>
+    row.map((value, columnIndex) => {
+      const edits = rowEdits[rowIndex] ?? {};
+      const column = columns[columnIndex]?.name ?? '';
+      return column in edits ? (edits[column] ?? null) : value;
+    })
+  );
+  const changedCells = rowEdits.map(edits => columns.map(column => column.name in edits));
+  const newRowValues = changes.newRows.map(row =>
+    columns.map(column =>
+      column.name in row.values ? (row.values[column.name] ?? null) : undefined
+    )
+  );
   const order = state.orderBy ? parseTableOrder(state.orderBy) : defaultOrder;
 
-  const [shownRow, setShownRow] = useState<(TableRowDetail & { index: number }) | null>(null);
-  const [isRowOpen, setIsRowOpen] = useState(false);
   const firstRowNumber = (state.page - 1) * TABLE_PAGE_SIZE + 1;
-
-  const openRow = (rowIndex: number) => {
-    const values = tableRows?.rows[rowIndex];
-    if (!values) return;
-
-    setShownRow({ index: rowIndex, number: firstRowNumber + rowIndex, values });
-    setIsRowOpen(true);
-    onPin();
-  };
 
   const toggleRow = (rowIndex: number) => {
     const key = rowKeys[rowIndex];
@@ -88,6 +112,37 @@ export const TableData = ({
         ? selectedRowKeys.filter(selected => getTableRowKeyId(selected) !== id)
         : [...selectedRowKeys, key]
     );
+  };
+
+  const toggleNewRow = (id: string) =>
+    onSelectedNewRowIdsChange(
+      selectedNewRowIds.includes(id)
+        ? selectedNewRowIds.filter(selected => selected !== id)
+        : [...selectedNewRowIds, id]
+    );
+
+  const editCell = (cell: TableCellRef) => {
+    onSelectedCellChange(cell);
+    onEditingCellChange(cell);
+  };
+
+  const changeCell = (value: string | null | undefined) => {
+    if (!editingCell || !tableRows) return;
+
+    const { row, column } = editingCell;
+
+    if (typeof row === 'string') {
+      return onChangesChange(
+        editTableNewRowCell(changes, { id: row, column, value: value === undefined ? '' : value })
+      );
+    }
+
+    const key = rowKeys[row];
+    if (!key || value === undefined) return;
+
+    const columnIndex = tableRows.columns.findIndex(({ name }) => name === column);
+    const original = tableRows.rows[row]?.[columnIndex] ?? null;
+    onChangesChange(editTableCell(changes, { key, column, value, original }));
   };
 
   const changeOrder = (nextOrder: TableOrder) =>
@@ -110,7 +165,7 @@ export const TableData = ({
       );
     }
 
-    if (!tableRows.rows.length) {
+    if (!tableRows.rows.length && !changes.newRows.length) {
       return (
         <Empty className="md:py-12">
           <EmptyHeader>
@@ -124,18 +179,34 @@ export const TableData = ({
 
     return (
       <TableGrid
-        {...getVisibleTableRows(tableRows, hiddenColumns)}
+        {...getVisibleTableRows({ columns, rows: shownRows }, hiddenColumns)}
+        changedCells={getVisibleTableRows({ columns, rows: changedCells }, hiddenColumns).rows}
+        newRows={changes.newRows.map((row, index) => ({
+          id: row.id,
+          values:
+            getVisibleTableRows({ columns, rows: [newRowValues[index] ?? []] }, hiddenColumns)
+              .rows[0] ?? []
+        }))}
         primaryKeys={primaryKeys}
         firstRowNumber={firstRowNumber}
         order={order}
         isStale={isPlaceholderData}
         onOrderChange={changeOrder}
-        selectedRowIndex={isRowOpen && shownRow ? shownRow.index : null}
-        onRowOpen={openRow}
         checkedRows={
           canSelectRows ? rowKeys.map(key => selectedIds.has(getTableRowKeyId(key))) : undefined
         }
         onRowCheck={canSelectRows ? toggleRow : undefined}
+        checkedNewRows={
+          canSelectRows ? changes.newRows.map(row => selectedNewRowIds.includes(row.id)) : undefined
+        }
+        onNewRowCheck={canSelectRows ? toggleNewRow : undefined}
+        canEditRows={canSelectRows}
+        selectedCell={selectedCell}
+        onCellSelect={onSelectedCellChange}
+        editingCell={editingCell}
+        onCellEdit={isTable ? editCell : undefined}
+        onCellChange={changeCell}
+        onCellEditEnd={() => onEditingCellChange(null)}
         className="pb-14"
       />
     );
@@ -165,16 +236,6 @@ export const TableData = ({
           />
         )}
       </div>
-      {tableRows && (
-        <TableRowSheet
-          objectName={object.name}
-          columns={tableRows.columns}
-          primaryKeys={primaryKeys}
-          isOpen={isRowOpen}
-          row={shownRow}
-          onClose={() => setIsRowOpen(false)}
-        />
-      )}
     </>
   );
 };

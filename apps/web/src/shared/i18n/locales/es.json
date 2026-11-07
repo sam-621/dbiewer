@@ -59,7 +59,6 @@
   "Connection URL": "URL de conexión",
   "Continue": "Continuar",
   "Copied": "Copiado",
-  "Copy {{name}}": "Copiar {{name}}",
   "Copy DDL": "Copiar DDL",
   "Copy definition": "Copiar definición",
   "Dark": "Oscuro",
@@ -138,7 +137,6 @@
   "Resize results": "Cambiar el alto de los resultados",
   "Resize sidebar": "Cambiar el ancho del panel lateral",
   "Results": "Resultados",
-  "Row {{number, number}}": "Fila {{number, number}}",
   "Run": "Ejecutar",
   "Run the query with {{shortcut}} to see results here": "Ejecuta la consulta con {{shortcut}} para ver los resultados aquí",
   "Running query": "Ejecutando la consulta",
@@ -197,5 +195,15 @@
   "Delete {{count, number}} rows from {{name}}?_one": "¿Borrar {{count, number}} fila de {{name}}?",
   "Delete {{count, number}} rows from {{name}}?_other": "¿Borrar {{count, number}} filas de {{name}}?",
   "Select row {{number, number}}": "Seleccionar la fila {{number, number}}",
-  "This table needs a primary key": "Esta tabla necesita una llave primaria"
+  "This table needs a primary key": "Esta tabla necesita una llave primaria",
+  "Add row": "Agregar fila",
+  "Without a primary key, you can only add rows": "Sin llave primaria, solo se pueden agregar filas",
+  "Edit {{column}}": "Editar {{column}}",
+  "Set NULL": "Poner NULL",
+  "New row {{number, number}}": "Fila nueva {{number, number}}",
+  "Select new row {{number, number}}": "Seleccionar la fila nueva {{number, number}}",
+  "Save ({{count, number}})": "Guardar ({{count, number}})",
+  "Undo": "Deshacer",
+  "You have {{count, number}} unsaved changes in this table._one": "Tienes {{count, number}} cambio sin guardar en esta tabla.",
+  "You have {{count, number}} unsaved changes in this table._other": "Tienes {{count, number}} cambios sin guardar en esta tabla."
 }

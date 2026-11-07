@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { ReloadIcon } from '@/shared/components/icons/icons';
+import { PlusIcon, ReloadIcon } from '@/shared/components/icons/icons';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
@@ -23,7 +23,14 @@ type Props = {
   isReloading: boolean;
   onReload: () => void;
   selectedRowKeys: TableRowKey[];
-  onRowsDeleted: () => void;
+  selectedNewRowsCount: number;
+  onNewRowsRemove: () => void;
+  onRowsDeleted: (rowKeys: TableRowKey[]) => void;
+  changesCount: number;
+  isSaving: boolean;
+  onSave: () => void;
+  onUndo: () => void;
+  onRowAdd: () => void;
 };
 
 export const TableTabHeader = ({
@@ -37,11 +44,19 @@ export const TableTabHeader = ({
   isReloading,
   onReload,
   selectedRowKeys,
-  onRowsDeleted
+  selectedNewRowsCount,
+  onNewRowsRemove,
+  onRowsDeleted,
+  changesCount,
+  isSaving,
+  onSave,
+  onUndo,
+  onRowAdd
 }: Props) => {
   const { t } = useTranslation();
-  const canDeleteRows =
-    object.kind === 'table' && view === 'data' && !!columns?.some(column => column.isPrimaryKey);
+  const canChangeRows = object.kind === 'table' && view === 'data' && !!columns;
+  const hasPrimaryKey = !!columns?.some(column => column.isPrimaryKey);
+  const addLabel = hasPrimaryKey ? t('Add row') : t('Without a primary key, you can only add rows');
 
   return (
     <header className="flex min-h-10.5 shrink-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1 ps-3.5 pe-2">
@@ -49,13 +64,45 @@ export const TableTabHeader = ({
       <p className="text-xs text-muted-foreground">
         {totalRows !== null && t('{{count, number}} rows', { count: totalRows })}
       </p>
-      {canDeleteRows && (
-        <DeleteTableRowsDialog
-          connectionId={connectionId}
-          object={object}
-          rowKeys={selectedRowKeys}
-          onDeleted={onRowsDeleted}
-        />
+      {canChangeRows && (
+        <div className="flex items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground"
+                  aria-label={t('Add row')}
+                  onClick={onRowAdd}
+                />
+              }
+            >
+              <PlusIcon className="size-3.5" />
+            </TooltipTrigger>
+            <TooltipPopup>{addLabel}</TooltipPopup>
+          </Tooltip>
+          {hasPrimaryKey && (
+            <DeleteTableRowsDialog
+              connectionId={connectionId}
+              object={object}
+              rowKeys={selectedRowKeys}
+              newRowsCount={selectedNewRowsCount}
+              onNewRowsRemove={onNewRowsRemove}
+              onDeleted={onRowsDeleted}
+            />
+          )}
+        </div>
+      )}
+      {canChangeRows && changesCount > 0 && (
+        <div className="flex items-center gap-1">
+          <Button size="xs" loading={isSaving} onClick={onSave}>
+            {t('Save ({{count, number}})', { count: changesCount })}
+          </Button>
+          <Button variant="ghost" size="xs" disabled={isSaving} onClick={onUndo}>
+            {t('Undo')}
+          </Button>
+        </div>
       )}
       {object.kind === 'view' && <Badge variant="warning">{t('View · read only')}</Badge>}
       <div className="ms-auto flex items-center gap-1">

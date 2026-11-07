@@ -52,8 +52,8 @@ export const parseTableOrder = (orderBy: string): TableOrder | null => {
 export const formatTableOrder = ({ column, direction }: TableOrder) =>
   `${quoteIdentifier(column)} ${direction.toLowerCase()}`;
 
-export const getVisibleTableRows = (
-  { columns, rows }: Pick<TableRowsNode, 'columns' | 'rows'>,
+export const getVisibleTableRows = <T>(
+  { columns, rows }: { columns: TableRowsNode['columns']; rows: T[][] },
   hiddenColumns: string[]
 ) => {
   const isVisible = columns.map(column => !hiddenColumns.includes(column.name));

@@ -19,7 +19,7 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 ## Flujo
 
 1. El usuario abre una tabla en Data.
-2. Con doble clic en una celda, la edita. Con Enter, el valor queda como cambio pendiente y la celda se marca.
+2. Con clic selecciona una celda y con doble clic la edita. Lo que escribe queda como cambio pendiente al instante y la celda se marca.
 3. Con el botón `+`, se agrega una fila nueva al final de la grilla y la vista baja hasta ella. Llena los campos que quiera.
 4. Junto al nombre de la tabla y el número de filas aparecen Guardar y Deshacer mientras haya cambios pendientes.
 5. Con Guardar, se aplican todos los cambios: un `UPDATE` por fila editada y un `INSERT` por fila nueva. Si algo falla, se muestra el error y los cambios siguen pendientes. Con Deshacer, se descartan.
@@ -35,8 +35,13 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 
 ### Editar celdas
 
-- Doble clic en una celda la pone en modo edición con su valor actual. El clic simple en la fila sigue abriendo el detalle.
-- Enter confirma el valor como cambio pendiente. Escape sale sin cambiar nada.
+- Un clic en una celda la selecciona. Doble clic la pone en modo edición con su valor actual. El clic en la fila ya no abre el detalle.
+- Lo que se escribe cuenta como cambio pendiente mientras se escribe, sin esperar Enter.
+- Enter sale de edición conservando el valor y deja la celda seleccionada. Tab conserva el valor y mueve la selección a la celda siguiente (Shift+Tab, a la anterior). Salir de la celda también conserva el valor.
+- Escape devuelve la celda al valor que tenía antes de entrar en edición.
+- Editar fija la pestaña provisional.
+- El detalle de fila (sheet) se quita de la vista de tabla: el clic queda para seleccionar celdas.
+- Las vistas permiten seleccionar una celda, pero no editarla.
 - El valor se escribe como texto y Postgres lo convierte al tipo de la columna al guardar. Si no puede, el error sale al guardar.
 - Se puede poner `NULL` explícito en una celda.
 - Una celda con un valor distinto al original se marca como cambiada. Si se vuelve a dejar el valor original, deja de estar pendiente.
@@ -49,11 +54,12 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 - Una fila nueva se marca distinto de una celda editada.
 - Una celda vacía de una fila nueva no se manda en el `INSERT`: toma el default de la columna. Si la columna es `NOT NULL` y no tiene default, Postgres devuelve el error al guardar. `NULL` explícito sí se manda.
 - Las columnas ocultas en Data no se muestran en la fila nueva y toman su default.
-- Una fila nueva se quita seleccionándola y con el botón `−`, sin confirmación, porque no existe en la base.
+- Una fila nueva se quita seleccionándola y con el botón `−`, sin confirmación, porque no existe en la base. Si la selección mezcla filas nuevas y existentes, las nuevas se quitan y se pide confirmación solo para las existentes. En una tabla sin PK, donde no hay `−`, se quitan con Deshacer.
+- Una celda vacía de una fila nueva siempre es default: no se puede insertar `''`.
 
 ### Cambios pendientes
 
-- Los cambios pendientes son las celdas editadas y las filas nuevas de la tabla. Mientras haya alguno, se ven Guardar y Deshacer con la cantidad de cambios.
+- Los cambios pendientes son las celdas editadas y las filas nuevas de la tabla. Mientras haya alguno, se ven Guardar y Deshacer con la cantidad de cambios: celdas editadas más filas nuevas.
 - Guardar aplica todo en una sola transacción: si un cambio falla, no se aplica ninguno, se muestra el mensaje de Postgres y los cambios siguen pendientes para corregirlos.
 - Al guardar bien, se descartan los pendientes y se recargan las filas y el conteo.
 - Deshacer descarta todos los cambios pendientes, sin confirmación.
@@ -79,12 +85,12 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 - **Fila ubicada por la PK**: es lo único que identifica una fila sin ambigüedad. Se descarta usar `ctid` o todos los valores de la fila para tablas sin PK.
 - **Celda vacía en fila nueva toma el default**: así las PK `serial` o `uuid` con default y columnas como `created_at` se llenan solas. El `NULL` explícito queda para cuando se quiere.
 - **Valores como texto**: la grilla ya los recibe como texto. Postgres los convierte al tipo de la columna, igual que si se escribieran en SQL, sin que la web tenga que conocer cada tipo.
-- **Seleccionar desde el numeral**: no agrega una columna a la grilla y no choca con el clic en la fila, que abre el detalle.
+- **Seleccionar desde el numeral**: no agrega una columna a la grilla y no choca con el clic en una celda, que la selecciona.
 - **Selección separada del borrado**: la selección es un estado propio de la grilla, para que otras acciones sobre filas seleccionadas se sumen sin rehacerla.
 
 ## Fuera de alcance
 
-- Editar desde el detalle de fila (sheet).
+- Un detalle de fila (sheet) en la vista de tabla.
 - Deshacer celda por celda o rehacer.
 - Copiar y pegar varias celdas o filas.
 - Editores por tipo (fecha, booleano, JSON): todo se edita como texto.
@@ -95,5 +101,5 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 
 1. [x] api: mutations `saveTableChanges` y `deleteTableRows` en una transacción, con sus tests de integración y e2e.
 2. [x] web: selección de filas desde el numeral y borrado con confirmación.
-3. [ ] web: edición de celdas con cambios pendientes, Guardar y Deshacer.
-4. [ ] web: agregar filas nuevas con `+`.
+3. [x] web: edición de celdas con cambios pendientes, Guardar y Deshacer.
+4. [x] web: agregar filas nuevas con `+`.

@@ -30,15 +30,15 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
   - `−`: borra o quita las filas seleccionadas. Deshabilitado sin selección.
   - Guardar y Deshacer, visibles solo con cambios pendientes, con la cantidad. Ejemplo: `orders 1,234 filas  + −  Guardar (3)  Deshacer`.
 - **Cambia:** en una tabla sin PK, `−` no aparece y no se pueden editar celdas existentes; un tooltip en `+` o un aviso explica que sin PK solo se agregan filas.
-- **Estados:** Guardar en carga mientras se guarda; error de Postgres visible cerca de la grilla o como aviso, con los cambios aún marcados.
+- **Estados:** Guardar en carga mientras se guarda; error de Postgres en un aviso sobre la grilla, visible hasta guardar bien o descartar, con los cambios aún marcados.
 
 ### Grilla de Data
 
 - **Ubicación:** pestaña de tabla, vista Data.
 - **Cambia:**
-  - Doble clic en una celda abre un input con su valor. Enter confirma, Escape cancela. Hay una forma de poner `NULL` (acción en el input o atajo).
+  - Clic en una celda la selecciona (una celda activa, resaltada). Doble clic la vuelve editable en el lugar: aparece el cursor dentro de la celda con su valor, sin un input visible ni cambio de tamaño. Enter, Tab y Escape según `product.md` "Editar celdas". Hay una forma de poner `NULL` (acción discreta o atajo).
   - Celda cambiada con un tono distinto. Ejemplo: `status` de `pending` a `paid`.
-  - Fila nueva al final, con otro tono y todas sus celdas visibles editables; las vacías muestran que tomarán el default.
+  - Fila nueva al final, con otro tono y todas sus celdas visibles editables; las vacías muestran `DEFAULT`. Su numeral muestra `+` y se selecciona igual que el de una fila existente.
   - El numeral sigue mostrando el número de fila, sin checkbox (ni al pasar el mouse). Un clic en él agrega o quita la fila de la selección, y la fila seleccionada se ve resaltada.
   - Al agregar una fila, la grilla baja hasta ella y pone en edición su primera celda.
 - **Estados:** las vistas no permiten seleccionar filas ni muestran `+`, `−` ni edición.

@@ -59,7 +59,6 @@
   "Connection URL": "Connection URL",
   "Continue": "Continue",
   "Copied": "Copied",
-  "Copy {{name}}": "Copy {{name}}",
   "Copy DDL": "Copy DDL",
   "Copy definition": "Copy definition",
   "Dark": "Dark",
@@ -138,7 +137,6 @@
   "Resize results": "Resize results",
   "Resize sidebar": "Resize sidebar",
   "Results": "Results",
-  "Row {{number, number}}": "Row {{number, number}}",
   "Run": "Run",
   "Run the query with {{shortcut}} to see results here": "Run the query with {{shortcut}} to see results here",
   "Running query": "Running query",
@@ -197,5 +195,15 @@
   "Delete {{count, number}} rows from {{name}}?_one": "Delete {{count, number}} row from {{name}}?",
   "Delete {{count, number}} rows from {{name}}?_other": "Delete {{count, number}} rows from {{name}}?",
   "Select row {{number, number}}": "Select row {{number, number}}",
-  "This table needs a primary key": "This table needs a primary key"
+  "This table needs a primary key": "This table needs a primary key",
+  "Add row": "Add row",
+  "Without a primary key, you can only add rows": "Without a primary key, you can only add rows",
+  "Edit {{column}}": "Edit {{column}}",
+  "Set NULL": "Set NULL",
+  "New row {{number, number}}": "New row {{number, number}}",
+  "Select new row {{number, number}}": "Select new row {{number, number}}",
+  "Save ({{count, number}})": "Save ({{count, number}})",
+  "Undo": "Undo",
+  "You have {{count, number}} unsaved changes in this table._one": "You have {{count, number}} unsaved change in this table.",
+  "You have {{count, number}} unsaved changes in this table._other": "You have {{count, number}} unsaved changes in this table."
 }

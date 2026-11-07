@@ -5,6 +5,10 @@ import {
   DEFAULT_DIAGRAM_NAVIGATION,
   type DiagramNavigation
 } from '@/lib/database-schema/constants/diagram-navigation';
+import {
+  EMPTY_TABLE_CHANGES,
+  type TableChanges
+} from '@/lib/database-schema/utils/table-changes.utils';
 import type { TableViewState } from '@/lib/database-schema/utils/table-view.utils';
 import { removeStoredDraft } from '@/lib/file/hooks/use-file-draft';
 import { Logger } from '@/shared/utils/logger';
@@ -36,6 +40,8 @@ type HiddenColumns = Record<string, string[]>;
 
 type DiagramNavigations = Record<string, DiagramNavigation>;
 
+type TablesChanges = Record<string, TableChanges>;
+
 export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   const [stored, setStored] = useState(() => ({
     connectionId,
@@ -47,6 +53,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
   }
 
   const [hiddenColumns, setHiddenColumns] = useState<HiddenColumns>({});
+  const [tablesChanges, setTablesChanges] = useState<TablesChanges>({});
   const diagramNavigations = useRef<DiagramNavigations>({});
 
   const { workspaceTabs } = stored;
@@ -58,6 +65,7 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
     const removedKeys = getRemovedTabKeys(workspaceTabs, next);
     if (removedKeys.length) {
       setHiddenColumns(current => removeTabEntries(current, connectionId, removedKeys));
+      setTablesChanges(current => removeTabEntries(current, connectionId, removedKeys));
       diagramNavigations.current = removeTabEntries(
         diagramNavigations.current,
         connectionId,
@@ -98,6 +106,15 @@ export const WorkspaceTabsProvider = ({ connectionId, children }: Props) => {
           setHiddenColumns(current => ({
             ...current,
             [getTabEntryKey(connectionId, key)]: columns
+          }));
+          update(pinTab(workspaceTabs, key));
+        },
+        getTableChanges: key =>
+          tablesChanges[getTabEntryKey(connectionId, key)] ?? EMPTY_TABLE_CHANGES,
+        changeTableChanges: (key, changes) => {
+          setTablesChanges(current => ({
+            ...current,
+            [getTabEntryKey(connectionId, key)]: changes
           }));
           update(pinTab(workspaceTabs, key));
         },

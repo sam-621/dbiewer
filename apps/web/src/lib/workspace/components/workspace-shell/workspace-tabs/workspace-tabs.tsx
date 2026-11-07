@@ -20,6 +20,8 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
     changeTabState,
     getHiddenColumns,
     changeHiddenColumns,
+    getTableChanges,
+    changeTableChanges,
     getDiagramNavigation,
     changeDiagramNavigation
   } = useWorkspaceTabs();
@@ -65,6 +67,8 @@ export const WorkspaceTabs = ({ connectionId, connectionName }: Props) => {
         onStateChange={state => changeTabState(tab.key, state)}
         hiddenColumns={getHiddenColumns(tab.key)}
         onHiddenColumnsChange={columns => changeHiddenColumns(tab.key, columns)}
+        changes={getTableChanges(tab.key)}
+        onChangesChange={changes => changeTableChanges(tab.key, changes)}
         onPin={() => pinTab(tab.key)}
       />
     );

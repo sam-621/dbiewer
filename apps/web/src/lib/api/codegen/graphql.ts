@@ -43,6 +43,15 @@ export type DbObjectInput = {
   schema: string;
 };
 
+export type DbRowInsertInput = {
+  values: Array<DbCellValueInput>;
+};
+
+export type DbRowUpdateInput = {
+  key: Array<DbCellValueInput>;
+  values: Array<DbCellValueInput>;
+};
+
 export type DeleteTableRowsInput = {
   connectionId: string | number;
   keys: Array<Array<DbCellValueInput>>;
@@ -83,6 +92,14 @@ export type SaveFileInput = {
   id?: string | number | null | undefined;
   name: string;
   type: FileType;
+};
+
+export type SaveTableChangesInput = {
+  connectionId: string | number;
+  inserts: Array<DbRowInsertInput>;
+  name: string;
+  schema: string;
+  updates: Array<DbRowUpdateInput>;
 };
 
 export type ShellErrorCode =
@@ -203,6 +220,13 @@ export type DeleteTableRowsMutationVariables = Exact<{
 
 
 export type DeleteTableRowsMutation = { deleteTableRows: { deletedRows: number | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
+
+export type SaveTableChangesMutationVariables = Exact<{
+  input: SaveTableChangesInput;
+}>;
+
+
+export type SaveTableChangesMutation = { saveTableChanges: { success: boolean | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
 
 export type CommonFileFragment = { id: string, name: string, type: FileType, content: string, updatedAt: string } & { ' $fragmentName'?: 'CommonFileFragment' };
 
@@ -516,6 +540,17 @@ export const DeleteTableRowsDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<DeleteTableRowsMutation, DeleteTableRowsMutationVariables>;
+export const SaveTableChangesDocument = new TypedDocumentString(`
+    mutation SaveTableChanges($input: SaveTableChangesInput!) {
+  saveTableChanges(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    success
+  }
+}
+    `) as unknown as TypedDocumentString<SaveTableChangesMutation, SaveTableChangesMutationVariables>;
 export const GetFilesDocument = new TypedDocumentString(`
     query GetFiles($connectionId: ID!) {
   files(connectionId: $connectionId) {

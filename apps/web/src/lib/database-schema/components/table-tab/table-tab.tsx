@@ -1,14 +1,30 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Alert, AlertDescription } from '@/shared/components/ui/alert';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Tabs, TabsPanel } from '@/shared/components/ui/tabs';
 
 import { useGetTableRows } from '../../hooks/use-get-table-rows';
 import { useGetTableStructure } from '../../hooks/use-get-table-structure';
+import {
+  type SaveTableChangesResult,
+  useSaveTableChanges
+} from '../../hooks/use-save-table-changes';
+import {
+  addTableNewRow,
+  countTableChanges,
+  EMPTY_TABLE_CHANGES,
+  getSaveTableChanges,
+  removeTableNewRows,
+  removeTableRowEdits,
+  type TableChanges
+} from '../../utils/table-changes.utils';
 import type { TableRowKey, TableViewState } from '../../utils/table-view.utils';
 
+import { DiscardTableChangesDialog } from './discard-table-changes-dialog/discard-table-changes-dialog';
 import { TableData } from './table-data/table-data';
+import type { TableCellRef } from './table-data/table-grid/table-grid';
 import { TableStructure } from './table-structure/table-structure';
 import { TableTabHeader } from './table-tab-header/table-tab-header';
 import { TableTabMessage } from './table-tab-message/table-tab-message';
@@ -22,6 +38,8 @@ type Props = {
   onStateChange: (state: TableViewState) => void;
   hiddenColumns: string[];
   onHiddenColumnsChange: (hiddenColumns: string[]) => void;
+  changes: TableChanges;
+  onChangesChange: (changes: TableChanges) => void;
   onPin: () => void;
 };
 
@@ -32,6 +50,8 @@ export const TableTab = ({
   onStateChange,
   hiddenColumns,
   onHiddenColumnsChange,
+  changes,
+  onChangesChange,
   onPin
 }: Props) => {
   const { t } = useTranslation();
@@ -45,21 +65,79 @@ export const TableTab = ({
   });
   const { structure, structureError } = structureResult;
   const [selectedRowKeys, setSelectedRowKeys] = useState<TableRowKey[]>([]);
+  const [selectedNewRowIds, setSelectedNewRowIds] = useState<string[]>([]);
+  const [selectedCell, setSelectedCell] = useState<TableCellRef | null>(null);
+  const [editingCell, setEditingCell] = useState<TableCellRef | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [saveError, setSaveError] = useState<Extract<
+    SaveTableChangesResult,
+    { isSuccess: false }
+  > | null>(null);
+  const { saveTableChanges, isLoading: isSaving } = useSaveTableChanges();
+  const changesCount = countTableChanges(changes);
+
+  const discardChanges = () => {
+    onChangesChange(EMPTY_TABLE_CHANGES);
+    setSelectedNewRowIds([]);
+    setEditingCell(null);
+    setSaveError(null);
+  };
+
+  const confirmDiscard = (action: () => void) => {
+    if (!changesCount) return action();
+    setPendingAction(() => action);
+  };
 
   const changeState = (nextState: TableViewState) => {
     if (
-      nextState.where !== state.where ||
-      nextState.orderBy !== state.orderBy ||
-      nextState.page !== state.page
+      nextState.where === state.where &&
+      nextState.orderBy === state.orderBy &&
+      nextState.page === state.page
     ) {
-      setSelectedRowKeys([]);
+      return onStateChange(nextState);
     }
-    onStateChange(nextState);
+
+    confirmDiscard(() => {
+      setSelectedRowKeys([]);
+      setSelectedCell(null);
+      setEditingCell(null);
+      onStateChange(nextState);
+    });
   };
 
-  const reload = () => {
-    void structureResult.refetch();
-    void rowsResult.refetch();
+  const reload = () =>
+    confirmDiscard(() => {
+      void structureResult.refetch();
+      void rowsResult.refetch();
+    });
+
+  const addRow = () => {
+    const id = crypto.randomUUID();
+    const columns = rowsResult.tableRows?.columns ?? structure?.columns ?? [];
+    const firstColumn = columns.find(column => !hiddenColumns.includes(column.name));
+
+    onChangesChange(addTableNewRow(changes, id));
+    const cell = firstColumn ? { row: id, column: firstColumn.name } : null;
+    setSelectedCell(cell);
+    setEditingCell(cell);
+  };
+
+  const removeNewRows = () => {
+    onChangesChange(removeTableNewRows(changes, selectedNewRowIds));
+    setSelectedNewRowIds([]);
+  };
+
+  const removeDeletedRows = (keys: TableRowKey[]) => {
+    onChangesChange(removeTableRowEdits(changes, keys));
+    setSelectedRowKeys([]);
+  };
+
+  const save = async () => {
+    const result = await saveTableChanges({ ...input, ...getSaveTableChanges(changes) });
+
+    if (!result.isSuccess) return setSaveError(result);
+
+    discardChanges();
   };
 
   const renderBody = () => {
@@ -86,6 +164,16 @@ export const TableTab = ({
     return (
       <>
         <TabsPanel value="data" className="flex min-h-0 flex-col">
+          {saveError && (
+            <Alert variant="error" className="m-2 w-auto">
+              <AlertDescription>
+                <p>{t(saveError.error)}</p>
+                {saveError.errorCode === 'QUERY_FAILED' && saveError.detail && (
+                  <p className="font-mono text-xs">{saveError.detail}</p>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
           <TableData
             structure={structure}
             rowsResult={rowsResult}
@@ -97,6 +185,14 @@ export const TableTab = ({
             onPin={onPin}
             selectedRowKeys={selectedRowKeys}
             onSelectedRowKeysChange={setSelectedRowKeys}
+            selectedNewRowIds={selectedNewRowIds}
+            onSelectedNewRowIdsChange={setSelectedNewRowIds}
+            changes={changes}
+            onChangesChange={onChangesChange}
+            selectedCell={selectedCell}
+            onSelectedCellChange={setSelectedCell}
+            editingCell={editingCell}
+            onEditingCellChange={setEditingCell}
           />
         </TabsPanel>
         <TabsPanel value="structure" className="min-h-0 overflow-auto">
@@ -123,9 +219,27 @@ export const TableTab = ({
         isReloading={structureResult.isFetching || rowsResult.isFetching}
         onReload={reload}
         selectedRowKeys={selectedRowKeys}
-        onRowsDeleted={() => setSelectedRowKeys([])}
+        selectedNewRowsCount={selectedNewRowIds.length}
+        onNewRowsRemove={removeNewRows}
+        onRowsDeleted={removeDeletedRows}
+        changesCount={changesCount}
+        isSaving={isSaving}
+        onSave={() => void save()}
+        onUndo={discardChanges}
+        onRowAdd={addRow}
       />
       {renderBody()}
+      {pendingAction && (
+        <DiscardTableChangesDialog
+          count={changesCount}
+          onCancel={() => setPendingAction(null)}
+          onDiscard={() => {
+            discardChanges();
+            pendingAction();
+            setPendingAction(null);
+          }}
+        />
+      )}
     </Tabs>
   );
 };

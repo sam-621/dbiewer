@@ -26,10 +26,19 @@ type Props = {
   connectionId: string;
   object: TableTabObject;
   rowKeys: TableRowKey[];
-  onDeleted: () => void;
+  newRowsCount: number;
+  onNewRowsRemove: () => void;
+  onDeleted: (rowKeys: TableRowKey[]) => void;
 };
 
-export const DeleteTableRowsDialog = ({ connectionId, object, rowKeys, onDeleted }: Props) => {
+export const DeleteTableRowsDialog = ({
+  connectionId,
+  object,
+  rowKeys,
+  newRowsCount,
+  onNewRowsRemove,
+  onDeleted
+}: Props) => {
   const { t } = useTranslation();
   const { deleteTableRows, isLoading } = useDeleteTableRows();
   const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +47,9 @@ export const DeleteTableRowsDialog = ({ connectionId, object, rowKeys, onDeleted
   );
 
   const open = () => {
+    if (newRowsCount) onNewRowsRemove();
+    if (!rowKeys.length) return;
+
     setError(null);
     setIsOpen(true);
   };
@@ -53,7 +65,7 @@ export const DeleteTableRowsDialog = ({ connectionId, object, rowKeys, onDeleted
     if (!result.isSuccess) return setError(result);
 
     setIsOpen(false);
-    onDeleted();
+    onDeleted(rowKeys);
   };
 
   return (
@@ -66,7 +78,7 @@ export const DeleteTableRowsDialog = ({ connectionId, object, rowKeys, onDeleted
               size="icon-sm"
               className="text-muted-foreground"
               aria-label={t('Delete selected rows')}
-              disabled={!rowKeys.length}
+              disabled={!rowKeys.length && !newRowsCount}
               onClick={open}
             />
           }
