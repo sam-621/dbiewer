@@ -22,6 +22,6 @@ export const createAppContext = (databases: AppContext['databases']): AppContext
   services: {
     emailSender: getEmailSender(config.emailSender),
     encryptionService: new EncryptionService(config.encryption.connectionsKey),
-    postgresService: new PostgresService()
+    postgresService: new PostgresService(config.postgres)
   }
 });

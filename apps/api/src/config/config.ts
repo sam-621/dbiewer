@@ -56,11 +56,16 @@ const ConfigSchema = EnvSchema.transform(env => ({
   },
   encryption: {
     connectionsKey: env.CONNECTIONS_ENCRYPTION_KEY
+  },
+  postgres: {
+    allowPrivateHosts: env.NODE_ENV !== 'production'
   }
 }));
 
 export type Config = z.infer<typeof ConfigSchema>;
 
 export type EmailSenderConfig = Config['emailSender'];
+
+export type PostgresConfig = Config['postgres'];
 
 export const config: Config = ConfigSchema.parse(process.env);

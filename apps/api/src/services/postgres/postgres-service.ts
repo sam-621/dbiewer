@@ -1,13 +1,10 @@
-import type {
-  ClientConfig,
-  FieldDef,
-  PoolClient,
-  QueryArrayResult,
-  QueryResult,
-  QueryResultRow
-} from 'pg';
-import { Client, escapeIdentifier, Pool } from 'pg';
+import { lookup } from 'node:dns/promises';
+import { BlockList, isIP } from 'node:net';
 
+import type { ClientConfig, FieldDef, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import { Client, escapeIdentifier, Pool, Query } from 'pg';
+
+import type { PostgresConfig } from '@/config';
 import type { Logger } from '@/services/logger';
 import { createLogger } from '@/services/logger';
 
@@ -129,6 +126,12 @@ type PostgresRowsDeletion = PostgresObject & { keys: PostgresCellValue[][] };
 export type PostgresTableRows = { rows: Array<Array<string | null>>; totalRows: number };
 
 type PostgresResultColumn = { name: string; type: string };
+
+type PostgresRow = Array<string | null>;
+
+type PostgresStreamedResult = { fields: FieldDef[]; command: string; rowCount: number | null };
+
+type PostgresStreamedRows = { rows: PostgresRow[]; count: number };
 
 export type PostgresQueryExecution = {
   columns: PostgresResultColumn[];
@@ -444,6 +447,23 @@ export class PostgresService {
   private static readonly VIEW_KINDS = ['v', 'm'];
   private static readonly PAGE_SIZE = 50;
   private static readonly MAX_RESULT_ROWS = 1_000;
+  private static readonly PRIVATE_SUBNETS: Array<[string, number, 'ipv4' | 'ipv6']> = [
+    ['0.0.0.0', 8, 'ipv4'],
+    ['10.0.0.0', 8, 'ipv4'],
+    ['100.64.0.0', 10, 'ipv4'],
+    ['127.0.0.0', 8, 'ipv4'],
+    ['169.254.0.0', 16, 'ipv4'],
+    ['172.16.0.0', 12, 'ipv4'],
+    ['192.0.0.0', 24, 'ipv4'],
+    ['192.168.0.0', 16, 'ipv4'],
+    ['198.18.0.0', 15, 'ipv4'],
+    ['224.0.0.0', 3, 'ipv4'],
+    ['::', 128, 'ipv6'],
+    ['::1', 128, 'ipv6'],
+    ['fc00::', 7, 'ipv6'],
+    ['fe80::', 10, 'ipv6'],
+    ['ff00::', 8, 'ipv6']
+  ];
   private static readonly COLUMN_TYPES_SQL = `
     select pg_catalog.format_type(t.oid, t.modifier) as type
     from unnest($1::oid[], $2::int[]) with ordinality as t (oid, modifier, position)
@@ -453,17 +473,25 @@ export class PostgresService {
   private readonly pools = new Map<string, Pool>();
   private readonly sslByMode: Record<PostgresSslMode, ClientConfig['ssl']>;
   private readonly logger: Logger;
+  private readonly privateNetworks: BlockList;
 
-  constructor() {
+  constructor(private readonly config: PostgresConfig) {
     this.sslByMode = {
       disable: false,
       require: { rejectUnauthorized: false },
       'verify-full': { rejectUnauthorized: true }
     };
     this.logger = createLogger('postgres');
+    this.privateNetworks = new BlockList();
+
+    for (const [address, prefix, type] of PostgresService.PRIVATE_SUBNETS) {
+      this.privateNetworks.addSubnet(address, prefix, type);
+    }
   }
 
   async testConnection(credentials: PostgresCredentials) {
+    await this.assertPublicHost(credentials);
+
     const client = new Client(this.toClientConfig(credentials));
 
     try {
@@ -569,15 +597,8 @@ export class PostgresService {
       connection,
       async client => {
         const startedAt = performance.now();
-        const response:
-          QueryArrayResult<Array<string | null>> | QueryArrayResult<Array<string | null>>[] =
-          await client.query<Array<string | null>>({
-            text: sql,
-            rowMode: 'array',
-            types: { getTypeParser: () => (value: string) => value }
-          });
+        const { results, rowsByResult } = await this.streamQuery(client, sql);
         const durationMs = Math.round(performance.now() - startedAt);
-        const results = Array.isArray(response) ? response : [response];
         const result = results.findLast(item => item.fields.length > 0) ?? results.at(-1);
 
         if (!result) {
@@ -591,11 +612,13 @@ export class PostgresService {
           };
         }
 
+        const { rows, count } = rowsByResult.get(result) ?? { rows: [], count: 0 };
+
         return {
           columns: await this.readResultColumns(client, result.fields),
-          rows: result.rows.slice(0, PostgresService.MAX_RESULT_ROWS),
-          rowCount: result.rows.length,
-          isTruncated: result.rows.length > PostgresService.MAX_RESULT_ROWS,
+          rows,
+          rowCount: count,
+          isTruncated: count > PostgresService.MAX_RESULT_ROWS,
           durationMs,
           command:
             result.rowCount === null ? result.command : `${result.command} ${result.rowCount}`
@@ -693,6 +716,8 @@ export class PostgresService {
   ): Promise<T> {
     let client: PoolClient;
 
+    if (!this.pools.has(connection.id)) await this.assertPublicHost(connection);
+
     try {
       client = await this.getPool(connection).connect();
     } catch (error) {
@@ -727,6 +752,58 @@ export class PostgresService {
         throw error;
       }
     });
+  }
+
+  private streamQuery(client: PoolClient, sql: string) {
+    return new Promise<{
+      results: PostgresStreamedResult[];
+      rowsByResult: Map<PostgresStreamedResult, PostgresStreamedRows>;
+    }>((resolve, reject) => {
+      const rowsByResult = new Map<PostgresStreamedResult, PostgresStreamedRows>();
+      const query = client.query(
+        new Query<PostgresRow>({
+          text: sql,
+          rowMode: 'array',
+          types: { getTypeParser: () => (value: string) => value }
+        })
+      );
+
+      query.on('row', (row: PostgresRow, result?: PostgresStreamedResult) => {
+        if (!result) return;
+
+        const streamed = rowsByResult.get(result) ?? { rows: [], count: 0 };
+
+        if (streamed.count < PostgresService.MAX_RESULT_ROWS) streamed.rows.push(row);
+        streamed.count += 1;
+        rowsByResult.set(result, streamed);
+      });
+      query.on('error', reject);
+      query.on('end', (response: PostgresStreamedResult | PostgresStreamedResult[]) =>
+        resolve({ results: Array.isArray(response) ? response : [response], rowsByResult })
+      );
+    });
+  }
+
+  private async assertPublicHost(credentials: PostgresCredentials) {
+    if (this.config.allowPrivateHosts) return;
+
+    let addresses: string[];
+
+    try {
+      addresses = isIP(credentials.host)
+        ? [credentials.host]
+        : (await lookup(credentials.host, { all: true })).map(entry => entry.address);
+    } catch (error) {
+      throw new PostgresConnectionFailedError(credentials, this.toReason(error));
+    }
+
+    const isPrivate = addresses.some(address =>
+      this.privateNetworks.check(address, isIP(address) === 6 ? 'ipv6' : 'ipv4')
+    );
+
+    if (isPrivate) {
+      throw new PostgresConnectionFailedError(credentials, 'host resolves to a private address');
+    }
   }
 
   private toTableName(object: PostgresObject) {

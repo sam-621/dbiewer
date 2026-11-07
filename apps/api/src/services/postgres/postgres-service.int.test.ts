@@ -26,7 +26,7 @@ const getTestConnection = () => {
 const BACKEND_PID_SQL = 'select pg_backend_pid() as pid';
 
 describe('PostgresService', () => {
-  const postgresService = new PostgresService();
+  const postgresService = new PostgresService({ allowPrivateHosts: true });
 
   afterEach(async () => {
     await postgresService.closePools();
@@ -1383,5 +1383,29 @@ describe('PostgresService', () => {
 
     await expect(query).rejects.toThrow(PostgresQueryFailedError);
     await expect(query).rejects.toThrow('relation "missing_table" does not exist');
+  });
+
+  describe('without private hosts', () => {
+    const publicPostgresService = new PostgresService({ allowPrivateHosts: false });
+
+    test('throws PostgresConnectionFailedError when the host is a private address', async () => {
+      const query = publicPostgresService.query(
+        { ...getTestConnection(), host: '127.0.0.1' },
+        'select 1'
+      );
+
+      await expect(query).rejects.toThrow(PostgresConnectionFailedError);
+      await expect(query).rejects.toThrow('host resolves to a private address');
+    });
+
+    test('throws PostgresConnectionFailedError when the host name resolves to a private address', async () => {
+      const connectionTest = publicPostgresService.testConnection({
+        ...getTestConnection(),
+        host: 'localhost'
+      });
+
+      await expect(connectionTest).rejects.toThrow(PostgresConnectionFailedError);
+      await expect(connectionTest).rejects.toThrow('host resolves to a private address');
+    });
   });
 });
