@@ -9,6 +9,7 @@
 - (web) Edición de celdas con cambios pendientes, filas nuevas con `+`, Guardar y Deshacer con `saveTableChanges`, y confirmación al descartar (pasos 3 y 4 del plan).
 - (web) La columna del numeral tiene ancho fijo para que agregar filas no desfase la grilla.
 - (web) Selección de celda con clic, edición en el lugar con doble clic y guardado en vivo; se quita el detalle de fila de la vista de tabla.
+- Se aplican al `docs/` de las apps los cambios propuestos: transacciones en la base del usuario (api), diálogos de confirmación (web) y elementos nativos sin estilos (web). Feature terminada.
 
 **Decisiones:**
 - Ediciones e inserts quedan pendientes y se guardan juntos en una sola transacción; el borrado es inmediato, con confirmación.

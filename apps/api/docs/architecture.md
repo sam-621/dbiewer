@@ -237,6 +237,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 - Hay dos tipos de base de datos: la propia de la api (usuarios, conexiones, queries guardadas, historial; ver `database.md`) y las del usuario, a las que la api se conecta para ejecutar queries y leer su esquema.
 - Motor soportado al inicio: Postgres. Cómo se abstrae un motor para agregar otros: por definir.
+- Las escrituras en una base del usuario que deben aplicarse todas o ninguna corren en una transacción dentro del service del motor: toma un cliente del pool, corre `BEGIN`, las sentencias y `COMMIT`, y si una falla, `ROLLBACK` y el error del service. El `UnitOfWork` es solo para la base propia. Las reglas que se validan antes de escribir (como exigir la PK) las lee y decide el use-case, no el service.
 - De las credenciales de las conexiones solo se cifra la contraseña, con `EncryptionService`: AES-256-GCM (`node:crypto`), IV aleatorio de 12 bytes, tag de 16 y la llave de `CONNECTIONS_ENCRYPTION_KEY`. Se guarda como `v1:<iv>:<authTag>:<ciphertext>` en base64; el prefijo de versión permite rotar la llave o pasar a KMS sin romper lo guardado. El `id` de la conexión va como dato asociado, así el valor no se descifra en otra fila.
 
 ## Errores

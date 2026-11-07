@@ -204,6 +204,14 @@ components/
 - El modal se cierra desde el formulario con un callback por parámetro: `<ConnectionForm onSuccess={() => setIsOpen(false)} />`. "Cancel" es un `DialogClose`.
 - Después de guardar no se navega: la mutation refresca la cache y la pantalla de atrás se actualiza sola.
 
+## Diálogos de confirmación
+
+Una confirmación sin formulario usa el `AlertDialog` de coss en su propio componente `<acción>-<x>-dialog/`:
+
+- Si se abre desde un botón propio, el componente lleva el trigger y su estado `isOpen` adentro, igual que un modal con formulario.
+- Si la abre otra acción (por ejemplo, descartar cambios al cambiar de página), el padre la monta con `open` y le pasa los callbacks de confirmar y cancelar.
+- Mientras corre la acción, el botón de confirmar muestra carga. Si falla, el error se ve dentro del diálogo, sin cerrarlo.
+
 ## Hooks de formulario
 
 Todo hook de formulario (`<X>Details` u otro) vive en un solo archivo `use-<nombre>-form.ts`, sin carpeta, y tiene la misma forma:
