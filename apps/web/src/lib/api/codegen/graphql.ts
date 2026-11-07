@@ -28,12 +28,24 @@ export type CreateWorkspaceInput = {
   name: string;
 };
 
+export type DbCellValueInput = {
+  column: string;
+  value?: string | null | undefined;
+};
+
 export type DbFunctionKind =
   | 'FUNCTION'
   | 'PROCEDURE';
 
 export type DbObjectInput = {
   connectionId: string | number;
+  name: string;
+  schema: string;
+};
+
+export type DeleteTableRowsInput = {
+  connectionId: string | number;
+  keys: Array<Array<DbCellValueInput>>;
   name: string;
   schema: string;
 };
@@ -78,6 +90,7 @@ export type ShellErrorCode =
   | 'CONNECTION_NOT_FOUND'
   | 'INVALID_INPUT'
   | 'OBJECT_NOT_FOUND'
+  | 'PRIMARY_KEY_REQUIRED'
   | 'QUERY_FAILED';
 
 export type TableRowsInput = {
@@ -183,6 +196,13 @@ export type GetSchemaDiagramQueryVariables = Exact<{
 
 
 export type GetSchemaDiagramQuery = { schemaDiagram: { apiErrors: Array<{ code: ShellErrorCode, message: string }>, diagram: { entities: Array<{ id: string, schema: string, name: string, properties: Array<{ name: string, type: string, default: string | null, isNullable: boolean, isPrimaryKey: boolean, isForeignKey: boolean }> }>, relations: Array<{ id: string, type: DiagramRelationType, fromEntityId: string, fromProperties: Array<string>, toEntityId: string, toProperties: Array<string> }> } | null } };
+
+export type DeleteTableRowsMutationVariables = Exact<{
+  input: DeleteTableRowsInput;
+}>;
+
+
+export type DeleteTableRowsMutation = { deleteTableRows: { deletedRows: number | null, apiErrors: Array<{ code: ShellErrorCode, message: string }> } };
 
 export type CommonFileFragment = { id: string, name: string, type: FileType, content: string, updatedAt: string } & { ' $fragmentName'?: 'CommonFileFragment' };
 
@@ -485,6 +505,17 @@ export const GetSchemaDiagramDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<GetSchemaDiagramQuery, GetSchemaDiagramQueryVariables>;
+export const DeleteTableRowsDocument = new TypedDocumentString(`
+    mutation DeleteTableRows($input: DeleteTableRowsInput!) {
+  deleteTableRows(input: $input) {
+    apiErrors {
+      code
+      message
+    }
+    deletedRows
+  }
+}
+    `) as unknown as TypedDocumentString<DeleteTableRowsMutation, DeleteTableRowsMutationVariables>;
 export const GetFilesDocument = new TypedDocumentString(`
     query GetFiles($connectionId: ID!) {
   files(connectionId: $connectionId) {

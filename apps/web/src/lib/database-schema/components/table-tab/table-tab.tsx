@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -5,7 +6,7 @@ import { Tabs, TabsPanel } from '@/shared/components/ui/tabs';
 
 import { useGetTableRows } from '../../hooks/use-get-table-rows';
 import { useGetTableStructure } from '../../hooks/use-get-table-structure';
-import type { TableViewState } from '../../utils/table-view.utils';
+import type { TableRowKey, TableViewState } from '../../utils/table-view.utils';
 
 import { TableData } from './table-data/table-data';
 import { TableStructure } from './table-structure/table-structure';
@@ -43,6 +44,18 @@ export const TableTab = ({
     page: state.page
   });
   const { structure, structureError } = structureResult;
+  const [selectedRowKeys, setSelectedRowKeys] = useState<TableRowKey[]>([]);
+
+  const changeState = (nextState: TableViewState) => {
+    if (
+      nextState.where !== state.where ||
+      nextState.orderBy !== state.orderBy ||
+      nextState.page !== state.page
+    ) {
+      setSelectedRowKeys([]);
+    }
+    onStateChange(nextState);
+  };
 
   const reload = () => {
     void structureResult.refetch();
@@ -77,11 +90,13 @@ export const TableTab = ({
             structure={structure}
             rowsResult={rowsResult}
             state={state}
-            onStateChange={onStateChange}
+            onStateChange={changeState}
             hiddenColumns={hiddenColumns}
             connectionId={connectionId}
             object={object}
             onPin={onPin}
+            selectedRowKeys={selectedRowKeys}
+            onSelectedRowKeysChange={setSelectedRowKeys}
           />
         </TabsPanel>
         <TabsPanel value="structure" className="min-h-0 overflow-auto">
@@ -94,10 +109,11 @@ export const TableTab = ({
   return (
     <Tabs
       value={state.view}
-      onValueChange={(view: TableViewState['view']) => onStateChange({ ...state, view })}
+      onValueChange={(view: TableViewState['view']) => changeState({ ...state, view })}
       className="h-full min-h-0 gap-0"
     >
       <TableTabHeader
+        connectionId={connectionId}
         object={object}
         view={state.view}
         totalRows={rowsResult.tableRows?.totalRows ?? null}
@@ -106,6 +122,8 @@ export const TableTab = ({
         onHiddenColumnsChange={onHiddenColumnsChange}
         isReloading={structureResult.isFetching || rowsResult.isFetching}
         onReload={reload}
+        selectedRowKeys={selectedRowKeys}
+        onRowsDeleted={() => setSelectedRowKeys([])}
       />
       {renderBody()}
     </Tabs>

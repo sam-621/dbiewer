@@ -7,10 +7,14 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import type { useGetTableRows } from '../../../hooks/use-get-table-rows';
 import {
   formatTableOrder,
+  getPrimaryKeyColumns,
+  getTableRowKey,
+  getTableRowKeyId,
   getVisibleTableRows,
   parseTableOrder,
   TABLE_PAGE_SIZE,
   type TableOrder,
+  type TableRowKey,
   type TableStructureNode,
   type TableViewState
 } from '../../../utils/table-view.utils';
@@ -28,8 +32,10 @@ type Props = {
   onStateChange: (state: TableViewState) => void;
   hiddenColumns: string[];
   connectionId: string;
-  object: { schema: string; name: string };
+  object: { kind: 'table' | 'view'; schema: string; name: string };
   onPin: () => void;
+  selectedRowKeys: TableRowKey[];
+  onSelectedRowKeysChange: (keys: TableRowKey[]) => void;
 };
 
 export const TableData = ({
@@ -40,15 +46,23 @@ export const TableData = ({
   connectionId,
   object,
   onStateChange,
-  onPin
+  onPin,
+  selectedRowKeys,
+  onSelectedRowKeysChange
 }: Props) => {
   const { t } = useTranslation();
   const { tableRows, rowsError, durationMs, isLoading, isFetching, isPlaceholderData, refetch } =
     rowsResult;
-  const primaryKey = structure.columns.find(column => column.isPrimaryKey)?.name ?? null;
+  const primaryKeys = getPrimaryKeyColumns(structure.columns);
+  const [primaryKey] = primaryKeys;
   const defaultOrder: TableOrder | null = primaryKey
     ? { column: primaryKey, direction: 'ASC' }
     : null;
+  const canSelectRows = object.kind === 'table' && primaryKeys.length > 0;
+  const rowKeys = tableRows
+    ? tableRows.rows.map(row => getTableRowKey(tableRows.columns, row, primaryKeys))
+    : [];
+  const selectedIds = new Set(selectedRowKeys.map(getTableRowKeyId));
   const order = state.orderBy ? parseTableOrder(state.orderBy) : defaultOrder;
 
   const [shownRow, setShownRow] = useState<(TableRowDetail & { index: number }) | null>(null);
@@ -62,6 +76,18 @@ export const TableData = ({
     setShownRow({ index: rowIndex, number: firstRowNumber + rowIndex, values });
     setIsRowOpen(true);
     onPin();
+  };
+
+  const toggleRow = (rowIndex: number) => {
+    const key = rowKeys[rowIndex];
+    if (!key) return;
+
+    const id = getTableRowKeyId(key);
+    onSelectedRowKeysChange(
+      selectedIds.has(id)
+        ? selectedRowKeys.filter(selected => getTableRowKeyId(selected) !== id)
+        : [...selectedRowKeys, key]
+    );
   };
 
   const changeOrder = (nextOrder: TableOrder) =>
@@ -99,13 +125,17 @@ export const TableData = ({
     return (
       <TableGrid
         {...getVisibleTableRows(tableRows, hiddenColumns)}
-        primaryKey={primaryKey}
+        primaryKeys={primaryKeys}
         firstRowNumber={firstRowNumber}
         order={order}
         isStale={isPlaceholderData}
         onOrderChange={changeOrder}
         selectedRowIndex={isRowOpen && shownRow ? shownRow.index : null}
         onRowOpen={openRow}
+        checkedRows={
+          canSelectRows ? rowKeys.map(key => selectedIds.has(getTableRowKeyId(key))) : undefined
+        }
+        onRowCheck={canSelectRows ? toggleRow : undefined}
         className="pb-14"
       />
     );
@@ -139,7 +169,7 @@ export const TableData = ({
         <TableRowSheet
           objectName={object.name}
           columns={tableRows.columns}
-          primaryKey={primaryKey}
+          primaryKeys={primaryKeys}
           isOpen={isRowOpen}
           row={shownRow}
           onClose={() => setIsRowOpen(false)}

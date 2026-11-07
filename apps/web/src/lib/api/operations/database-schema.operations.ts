@@ -134,3 +134,15 @@ export const GET_SCHEMA_DIAGRAM_QUERY = graphql(`
     }
   }
 `);
+
+export const DELETE_TABLE_ROWS_MUTATION = graphql(`
+  mutation DeleteTableRows($input: DeleteTableRowsInput!) {
+    deleteTableRows(input: $input) {
+      apiErrors {
+        code
+        message
+      }
+      deletedRows
+    }
+  }
+`);

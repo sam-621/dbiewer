@@ -87,13 +87,15 @@ type Result = unknown;
 
 const mockApi = ({
   structure = { tableStructure: { apiErrors: [], structure: STRUCTURE } } as Result,
-  rows = { tableRows: { apiErrors: [], tableRows: ROWS } } as Result
+  rows = { tableRows: { apiErrors: [], tableRows: ROWS } } as Result,
+  deleteRows = { deleteTableRows: { apiErrors: [], deletedRows: 1 } } as Result
 } = {}) => {
   vi.mocked(gqlFetcher).mockImplementation(async document => {
     const query = document.toString();
     if (query.includes('query GetConnectionSchema')) {
       return { connectionSchema: { apiErrors: [], schemas: SCHEMAS } };
     }
+    if (query.includes('mutation DeleteTableRows')) return deleteRows;
     const result = await (query.includes('query GetTableStructure') ? structure : rows);
     if (result instanceof Error) throw result;
     return result;
@@ -107,6 +109,14 @@ const getRowsInputs = () =>
     .map(([, variables]) => (variables as { input: Record<string, unknown> }).input);
 
 const lastRowsInput = () => getRowsInputs().at(-1);
+
+const getDeleteInputs = () =>
+  vi
+    .mocked(gqlFetcher)
+    .mock.calls.filter(([document]) => document.toString().includes('mutation DeleteTableRows'))
+    .map(([, variables]) => (variables as { input: Record<string, unknown> }).input);
+
+const deleteButton = () => screen.getByRole('button', { name: 'Borrar las filas seleccionadas' });
 
 const onStateChange = vi.fn<(state: TableViewState) => void>();
 
@@ -445,7 +455,7 @@ describe('TableTab', () => {
 
     expect(lastState()?.view).toBe('structure');
     expect(screen.getByText('gen_random_uuid()')).toBeInTheDocument();
-    expect(screen.getByText('varchar(255)')).toBeInTheDocument();
+    expect(within(screen.getByRole('tabpanel')).getByText('varchar(255)')).toBeInTheDocument();
     expect(screen.getByText('users_email_key')).toBeInTheDocument();
     expect(screen.getByText('Único')).toBeInTheDocument();
     expect(screen.getByText('billing.plans(code)')).toBeInTheDocument();
@@ -722,5 +732,207 @@ describe('TableTab', () => {
     const secondSheet = await screen.findByRole('dialog');
     expect(within(secondSheet).getByLabelText(/^plan/)).toHaveValue('');
     expect(within(secondSheet).getByLabelText(/^plan/)).not.toHaveAttribute('placeholder');
+  });
+
+  test('selects rows from the numeral without opening the row detail', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    expect(deleteButton()).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 1' }));
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 2' }));
+
+    expect(screen.getByRole('button', { name: 'Seleccionar la fila 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getAllByRole('row')[1]).toHaveAttribute('data-state', 'selected');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(deleteButton()).toBeEnabled();
+
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 2' }));
+
+    expect(screen.getByRole('button', { name: 'Seleccionar la fila 2' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  test('deletes the selected rows after confirming and reloads the rows', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 1' }));
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 2' }));
+    const rowsCalls = getRowsInputs().length;
+
+    await user.click(deleteButton());
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('¿Borrar 2 filas de users?')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(getDeleteInputs()).toEqual([
+      {
+        connectionId: 'connection-1',
+        schema: 'public',
+        name: 'users',
+        keys: [[{ column: 'id', value: '1' }], [{ column: 'id', value: '2' }]]
+      }
+    ]);
+    expect(getRowsInputs().length).toBeGreaterThan(rowsCalls);
+    expect(screen.getByRole('button', { name: 'Seleccionar la fila 1' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    expect(deleteButton()).toBeDisabled();
+  });
+
+  test('does not delete when the confirmation is cancelled', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 1' }));
+
+    await user.click(deleteButton());
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('¿Borrar 1 fila de users?')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(getDeleteInputs()).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Seleccionar la fila 1' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  test('shows the Postgres message without closing the confirmation', async () => {
+    mockApi({
+      deleteRows: {
+        deleteTableRows: {
+          apiErrors: [
+            { code: 'QUERY_FAILED', message: 'violates foreign key constraint "orders_user_fk"' }
+          ],
+          deletedRows: null
+        }
+      }
+    });
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 1' }));
+
+    await user.click(deleteButton());
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    expect(
+      await within(dialog).findByText('violates foreign key constraint "orders_user_fk"')
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('La consulta falló')).toBeInTheDocument();
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+  });
+
+  test('deletes rows by every column of a composite primary key', async () => {
+    mockApi({
+      structure: {
+        tableStructure: {
+          apiErrors: [],
+          structure: {
+            ...STRUCTURE,
+            columns: STRUCTURE.columns.map(column => ({
+              ...column,
+              isPrimaryKey: column.name !== 'plan'
+            }))
+          }
+        }
+      }
+    });
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 2' }));
+
+    await user.click(deleteButton());
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Eliminar' })
+    );
+
+    await waitFor(() => expect(getDeleteInputs()).toHaveLength(1));
+    expect(getDeleteInputs()[0]?.keys).toEqual([
+      [
+        { column: 'id', value: '2' },
+        { column: 'email', value: 'bo@acme.dev' }
+      ]
+    ]);
+  });
+
+  test('clears the selection when changing the page', async () => {
+    mockApi();
+
+    renderTab();
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+    await user.click(screen.getByRole('button', { name: 'Seleccionar la fila 1' }));
+
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    await user.click(screen.getByRole('button', { name: 'Página anterior' }));
+
+    await waitFor(() => expect(lastRowsInput()?.page).toBe(1));
+    expect(await screen.findByRole('button', { name: 'Seleccionar la fila 1' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    expect(deleteButton()).toBeDisabled();
+  });
+
+  test('does not let rows be selected on a table without primary key', async () => {
+    mockApi({
+      structure: {
+        tableStructure: {
+          apiErrors: [],
+          structure: {
+            ...STRUCTURE,
+            columns: STRUCTURE.columns.map(column => ({ ...column, isPrimaryKey: false }))
+          }
+        }
+      }
+    });
+
+    renderTab();
+    await screen.findByText('ana@acme.dev');
+
+    expect(screen.queryByRole('button', { name: /^Seleccionar la fila/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Borrar las filas seleccionadas' })
+    ).not.toBeInTheDocument();
+  });
+
+  test('does not let rows be selected on a view or on Structure', async () => {
+    mockApi();
+
+    renderTab({ kind: 'view', schema: 'public', name: 'active_users' });
+    const user = userEvent.setup();
+    await screen.findByText('ana@acme.dev');
+
+    expect(screen.queryByRole('button', { name: /^Seleccionar la fila/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Borrar las filas seleccionadas' })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Estructura' }));
+    expect(
+      screen.queryByRole('button', { name: 'Borrar las filas seleccionadas' })
+    ).not.toBeInTheDocument();
   });
 });

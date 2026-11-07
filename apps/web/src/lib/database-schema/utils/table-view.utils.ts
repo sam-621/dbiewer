@@ -2,7 +2,12 @@ import { z } from 'zod';
 
 import { GENERIC_ERROR } from '@/lib/api/errors/api-error';
 import { getShellError } from '@/lib/api/errors/shell.errors';
-import type { GetTableRowsQuery, GetTableStructureQuery, ShellErrorCode } from '@/lib/api/types';
+import type {
+  DbCellValueInput,
+  GetTableRowsQuery,
+  GetTableStructureQuery,
+  ShellErrorCode
+} from '@/lib/api/types';
 import { quoteIdentifier } from '@/lib/query/utils/sql.utils';
 
 export type TableStructureNode = NonNullable<GetTableStructureQuery['tableStructure']['structure']>;
@@ -20,6 +25,7 @@ export const TableViewStateSchema = z.object({
 
 export type TableViewState = z.infer<typeof TableViewStateSchema>;
 export type TableOrder = { column: string; direction: 'ASC' | 'DESC' };
+export type TableRowKey = DbCellValueInput[];
 
 export const DEFAULT_TABLE_VIEW_STATE: TableViewState = {
   view: 'data',
@@ -57,6 +63,21 @@ export const getVisibleTableRows = (
     rows: rows.map(row => row.filter((_, index) => isVisible[index]))
   };
 };
+
+export const getPrimaryKeyColumns = (columns: Pick<TableColumnNode, 'name' | 'isPrimaryKey'>[]) =>
+  columns.filter(column => column.isPrimaryKey).map(column => column.name);
+
+export const getTableRowKey = (
+  columns: TableRowsNode['columns'],
+  row: (string | null)[],
+  primaryKeys: string[]
+): TableRowKey =>
+  primaryKeys.map(column => ({
+    column,
+    value: row[columns.findIndex(({ name }) => name === column)] ?? null
+  }));
+
+export const getTableRowKeyId = (key: TableRowKey) => JSON.stringify(key);
 
 export const getTotalPages = (totalRows: number) =>
   Math.max(1, Math.ceil(totalRows / TABLE_PAGE_SIZE));

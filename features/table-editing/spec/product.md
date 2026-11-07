@@ -63,7 +63,7 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 
 ### Seleccionar y borrar filas
 
-- El numeral de cada fila funciona como checkbox: un clic agrega o quita la fila de la selección. Se pueden seleccionar varias.
+- Un clic en el numeral de una fila la agrega o la quita de la selección. Se pueden seleccionar varias.
 - La selección es independiente de lo que se haga con ella: borrar es la primera acción sobre las filas seleccionadas, y pueden sumarse otras más adelante.
 - El botón `−` se habilita solo con filas seleccionadas.
 - Con `−`, se pide confirmación con la cantidad de filas y, al confirmar, se borran en ese momento, en una sola transacción, aparte de los cambios pendientes.
@@ -94,6 +94,6 @@ Como usuario con una base Postgres conectada, quiero editar, agregar y borrar fi
 ## Plan de trabajo recomendado
 
 1. [x] api: mutations `saveTableChanges` y `deleteTableRows` en una transacción, con sus tests de integración y e2e.
-2. [ ] web: selección de filas desde el numeral y borrado con confirmación.
+2. [x] web: selección de filas desde el numeral y borrado con confirmación.
 3. [ ] web: edición de celdas con cambios pendientes, Guardar y Deshacer.
 4. [ ] web: agregar filas nuevas con `+`.

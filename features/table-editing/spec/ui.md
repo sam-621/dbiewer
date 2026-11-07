@@ -39,6 +39,6 @@ Las capacidades (qué muestra, qué permite, estados) son obligatorias. La forma
   - Doble clic en una celda abre un input con su valor. Enter confirma, Escape cancela. Hay una forma de poner `NULL` (acción en el input o atajo).
   - Celda cambiada con un tono distinto. Ejemplo: `status` de `pending` a `paid`.
   - Fila nueva al final, con otro tono y todas sus celdas visibles editables; las vacías muestran que tomarán el default.
-  - El numeral muestra un checkbox (al pasar el mouse o cuando está seleccionada) y un clic lo marca. La fila seleccionada se ve resaltada.
+  - El numeral sigue mostrando el número de fila, sin checkbox (ni al pasar el mouse). Un clic en él agrega o quita la fila de la selección, y la fila seleccionada se ve resaltada.
   - Al agregar una fila, la grilla baja hasta ella y pone en edición su primera celda.
-- **Estados:** las vistas no muestran checkbox, `+`, `−` ni edición.
+- **Estados:** las vistas no permiten seleccionar filas ni muestran `+`, `−` ni edición.

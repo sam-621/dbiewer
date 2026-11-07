@@ -192,5 +192,10 @@
   "Yes": "Sí",
   "You already have a connection with this name": "Ya tienes una conexión con este nombre",
   "You already have a workspace": "Ya tienes un workspace",
-  "You need a Postgres connection to explore its schema and run queries.": "Necesitas una conexión Postgres para explorar su esquema y ejecutar consultas."
+  "You need a Postgres connection to explore its schema and run queries.": "Necesitas una conexión Postgres para explorar su esquema y ejecutar consultas.",
+  "Delete selected rows": "Borrar las filas seleccionadas",
+  "Delete {{count, number}} rows from {{name}}?_one": "¿Borrar {{count, number}} fila de {{name}}?",
+  "Delete {{count, number}} rows from {{name}}?_other": "¿Borrar {{count, number}} filas de {{name}}?",
+  "Select row {{number, number}}": "Seleccionar la fila {{number, number}}",
+  "This table needs a primary key": "Esta tabla necesita una llave primaria"
 }

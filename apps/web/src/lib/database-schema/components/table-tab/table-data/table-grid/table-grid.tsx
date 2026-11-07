@@ -17,26 +17,30 @@ import type { TableOrder, TableRowsNode } from '../../../../utils/table-view.uti
 type Props = {
   columns: TableRowsNode['columns'];
   rows: (string | null)[][];
-  primaryKey?: string | null;
+  primaryKeys?: string[];
   firstRowNumber?: number;
   order?: TableOrder | null;
   isStale?: boolean;
   onOrderChange?: (order: TableOrder) => void;
   selectedRowIndex?: number | null;
   onRowOpen?: (rowIndex: number) => void;
+  checkedRows?: boolean[];
+  onRowCheck?: (rowIndex: number) => void;
   className?: string;
 };
 
 export const TableGrid = ({
   columns,
   rows,
-  primaryKey = null,
+  primaryKeys = [],
   firstRowNumber = 1,
   order = null,
   isStale = false,
   onOrderChange,
   selectedRowIndex = null,
   onRowOpen,
+  checkedRows,
+  onRowCheck,
   className
 }: Props) => {
   const { t } = useTranslation();
@@ -63,7 +67,7 @@ export const TableGrid = ({
 
             const content = (
               <>
-                {column.name === primaryKey && (
+                {primaryKeys.includes(column.name) && (
                   <KeyIcon
                     role="img"
                     aria-hidden={false}
@@ -108,39 +112,71 @@ export const TableGrid = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row, rowIndex) => (
-          <TableRow
-            key={firstRowNumber + rowIndex}
-            tabIndex={onRowOpen ? 0 : undefined}
-            data-state={rowIndex === selectedRowIndex ? 'selected' : undefined}
-            aria-selected={onRowOpen ? rowIndex === selectedRowIndex : undefined}
-            className={cn(onRowOpen && 'cursor-pointer outline-none focus-visible:bg-accent')}
-            onClick={onRowOpen && (() => onRowOpen(rowIndex))}
-            onKeyDown={
-              onRowOpen &&
-              (event => {
-                if (event.key === 'Enter') onRowOpen(rowIndex);
-              })
-            }
-          >
-            <TableCell className="w-px py-1.5 text-end text-muted-foreground tabular-nums">
-              {firstRowNumber + rowIndex}
-            </TableCell>
-            {row.map((value, columnIndex) => (
-              <TableCell key={columnIndex} className="py-1.5">
-                <span className="flex items-center gap-1">
-                  {value === null ? (
-                    <span className="text-muted-foreground/70 italic">NULL</span>
-                  ) : (
-                    <span title={value} className="max-w-80 truncate text-foreground/70">
-                      {value}
-                    </span>
+        {rows.map((row, rowIndex) => {
+          const rowNumber = firstRowNumber + rowIndex;
+          const isChecked = !!checkedRows?.[rowIndex];
+          const isSelected = rowIndex === selectedRowIndex || isChecked;
+
+          return (
+            <TableRow
+              key={rowNumber}
+              tabIndex={onRowOpen ? 0 : undefined}
+              data-state={isSelected ? 'selected' : undefined}
+              aria-selected={onRowOpen ? rowIndex === selectedRowIndex : undefined}
+              className={cn(
+                onRowOpen && 'cursor-pointer outline-none focus-visible:bg-accent',
+                isChecked && '*:bg-primary/12 dark:*:bg-primary/10'
+              )}
+              onClick={onRowOpen && (() => onRowOpen(rowIndex))}
+              onKeyDown={
+                onRowOpen &&
+                (event => {
+                  if (event.key === 'Enter') onRowOpen(rowIndex);
+                })
+              }
+            >
+              {onRowCheck ? (
+                <TableCell
+                  className={cn(
+                    'w-px p-0 text-muted-foreground tabular-nums',
+                    isChecked && 'text-foreground'
                   )}
-                </span>
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
+                >
+                  <button
+                    type="button"
+                    aria-label={t('Select row {{number, number}}', { number: rowNumber })}
+                    aria-pressed={isChecked}
+                    className="flex h-full w-full cursor-pointer items-center justify-end px-2.5 py-1.5 outline-none hover:text-foreground focus-visible:text-foreground"
+                    onClick={event => {
+                      event.stopPropagation();
+                      onRowCheck(rowIndex);
+                    }}
+                    onKeyDown={event => event.stopPropagation()}
+                  >
+                    {rowNumber}
+                  </button>
+                </TableCell>
+              ) : (
+                <TableCell className="w-px py-1.5 text-end text-muted-foreground tabular-nums">
+                  {rowNumber}
+                </TableCell>
+              )}
+              {row.map((value, columnIndex) => (
+                <TableCell key={columnIndex} className="py-1.5">
+                  <span className="flex items-center gap-1">
+                    {value === null ? (
+                      <span className="text-muted-foreground/70 italic">NULL</span>
+                    ) : (
+                      <span title={value} className="max-w-80 truncate text-foreground/70">
+                        {value}
+                      </span>
+                    )}
+                  </span>
+                </TableCell>
+              ))}
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

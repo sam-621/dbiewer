@@ -6,12 +6,14 @@ import { Button } from '@/shared/components/ui/button';
 import { TabsList, TabsTab } from '@/shared/components/ui/tabs';
 import { Tooltip, TooltipPopup, TooltipTrigger } from '@/shared/components/ui/tooltip';
 
-import type { TableColumnNode, TableViewState } from '../../../utils/table-view.utils';
+import type { TableColumnNode, TableRowKey, TableViewState } from '../../../utils/table-view.utils';
 import type { TableTabObject } from '../table-tab';
 
+import { DeleteTableRowsDialog } from './delete-table-rows-dialog/delete-table-rows-dialog';
 import { TableColumnsMenu } from './table-columns-menu/table-columns-menu';
 
 type Props = {
+  connectionId: string;
   object: TableTabObject;
   view: TableViewState['view'];
   totalRows: number | null;
@@ -20,9 +22,12 @@ type Props = {
   onHiddenColumnsChange: (hiddenColumns: string[]) => void;
   isReloading: boolean;
   onReload: () => void;
+  selectedRowKeys: TableRowKey[];
+  onRowsDeleted: () => void;
 };
 
 export const TableTabHeader = ({
+  connectionId,
   object,
   view,
   totalRows,
@@ -30,9 +35,13 @@ export const TableTabHeader = ({
   hiddenColumns,
   onHiddenColumnsChange,
   isReloading,
-  onReload
+  onReload,
+  selectedRowKeys,
+  onRowsDeleted
 }: Props) => {
   const { t } = useTranslation();
+  const canDeleteRows =
+    object.kind === 'table' && view === 'data' && !!columns?.some(column => column.isPrimaryKey);
 
   return (
     <header className="flex min-h-10.5 shrink-0 flex-wrap items-center gap-x-2.5 gap-y-1 border-b py-1 ps-3.5 pe-2">
@@ -40,6 +49,14 @@ export const TableTabHeader = ({
       <p className="text-xs text-muted-foreground">
         {totalRows !== null && t('{{count, number}} rows', { count: totalRows })}
       </p>
+      {canDeleteRows && (
+        <DeleteTableRowsDialog
+          connectionId={connectionId}
+          object={object}
+          rowKeys={selectedRowKeys}
+          onDeleted={onRowsDeleted}
+        />
+      )}
       {object.kind === 'view' && <Badge variant="warning">{t('View · read only')}</Badge>}
       <div className="ms-auto flex items-center gap-1">
         {view === 'data' && columns && (

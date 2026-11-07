@@ -27,6 +27,7 @@ type Documents = {
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": typeof types.GetTableRowsDocument,
     "\n  query GetFunctionDefinition($input: FunctionDefinitionInput!) {\n    functionDefinition(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      definition\n    }\n  }\n": typeof types.GetFunctionDefinitionDocument,
     "\n  query GetSchemaDiagram($connectionId: ID!) {\n    schemaDiagram(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      diagram {\n        entities {\n          id\n          schema\n          name\n          properties {\n            name\n            type\n            default\n            isNullable\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        relations {\n          id\n          type\n          fromEntityId\n          fromProperties\n          toEntityId\n          toProperties\n        }\n      }\n    }\n  }\n": typeof types.GetSchemaDiagramDocument,
+    "\n  mutation DeleteTableRows($input: DeleteTableRowsInput!) {\n    deleteTableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      deletedRows\n    }\n  }\n": typeof types.DeleteTableRowsDocument,
     "\n  fragment CommonFile on File {\n    id\n    name\n    type\n    content\n    updatedAt\n  }\n": typeof types.CommonFileFragmentDoc,
     "\n  query GetFiles($connectionId: ID!) {\n    files(connectionId: $connectionId) {\n      items {\n        ...CommonFile\n      }\n    }\n  }\n": typeof types.GetFilesDocument,
     "\n  query GetFile($id: ID!) {\n    file(id: $id) {\n      ...CommonFile\n    }\n  }\n": typeof types.GetFileDocument,
@@ -47,6 +48,7 @@ const documents: Documents = {
     "\n  query GetTableRows($input: TableRowsInput!) {\n    tableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      tableRows {\n        columns {\n          name\n          type\n        }\n        rows\n        totalRows\n      }\n    }\n  }\n": types.GetTableRowsDocument,
     "\n  query GetFunctionDefinition($input: FunctionDefinitionInput!) {\n    functionDefinition(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      definition\n    }\n  }\n": types.GetFunctionDefinitionDocument,
     "\n  query GetSchemaDiagram($connectionId: ID!) {\n    schemaDiagram(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      diagram {\n        entities {\n          id\n          schema\n          name\n          properties {\n            name\n            type\n            default\n            isNullable\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        relations {\n          id\n          type\n          fromEntityId\n          fromProperties\n          toEntityId\n          toProperties\n        }\n      }\n    }\n  }\n": types.GetSchemaDiagramDocument,
+    "\n  mutation DeleteTableRows($input: DeleteTableRowsInput!) {\n    deleteTableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      deletedRows\n    }\n  }\n": types.DeleteTableRowsDocument,
     "\n  fragment CommonFile on File {\n    id\n    name\n    type\n    content\n    updatedAt\n  }\n": types.CommonFileFragmentDoc,
     "\n  query GetFiles($connectionId: ID!) {\n    files(connectionId: $connectionId) {\n      items {\n        ...CommonFile\n      }\n    }\n  }\n": types.GetFilesDocument,
     "\n  query GetFile($id: ID!) {\n    file(id: $id) {\n      ...CommonFile\n    }\n  }\n": types.GetFileDocument,
@@ -103,6 +105,10 @@ export function graphql(source: "\n  query GetFunctionDefinition($input: Functio
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetSchemaDiagram($connectionId: ID!) {\n    schemaDiagram(connectionId: $connectionId) {\n      apiErrors {\n        code\n        message\n      }\n      diagram {\n        entities {\n          id\n          schema\n          name\n          properties {\n            name\n            type\n            default\n            isNullable\n            isPrimaryKey\n            isForeignKey\n          }\n        }\n        relations {\n          id\n          type\n          fromEntityId\n          fromProperties\n          toEntityId\n          toProperties\n        }\n      }\n    }\n  }\n"): typeof import('./graphql').GetSchemaDiagramDocument;
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteTableRows($input: DeleteTableRowsInput!) {\n    deleteTableRows(input: $input) {\n      apiErrors {\n        code\n        message\n      }\n      deletedRows\n    }\n  }\n"): typeof import('./graphql').DeleteTableRowsDocument;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

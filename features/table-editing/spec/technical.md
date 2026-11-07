@@ -76,14 +76,14 @@ type Mutation {
 - Los cambios pendientes son estado por pestaña, como `hiddenColumns`: celdas editadas por `key` de fila y columna, y filas nuevas con un id local. Viven en memoria mientras la pestaña está abierta, fuera de `localStorage`.
 - La `key` de una fila se arma con los valores de todas las columnas `isPrimaryKey` de `structure.columns`. Hoy `TableData` toma solo la primera PK: pasa a manejar todas.
 - Como los pendientes van por `key` y no por índice, sobreviven a la recarga de filas tras un borrado.
-- Al guardar o borrar bien se invalidan `tableRows` de esa tabla.
-- La selección de filas es estado local de `TableData`, por `key`, y no depende del borrado: las acciones sobre la selección la reciben como entrada.
-- Al borrar bien, se quitan de los pendientes las celdas editadas de las `key` borradas antes de invalidar `tableRows`.
+- Al guardar o borrar bien se refrescan `tableRows` de esa tabla con `refetchQueries`.
+- La selección de filas es estado local de `TableTab` (lo comparten `TableTabHeader` y `TableData`), por `key`; se limpia al cambiar de página, filtro u orden, y no depende del borrado: las acciones sobre la selección la reciben como entrada.
+- Al borrar bien, se quitan de los pendientes las celdas editadas de las `key` borradas antes de refrescar `tableRows`.
 
 ## Impacto en código existente
 
 - `TableTabHeader`: botones `+`, `−`, Guardar y Deshacer junto al nombre y el número de filas.
-- `TableGrid`: doble clic para editar, marcas de celda cambiada y fila nueva, numeral como checkbox.
+- `TableGrid`: doble clic para editar, marcas de celda cambiada y fila nueva, clic en el numeral para seleccionar la fila.
 - `TableData`: confirmación al cambiar de página, filtro u orden con pendientes.
 - Render de pestañas del workspace: los pendientes cuentan como cambios sin guardar al cerrar la pestaña.
 - Operaciones nuevas en `lib/api/operations/database-schema.operations.ts` y codegen.

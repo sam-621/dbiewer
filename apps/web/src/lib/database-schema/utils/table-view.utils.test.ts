@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 
 import {
   formatTableOrder,
+  getPrimaryKeyColumns,
+  getTableRowKey,
   getVisibleTableRows,
   parseTableOrder,
   TableViewStateSchema
@@ -77,5 +79,32 @@ describe('getVisibleTableRows', () => {
 
   test('ignores a hidden column that no longer exists', () => {
     expect(getVisibleTableRows(tableRows, ['deleted'])).toEqual(tableRows);
+  });
+});
+
+describe('getTableRowKey', () => {
+  const columns = [
+    { name: 'tenant_id', type: 'int4' },
+    { name: 'email', type: 'text' },
+    { name: 'id', type: 'int4' }
+  ];
+
+  test('takes every primary key column in the order of the structure', () => {
+    const primaryKeys = getPrimaryKeyColumns([
+      { name: 'id', isPrimaryKey: true },
+      { name: 'email', isPrimaryKey: false },
+      { name: 'tenant_id', isPrimaryKey: true }
+    ]);
+
+    expect(getTableRowKey(columns, ['7', 'ana@acme.dev', '1'], primaryKeys)).toEqual([
+      { column: 'id', value: '1' },
+      { column: 'tenant_id', value: '7' }
+    ]);
+  });
+
+  test('keeps NULL values', () => {
+    expect(getTableRowKey(columns, [null, 'ana@acme.dev', '1'], ['tenant_id'])).toEqual([
+      { column: 'tenant_id', value: null }
+    ]);
   });
 });

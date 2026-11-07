@@ -5,6 +5,7 @@
 **Hecho:**
 - (api, web) Se crea la feature `table-editing`: spec de producto, técnico y de UI, y plan de trabajo.
 - (api) Mutations `saveTableChanges` y `deleteTableRows` en una transacción, con tests de integración y e2e (paso 1 del plan).
+- (web) Selección de filas desde el numeral y borrado con confirmación; la `key` de fila usa todas las columnas de la PK (paso 2 del plan).
 
 **Decisiones:**
 - Ediciones e inserts quedan pendientes y se guardan juntos en una sola transacción; el borrado es inmediato, con confirmación.
@@ -13,3 +14,6 @@
 - Borrar una fila con celdas editadas quita esos cambios de los pendientes.
 - Editar y borrar necesitan PK; sin PK solo se agregan filas.
 - La validación de PK (`OBJECT_NOT_FOUND`, `PRIMARY_KEY_REQUIRED`) va en el use-case, que la lee antes con `PostgresService.readPrimaryKeyColumns`; el service no lleva esa regla.
+- La selección de filas vive en `TableTab`, porque el botón `−` del encabezado y la grilla la comparten.
+- El numeral selecciona la fila con un clic, sin mostrar checkbox: sigue mostrando el número y la fila seleccionada se resalta.
+- La fila seleccionada se resalta con el amarillo de la marca; el hover no cambia.

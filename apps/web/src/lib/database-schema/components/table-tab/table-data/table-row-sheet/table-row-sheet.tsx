@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/shared/components/ui/textarea';
 
 import { formatColumnType } from '../../../../utils/database-schema.utils';
-import type { TableRowsNode } from '../../../../utils/table-view.utils';
+import { getTableRowKey, type TableRowsNode } from '../../../../utils/table-view.utils';
 
 const LONG_VALUE_LENGTH = 80;
 
@@ -24,16 +24,23 @@ export type TableRowDetail = { number: number; values: (string | null)[] };
 type Props = {
   objectName: string;
   columns: TableRowsNode['columns'];
-  primaryKey: string | null;
+  primaryKeys: string[];
   isOpen: boolean;
   row: TableRowDetail | null;
   onClose: () => void;
 };
 
-export const TableRowSheet = ({ objectName, columns, primaryKey, isOpen, row, onClose }: Props) => {
+export const TableRowSheet = ({
+  objectName,
+  columns,
+  primaryKeys,
+  isOpen,
+  row,
+  onClose
+}: Props) => {
   const { t } = useTranslation();
-  const primaryKeyIndex = columns.findIndex(column => column.name === primaryKey);
-  const primaryKeyValue = row && primaryKeyIndex !== -1 ? row.values[primaryKeyIndex] : undefined;
+  const rowKey =
+    row && primaryKeys.length ? getTableRowKey(columns, row.values, primaryKeys) : null;
 
   return (
     <Sheet
@@ -46,8 +53,8 @@ export const TableRowSheet = ({ objectName, columns, primaryKey, isOpen, row, on
         <SheetHeader>
           <SheetTitle className="font-mono text-base">{objectName}</SheetTitle>
           <SheetDescription className="font-mono text-xs">
-            {primaryKey && primaryKeyValue !== undefined
-              ? `${primaryKey} = ${primaryKeyValue ?? 'NULL'}`
+            {rowKey
+              ? rowKey.map(({ column, value }) => `${column} = ${value ?? 'NULL'}`).join(', ')
               : t('Row {{number, number}}', { number: row?.number ?? 0 })}
           </SheetDescription>
         </SheetHeader>
@@ -68,7 +75,7 @@ export const TableRowSheet = ({ objectName, columns, primaryKey, isOpen, row, on
                 <Field key={column.name}>
                   <div className="flex w-full items-center gap-1.5">
                     <FieldLabel className="min-w-0 gap-1.5 font-mono">
-                      {column.name === primaryKey && (
+                      {primaryKeys.includes(column.name) && (
                         <KeyIcon
                           role="img"
                           aria-hidden={false}

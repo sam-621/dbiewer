@@ -7,7 +7,8 @@ const SHELL_ERRORS: Record<ShellErrorCode, string> = {
   CONNECTION_NOT_FOUND: 'This connection no longer exists',
   CONNECTION_FAILED: "We couldn't connect to the database",
   OBJECT_NOT_FOUND: 'This object no longer exists',
-  QUERY_FAILED: 'The query failed'
+  QUERY_FAILED: 'The query failed',
+  PRIMARY_KEY_REQUIRED: 'This table needs a primary key'
 };
 
 export const getShellError = (errorCode: ShellErrorCode): ApiError<ShellErrorCode> => ({
