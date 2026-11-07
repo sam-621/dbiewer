@@ -1,13 +1,14 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { like } from 'drizzle-orm';
+import { makeSignature } from 'better-auth/crypto';
 
 import { createApp } from '@/app';
 import type { AppContext } from '@/context';
 import { createAppContext } from '@/context';
 import { createDatabase } from '@/persistence/database';
-import { verification } from '@/persistence/schema';
+import type { Auth } from '@/services/auth';
+import { createAuth } from '@/services/auth';
 
 type TestServerOptions = {
   headers?: Record<string, string>;
@@ -17,8 +18,6 @@ type GraphQLResponse<T> = {
   data?: T;
   errors?: Array<{ message: string; extensions?: { code?: string } }>;
 };
-
-const MAGIC_LINK_IDENTIFIER_PREFIX = 'magic-link:';
 
 const getEnv = (name: 'DATABASE_URL' | 'ADMIN_DATABASE_URL') => {
   const url = process.env[name];
@@ -34,34 +33,27 @@ export class TestServer {
   private readonly adminDatabase = createDatabase(getEnv('ADMIN_DATABASE_URL'));
   private readonly server: Server;
   private readonly appContext: AppContext;
+  private readonly auth: Auth;
 
   constructor(options: TestServerOptions = {}) {
     this.headers = options.headers ?? {};
     this.appContext = createAppContext({ app: this.database.db, admin: this.adminDatabase.db });
+    this.auth = createAuth(this.appContext);
     this.server = createApp(this.appContext).listen(0);
   }
 
   async signIn(email: string) {
-    await fetch(`${this.url}/api/auth/sign-in/magic-link`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
+    const ctx = await this.auth.$context;
+    const found = await ctx.internalAdapter.findUserByEmail(email);
+    const user =
+      found?.user ??
+      (await ctx.internalAdapter.createUser({ email, name: '', emailVerified: true }));
+    const session = await ctx.internalAdapter.createSession(user.id);
+    const signature = await makeSignature(session.token, ctx.secret);
 
-    const [row] = await this.adminDatabase.db
-      .select({ identifier: verification.identifier })
-      .from(verification)
-      .where(like(verification.value, `%"email":"${email}"%`));
-
-    if (!row) throw new Error(`No magic link found for ${email}`);
-
-    const token = row.identifier.slice(MAGIC_LINK_IDENTIFIER_PREFIX.length);
-    const response = await fetch(`${this.url}/api/auth/magic-link/verify?token=${token}`);
-    const cookies = response.headers.getSetCookie().map(cookie => cookie.split(';')[0]);
-
-    if (!cookies.length) throw new Error(`Failed to sign in ${email}`);
-
-    return { cookie: cookies.join('; ') };
+    return {
+      cookie: `${ctx.authCookies.sessionToken.name}=${encodeURIComponent(`${session.token}.${signature}`)}`
+    };
   }
 
   async query<T>(

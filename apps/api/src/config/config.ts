@@ -8,6 +8,8 @@ const EnvSchema = z
     ADMIN_DATABASE_URL: z.url(),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.url(),
+    GITHUB_CLIENT_ID: z.string().min(1),
+    GITHUB_CLIENT_SECRET: z.string().min(1),
     WEB_URL: z.url(),
     EMAIL_SENDER: z.enum(['resend', 'console', 'dummy']),
     EMAIL_FROM: z.email(),
@@ -38,7 +40,11 @@ const ConfigSchema = EnvSchema.transform(env => ({
   },
   auth: {
     secret: env.BETTER_AUTH_SECRET,
-    url: env.BETTER_AUTH_URL
+    url: env.BETTER_AUTH_URL,
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET
+    }
   },
   webUrl: env.WEB_URL,
   emailSender: {

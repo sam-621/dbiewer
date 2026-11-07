@@ -10,113 +10,64 @@ import { render } from '../../../../tests/render';
 import { LoginPage } from './login-page';
 
 vi.mock('@/lib/api/auth-client', () => ({
-  authClient: { signIn: { magicLink: vi.fn() } }
+  authClient: { signIn: { social: vi.fn() } }
 }));
 
-const magicLink = vi.mocked(authClient.signIn.magicLink);
+const social = vi.mocked(authClient.signIn.social);
 
 const LocationSearch = () => <output data-testid="location-search">{useLocation().search}</output>;
 
-const requestLink = async (email = 'ana@acme.dev') => {
-  const user = userEvent.setup();
-
-  await user.type(screen.getByLabelText('Correo'), email);
-  await user.click(screen.getByRole('button', { name: 'Enviar magic link' }));
-
-  return user;
-};
+const continueWithGithub = () =>
+  userEvent.setup().click(screen.getByRole('button', { name: 'Continuar con GitHub' }));
 
 describe('LoginPage', () => {
   beforeEach(() => {
-    magicLink.mockReset();
+    social.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  test('renders the sign in form', () => {
+  test('renders the sign in page', () => {
     render(<LoginPage />);
 
     expect(screen.getByRole('heading', { name: 'Entra a dbiewer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuar con GitHub' })).toBeInTheDocument();
   });
 
-  test('sends the magic link and shows the sent state', async () => {
-    magicLink.mockResolvedValue({ data: { status: true }, error: null });
+  test('signs in with GitHub', async () => {
+    social.mockResolvedValue({ data: { url: 'https://github.com', redirect: true }, error: null });
 
     render(<LoginPage />);
-    await requestLink();
+    await continueWithGithub();
 
-    expect(await screen.findByRole('heading', { name: 'Revisa tu correo' })).toBeInTheDocument();
-    expect(
-      screen.getByText('Enviamos un magic link a ana@acme.dev. Vence en 15 minutos.')
-    ).toBeInTheDocument();
-    expect(magicLink).toHaveBeenCalledWith({
-      email: 'ana@acme.dev',
+    expect(social).toHaveBeenCalledWith({
+      provider: 'github',
       callbackURL: `${window.location.origin}/`,
       errorCallbackURL: `${window.location.origin}/login`
     });
+    expect(screen.getByRole('button')).toHaveAttribute('data-loading');
   });
 
-  test('shows a validation error for an invalid email', async () => {
-    render(<LoginPage />);
-    await requestLink('ana');
-
-    expect(await screen.findByText('Ingresa un correo válido')).toBeInTheDocument();
-    expect(magicLink).not.toHaveBeenCalled();
-  });
-
-  test('shows a warning when there are too many attempts', async () => {
-    magicLink.mockResolvedValue({
-      data: null,
-      error: { status: 429, statusText: 'Too Many Requests' }
-    });
+  test('shows a generic error when GitHub sign in fails', async () => {
+    social.mockRejectedValue(new Error('Network error'));
 
     render(<LoginPage />);
-    await requestLink();
-
-    expect(
-      await screen.findByText('Demasiados intentos. Espera unos minutos antes de pedir otro link.')
-    ).toBeInTheDocument();
-  });
-
-  test('shows a generic error when the request fails', async () => {
-    magicLink.mockRejectedValue(new Error('Network error'));
-
-    render(<LoginPage />);
-    await requestLink();
+    await continueWithGithub();
 
     expect(await screen.findByText('Algo salió mal')).toBeInTheDocument();
   });
 
-  test('shows a notice when the link expired', () => {
+  test('shows an error when GitHub sends back an error', () => {
     render(
       <>
         <LoginPage />
         <LocationSearch />
       </>,
-      { route: '/login?error=INVALID_TOKEN' }
+      { route: '/login?error=access_denied' }
     );
 
-    expect(screen.getByText('Este link venció. Pide uno nuevo.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No pudimos iniciar sesión con GitHub. Intenta de nuevo.')
+    ).toBeInTheDocument();
     expect(screen.getByTestId('location-search')).toBeEmptyDOMElement();
-  });
-
-  test('resends the link from the sent state', async () => {
-    magicLink.mockResolvedValue({ data: { status: true }, error: null });
-
-    render(<LoginPage />);
-    const user = await requestLink();
-    await user.click(await screen.findByRole('button', { name: 'Reenviar link' }));
-
-    expect(await screen.findByText('Te enviamos un link nuevo.')).toBeInTheDocument();
-    expect(magicLink).toHaveBeenCalledTimes(2);
-  });
-
-  test('goes back to the form to use another email', async () => {
-    magicLink.mockResolvedValue({ data: { status: true }, error: null });
-
-    render(<LoginPage />);
-    const user = await requestLink();
-    await user.click(await screen.findByRole('button', { name: 'Usar otro correo' }));
-
-    expect(screen.getByRole('heading', { name: 'Entra a dbiewer' })).toBeInTheDocument();
   });
 });

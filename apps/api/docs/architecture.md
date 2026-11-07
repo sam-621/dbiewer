@@ -181,9 +181,9 @@ El app context lleva, ya instanciados:
 |-------|-----|
 | `databases` | `app` (`DATABASE_URL`, con RLS) y `admin` (`ADMIN_DATABASE_URL`, se salta RLS). |
 | `services` | Los services externos (`emailSender`). Su factory se llama aquí. |
-| `repositories` | Los repositorios (`magicLinkRequest`, `verification`), cada uno con la conexión que le corresponde. |
+| `repositories` | Los repositorios (`connection`, `file`), cada uno con la conexión que le corresponde. |
 
-- **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new MagicLinkUseCase(appContext.repositories.magicLinkRequest, appContext.repositories.verification, appContext.services.emailSender, ...)`.
+- **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new ConnectionCreator(uowCtx, appContext.services.encryptionService)`.
 - Un service, repositorio o conexión nuevo se agrega al tipo `AppContext` y a `createAppContext`.
 
 ## Unit of work y RLS

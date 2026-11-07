@@ -1,29 +1,25 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/lib/api/auth-client';
-import { type AccountErrorCode, getAccountError } from '@/lib/api/errors/account.errors';
 import { GENERIC_ERROR } from '@/lib/api/errors/api-error';
 import type { ActionResult } from '@/lib/api/types';
 import { Logger } from '@/shared/utils/logger';
 
-export const useSignInMagicLink = () => {
+export const useSignInGithub = () => {
   const { isPending, mutateAsync } = useMutation({
-    mutationFn: (email: string) =>
-      authClient.signIn.magicLink({
-        email,
+    mutationFn: () =>
+      authClient.signIn.social({
+        provider: 'github',
         callbackURL: `${window.location.origin}/`,
         errorCallbackURL: `${window.location.origin}/login`
       })
   });
 
-  const signInMagicLink = async (email: string): Promise<ActionResult<AccountErrorCode>> => {
+  const signInGithub = async (): Promise<ActionResult> => {
     try {
-      const { error } = await mutateAsync(email);
+      const { error } = await mutateAsync();
 
       if (!error) return { isSuccess: true };
-
-      const accountError = getAccountError(error);
-      if (accountError) return { isSuccess: false, ...accountError };
 
       Logger.error(error);
       return { isSuccess: false, error: GENERIC_ERROR };
@@ -33,5 +29,5 @@ export const useSignInMagicLink = () => {
     }
   };
 
-  return { signInMagicLink, isLoading: isPending };
+  return { signInGithub, isLoading: isPending };
 };

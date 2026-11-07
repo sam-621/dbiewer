@@ -1,23 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 
-import { useSignInMagicLink } from '../../hooks/use-sign-in-magic-link';
+import { useSignInGithub } from '../../hooks/use-sign-in-github';
 
 export const useLoginForm = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [hasLinkError, setHasLinkError] = useState(() => searchParams.has('error'));
-  const { signInMagicLink, isLoading } = useSignInMagicLink();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(Schema),
-    defaultValues: { email: '' }
-  });
+  const [hasGithubError] = useState(() => searchParams.has('error'));
+  const [error, setError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const { signInGithub, isLoading } = useSignInGithub();
 
   useEffect(() => {
-    if (!hasLinkError) return;
+    if (!hasGithubError) return;
 
     setSearchParams(
       params => {
@@ -26,24 +20,16 @@ export const useLoginForm = () => {
       },
       { replace: true }
     );
-  }, [hasLinkError, setSearchParams]);
+  }, [hasGithubError, setSearchParams]);
 
-  const onSubmit = async ({ email }: FormValues) => {
-    const result = await signInMagicLink(email);
+  const onGithubSignIn = async () => {
+    setError(null);
+    const result = await signInGithub();
 
-    if (!result.isSuccess) form.setError('root', { message: result.error });
+    if (!result.isSuccess) return setError(result.error);
+
+    setIsRedirecting(true);
   };
 
-  const backToForm = () => {
-    setHasLinkError(false);
-    form.reset();
-  };
-
-  return { form, isLoading, hasLinkError, onSubmit: form.handleSubmit(onSubmit), backToForm };
+  return { isLoading: isLoading || isRedirecting, hasGithubError, error, onGithubSignIn };
 };
-
-const Schema = z.object({
-  email: z.email('Enter a valid email')
-});
-
-type FormValues = z.infer<typeof Schema>;

@@ -33,7 +33,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; archivo en kebab-case en `modules/<modulo>/use-cases/`; carpeta con el mismo nombre solo si tiene test | `modules/workspace/use-cases/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
 | Método del use-case | se llama `execute`, que hereda de `UseCase`; la lógica va en `run` | `new ConnectionCreator(ctx, encryptionService).execute(args.input)` |
 | Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `resend/resend-sender.ts`, `ResendSender` |
-| Templates de email | `<email>-template.tsx` | `magic-link-template.tsx` |
+| Templates de email | `<email>-template.tsx` | `welcome-template.tsx` |
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
 | Error | describe el caso + `Error` | `ConnectionNotFoundError` |
 | Conjuntos de valores | objeto `as const` con un tipo del mismo nombre, de preferencia en vez de `enum`; llaves en PascalCase y valores en minúsculas | `OrderByKey.Asc`, con valor `'asc'` |

@@ -29,7 +29,7 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 
 | Pieza | Test | Ubicación |
 |-------|------|-----------|
-| Use-case que no se usa desde un resolver (p. ej. `MagicLinkUseCase`, que llama Better Auth) | unit (repositorios y services mockeados) | junto al archivo |
+| Use-case que no se usa desde un resolver (p. ej. uno que llama Better Auth desde un hook) | unit (repositorios y services mockeados) | junto al archivo |
 | `UnitOfWork` | unit con la DB mockeada: orden de las sentencias de RLS, commit, rollback y que no se tape el error original | junto al archivo |
 | Middleware de GraphQL (`api/middlewares/`) | unit con el context mockeado | junto al archivo |
 | Use-case usado desde un resolver | lo cubre el e2e del resolver | `tests/<recurso>/<operación>/` |
