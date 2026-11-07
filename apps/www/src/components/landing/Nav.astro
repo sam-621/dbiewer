@@ -1,37 +1,17 @@
 ---
-import { APP_URL } from '../../config';
+import { APP_URL, GITHUB_URL } from '../../config';
+import Icon from '../app/Icon.astro';
 import Brand from '../ui/Brand.astro';
 import LinkButton from '../ui/LinkButton.astro';
-
-const links = [
-  { label: 'Features', href: '#features' },
-  { label: 'How it works', href: '#how' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'Changelog', href: '#' },
-  { label: 'Docs', href: '#' }
-];
 ---
 
-<nav class="sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md">
-  <div class="mx-auto flex max-w-[1200px] items-center gap-7 px-6 py-3 max-sm:px-4">
-    <Brand tag="v0.1" />
-    <div class="ml-auto flex items-center gap-[22px]">
-      {links.map(link => (
-        <a
-          href={link.href}
-          class="text-[13px] text-foreground/80 hover:text-foreground max-[900px]:hidden"
-        >
-          {link.label}
-        </a>
-      ))}
-      <div class="ml-2 flex gap-1.5">
-        <LinkButton href={APP_URL} variant="ghost" size="sm" class="max-sm:hidden">
-          Sign in
-        </LinkButton>
-        <LinkButton href={APP_URL} size="sm" kbd="↵">
-          Open app
-        </LinkButton>
-      </div>
-    </div>
-  </div>
-</nav>
+<header class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-6 py-5 max-sm:px-4">
+  <Brand />
+  <nav class="ml-auto flex items-center gap-1.5" aria-label="Main">
+    <LinkButton href={GITHUB_URL} variant="ghost">
+      <Icon name="github" class="size-4" />
+      GitHub
+    </LinkButton>
+    <LinkButton href={APP_URL}>Open app</LinkButton>
+  </nav>
+</header>

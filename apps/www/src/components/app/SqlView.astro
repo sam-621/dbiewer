@@ -1,0 +1,142 @@
+---
+import { Kbd } from '../ui/kbd';
+import AppFrame from './AppFrame.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+type Token = [string, string];
+
+const kw = (text: string): Token => ['text-sql-kw', text];
+const fn = (text: string): Token => ['text-sql-fn', text];
+const tbl = (text: string): Token => ['text-sql-tbl', text];
+const col = (text: string): Token => ['text-sql-col', text];
+const str = (text: string): Token => ['text-sql-str', text];
+const num = (text: string): Token => ['text-sql-num', text];
+const txt = (text: string): Token => ['text-foreground', text];
+
+const lines: Token[][] = [
+  [
+    kw('select'),
+    txt(' c.'),
+    col('country'),
+    txt(', '),
+    fn('count'),
+    txt('(*) '),
+    kw('as'),
+    txt(' orders,')
+  ],
+  [
+    txt('       '),
+    fn('sum'),
+    txt('(o.'),
+    col('total_cents'),
+    txt(') / '),
+    num('100'),
+    txt(' '),
+    kw('as'),
+    txt(' revenue')
+  ],
+  [kw('from'), txt(' '), tbl('orders'), txt(' o')],
+  [
+    kw('join'),
+    txt(' '),
+    tbl('customers'),
+    txt(' c '),
+    kw('on'),
+    txt(' c.'),
+    col('id'),
+    txt(' = o.'),
+    col('customer_id')
+  ],
+  [kw('where'), txt(' o.'), col('status'), txt(' = '), str("'paid'")],
+  [kw('group by'), txt(' c.'), col('country')],
+  [kw('order by'), txt(' revenue '), kw('desc'), txt(';')]
+];
+
+const columns = [
+  { name: 'country', type: 'char(2)' },
+  { name: 'orders', type: 'int8' },
+  { name: 'revenue', type: 'int8' }
+];
+
+const rows = [
+  ['MX', '412', '18240'],
+  ['BR', '356', '15910'],
+  ['ES', '298', '13025'],
+  ['DE', '241', '11480'],
+  ['JP', '187', '9035'],
+  ['FR', '164', '7720']
+];
+---
+
+<AppFrame class={className}>
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <span class="inline-flex h-7 items-center gap-1.5 rounded-lg border border-primary bg-primary px-2.5 text-sm font-medium text-primary-foreground">
+      <Icon name="play" class="size-4" />
+      Run
+      <Kbd className="bg-primary-foreground/10 text-primary-foreground">⌘↵</Kbd>
+    </span>
+    <span class="px-2.5 text-sm font-medium">Save</span>
+    <span class="flex items-center gap-1.5 px-2.5 text-sm font-medium">
+      <Icon name="magic-wand" class="size-4" />
+      Format
+    </span>
+    <span class="ms-auto truncate text-xs text-muted-foreground">revenue_by_country.sql</span>
+  </div>
+
+  <div class="shrink-0 py-2 font-mono text-xs leading-[1.7]">
+    {lines.map((line, index) => (
+      <div class:list={['flex', index === lines.length - 1 && 'bg-muted']}>
+        <span
+          class:list={[
+            'w-10 shrink-0 pe-3 text-end',
+            index === lines.length - 1 ? 'text-foreground' : 'text-muted-foreground'
+          ]}
+        >
+          {index + 1}
+        </span>
+        <span class="whitespace-pre">
+          {line.map(([tone, text]) => (
+            <span class={tone}>{text}</span>
+          ))}
+        </span>
+      </div>
+    ))}
+  </div>
+
+  <section class="flex min-h-0 flex-1 flex-col border-t">
+    <div class="flex h-9 shrink-0 items-center gap-4 border-b px-4 text-xs">
+      <span class="font-medium">Results</span>
+      <span class="ms-auto font-mono text-muted-foreground">6 rows</span>
+    </div>
+    <table class="w-full border-separate border-spacing-0 font-mono text-xs whitespace-nowrap [&_td]:border-e [&_td]:border-b [&_th]:border-e [&_th]:border-b">
+      <thead>
+        <tr>
+          <th class="w-10 px-2.5 py-1.5 text-end font-normal text-muted-foreground">#</th>
+          {columns.map(column => (
+            <th class="px-2.5 py-1.5 text-start font-normal text-muted-foreground">
+              <span class="font-semibold text-foreground">{column.name}</span> {column.type}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, index) => (
+          <tr>
+            <td class="w-10 px-2.5 py-1.5 text-end text-muted-foreground tabular-nums">
+              {index + 1}
+            </td>
+            {row.map(value => (
+              <td class="px-2.5 py-1.5 text-foreground/70">{value}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+</AppFrame>

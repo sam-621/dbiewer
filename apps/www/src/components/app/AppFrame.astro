@@ -1,0 +1,44 @@
+---
+import Icon from './Icon.astro';
+
+type Tab = { label: string; icon: string; active?: boolean; dirty?: boolean };
+
+interface Props {
+  tabs?: Tab[];
+  class?: string;
+}
+
+const { tabs = [], class: className } = Astro.props;
+---
+
+<div
+  aria-hidden="true"
+  class:list={[
+    'flex min-w-0 flex-col overflow-hidden rounded-shell bg-background text-[13px] text-foreground shadow-2xl outline outline-1 -outline-offset-1 outline-border select-none',
+    className
+  ]}
+>
+  {tabs.length > 0 && (
+    <div class="flex h-11 shrink-0 items-center gap-1 border-b px-2">
+      {tabs.map(tab => (
+        <span
+          class:list={[
+            'relative flex h-7.5 shrink-0 items-center gap-1.5 rounded-md ps-2.5 pe-8 text-xs',
+            tab.active ? 'bg-input text-foreground' : 'text-muted-foreground'
+          ]}
+        >
+          <Icon name={tab.icon} class="size-3.5" />
+          {tab.label}
+          {tab.dirty ? (
+            <span class="absolute end-3 size-2 rounded-full bg-primary" />
+          ) : (
+            tab.active && <Icon name="x" class="absolute end-2 size-3.5 text-muted-foreground" />
+          )}
+        </span>
+      ))}
+    </div>
+  )}
+  <div class="relative flex min-h-0 flex-1 flex-col">
+    <slot />
+  </div>
+</div>

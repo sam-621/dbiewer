@@ -1,0 +1,126 @@
+---
+import AppFrame from './AppFrame.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+type Property = { name: string; type: string; key?: boolean; link?: boolean; nullable?: boolean };
+type Entity = { name: string; x: number; y: number; width: number; properties: Property[] };
+
+const entities: Entity[] = [
+  {
+    name: 'customers',
+    x: 24,
+    y: 36,
+    width: 210,
+    properties: [
+      { name: 'id', type: 'int4', key: true },
+      { name: 'full_name', type: 'varchar(120)' },
+      { name: 'email', type: 'varchar(255)', nullable: true },
+      { name: 'country', type: 'char(2)' },
+      { name: 'created_at', type: 'timestamptz' }
+    ]
+  },
+  {
+    name: 'orders',
+    x: 256,
+    y: 128,
+    width: 200,
+    properties: [
+      { name: 'id', type: 'int4', key: true },
+      { name: 'customer_id', type: 'int4', link: true },
+      { name: 'status', type: 'text' },
+      { name: 'total_cents', type: 'int8' },
+      { name: 'created_at', type: 'timestamptz' }
+    ]
+  },
+  {
+    name: 'order_items',
+    x: 486,
+    y: 36,
+    width: 200,
+    properties: [
+      { name: 'order_id', type: 'int4', key: true, link: true },
+      { name: 'product_id', type: 'int4', key: true, link: true },
+      { name: 'quantity', type: 'int4' },
+      { name: 'unit_price_cents', type: 'int8' }
+    ]
+  },
+  {
+    name: 'products',
+    x: 486,
+    y: 250,
+    width: 200,
+    properties: [
+      { name: 'id', type: 'int4', key: true },
+      { name: 'category_id', type: 'int4', link: true },
+      { name: 'name', type: 'varchar(160)' },
+      { name: 'price_cents', type: 'int8' }
+    ]
+  },
+  {
+    name: 'categories',
+    x: 250,
+    y: 318,
+    width: 200,
+    properties: [
+      { name: 'id', type: 'int4', key: true },
+      { name: 'name', type: 'varchar(80)' },
+      { name: 'parent_id', type: 'int4', link: true, nullable: true }
+    ]
+  }
+];
+
+const edges = [
+  'M256 203 H245 V83 H234',
+  'M486 83 H471 V175 H456',
+  'M686 111 H706 V297 H686',
+  'M486 325 H468 V365 H450'
+];
+---
+
+<AppFrame
+  class={className}
+  tabs={[
+    { label: 'customers', icon: 'table' },
+    { label: 'Diagram', icon: 'share-network', active: true }
+  ]}
+>
+  <div class="bg-dots relative min-h-0 flex-1 overflow-hidden">
+    <div class="absolute top-0 left-0 origin-top-left scale-[0.78]">
+      <svg class="absolute top-0 left-0 h-[460px] w-[720px] text-muted-foreground/60" fill="none">
+        {edges.map(d => (
+          <path d={d} stroke="currentColor" stroke-width="1.25" />
+        ))}
+      </svg>
+      {entities.map(entity => (
+        <article
+          class="absolute overflow-hidden rounded-lg border bg-card shadow-lg"
+          style={`left: ${entity.x}px; top: ${entity.y}px; width: ${entity.width}px`}
+        >
+          <div class="flex h-8 items-center gap-1 border-b bg-muted ps-2.5 pe-1.5">
+            <h3 class="m-0 flex-1 truncate font-mono text-xs font-semibold">{entity.name}</h3>
+            <Icon name="share-network" class="size-3.5 text-muted-foreground" />
+          </div>
+          <ul class="m-0 list-none p-0">
+            {entity.properties.map(property => (
+              <li class="flex h-7 items-center gap-2 px-2.5 font-mono text-xs">
+                <span class="shrink-0">{property.name}</span>
+                <span class="min-w-0 truncate text-muted-foreground">{property.type}</span>
+                <span class="ms-auto flex shrink-0 items-center gap-1">
+                  {property.key && <Icon name="key" class="size-3.5 text-pk" />}
+                  {property.link && <Icon name="link" class="size-3.5 text-fk" />}
+                  {property.nullable && <span class="text-muted-foreground">?</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</AppFrame>

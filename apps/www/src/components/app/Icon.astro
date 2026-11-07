@@ -1,0 +1,20 @@
+---
+interface Props {
+  name: string;
+  class?: string;
+}
+
+const icons = import.meta.glob<string>('../../icons/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true
+});
+
+const { name, class: className = 'size-4' } = Astro.props;
+const raw = icons[`../../icons/${name}.svg`] ?? '';
+const svg = raw
+  .replace(/ width="1em" height="1em"/, '')
+  .replace('<svg ', `<svg aria-hidden="true" class="shrink-0 ${className}" `);
+---
+
+<Fragment set:html={svg} />
