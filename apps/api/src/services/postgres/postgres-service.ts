@@ -1,7 +1,14 @@
 import { lookup } from 'node:dns/promises';
 import { BlockList, isIP } from 'node:net';
 
-import type { ClientConfig, FieldDef, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import type {
+  ClientConfig,
+  FieldDef,
+  PoolClient,
+  QueryArrayConfig,
+  QueryResult,
+  QueryResultRow
+} from 'pg';
 import { Client, escapeIdentifier, Pool, Query } from 'pg';
 
 import type { PostgresConfig } from '@/config';
@@ -760,13 +767,12 @@ export class PostgresService {
       rowsByResult: Map<PostgresStreamedResult, PostgresStreamedRows>;
     }>((resolve, reject) => {
       const rowsByResult = new Map<PostgresStreamedResult, PostgresStreamedRows>();
-      const query = client.query(
-        new Query<PostgresRow>({
-          text: sql,
-          rowMode: 'array',
-          types: { getTypeParser: () => (value: string) => value }
-        })
-      );
+      const config: QueryArrayConfig = {
+        text: sql,
+        rowMode: 'array',
+        types: { getTypeParser: () => (value: string) => value }
+      };
+      const query = client.query(new Query<PostgresRow>(config));
 
       query.on('row', (row: PostgresRow, result?: PostgresStreamedResult) => {
         if (!result) return;

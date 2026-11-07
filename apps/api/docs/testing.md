@@ -35,15 +35,14 @@ El runner es Vitest. La suite se decide por el sufijo del archivo; un test mal n
 | Use-case usado desde un resolver | lo cubre el e2e del resolver | `tests/<recurso>/<operación>/` |
 | Query o mutation de GraphQL | e2e | `tests/<recurso>/<operación>/` |
 | Repositorio | integración contra la DB, con fixtures | `persistence/repositories/<recurso>/__tests__/` |
-| Adapter de un service externo | integración con el SDK del proveedor o sus dependencias mockeadas (`resend` con el SDK de Resend mockeado, `console` con un logger falso) | junto al archivo |
-| Factory de un service (`getEmailSender`) | integración: que devuelva el adapter que pide la config y falle sin credenciales | junto al archivo |
+| Adapter de un service externo | integración con el SDK del proveedor o sus dependencias mockeadas (el SDK del proveedor mockeado, `console` con un logger falso) | junto al archivo |
+| Factory de un service (`get<Rol>`) | integración: que devuelva el adapter que pide la config y falle sin credenciales | junto al archivo |
 | Service que se conecta a una base de datos externa (`PostgresService`) | integración contra la DB de test, que hace de base externa | junto al archivo |
 | Service sin proveedor externo (`EncryptionService`) | unit | junto al archivo |
 
 No se testean:
 
 - **Auth (Better Auth)**: es configuración de una librería ya probada; lo que importa se cubre con los e2e que usan la sesión y con el test del use-case que llama.
-- **Templates de email**: son presentación; se revisan con `yarn emails`, y el use-case comprueba que el email lleve el link.
 - **Logger**: envoltorio de winston; `formatError` solo copia los campos del error.
 - **Plugins de Yoga** (`api/plugins/`): solo loguean lo que ya trae la respuesta.
 - **`shared/`**: utilidades que se cubren a través de quien las usa. Si una tiene lógica propia que no queda cubierta, lleva su unit.
@@ -78,23 +77,23 @@ No se testean:
 - Los de repositorio corren cada caso dentro de un `UnitOfWork` sobre `testAppDatabase` de `tests/utils/database.ts` (conexión como `app_user`, con RLS) y usan el repositorio del callback (`new UnitOfWork(testAppDatabase, rlsContext).execute(repositories => ...)`). Para leer lo que quedó en la tabla se usa `testDatabase` (admin).
 - Setup: `loadFixtures([...])` en `beforeEach`; `resetDatabase()` en `afterEach`; `destroyDatabase()` en `afterAll`.
 - Corren sin paralelismo entre archivos (comparten la DB).
-- Los de senders y factories de un service también son de integración aunque no toquen la DB: van en esta suite, sin `loadFixtures`/`resetDatabase`/`destroyDatabase`.
-- **SDK de un proveedor mockeado** con `vi.hoisted` + `vi.mock('<paquete>')`, así el mock existe antes de que el adapter importe el SDK. Setup a copiar (`resend-sender.int.test.ts`):
+- Los de adapters y factories de un service también son de integración aunque no toquen la DB: van en esta suite, sin `loadFixtures`/`resetDatabase`/`destroyDatabase`.
+- **SDK de un proveedor mockeado** con `vi.hoisted` + `vi.mock('<paquete>')`, así el mock existe antes de que el adapter importe el SDK. Setup:
 
   ```ts
-  const { Resend, send } = vi.hoisted(() => {
-    const send = vi.fn();
-    const Resend = vi.fn(function () {
-      return { emails: { send } };
+  const { Client, charge } = vi.hoisted(() => {
+    const charge = vi.fn();
+    const Client = vi.fn(function () {
+      return { charge };
     });
 
-    return { Resend, send };
+    return { Client, charge };
   });
 
-  vi.mock('resend', () => ({ Resend }));
+  vi.mock('<paquete>', () => ({ Client }));
   ```
 
-  Se verifica qué recibe el SDK (`send`) y cómo responde el adapter a sus errores. Nunca se llama al proveedor real.
+  Se verifica qué recibe el SDK (`charge`) y cómo responde el adapter a sus errores. Nunca se llama al proveedor real.
 
 ## Use-cases y `UowContext`
 

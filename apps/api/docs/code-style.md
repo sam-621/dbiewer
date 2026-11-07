@@ -32,8 +32,7 @@ Aplica a todo código nuevo. Si un archivo existente lo contradice, manda este d
 | Clases | `<Recurso><Capa>` | `ConnectionRepository`, `ConnectionResolver` |
 | Use-cases | una clase por caso de uso, nombrada por lo que hace con sufijo `-er`/`-or`; archivo en kebab-case en `modules/<modulo>/use-cases/`; carpeta con el mismo nombre solo si tiene test | `modules/workspace/use-cases/workspace-for-user-creator.ts`, `WorkspaceForUserCreator` |
 | Método del use-case | se llama `execute`, que hereda de `UseCase`; la lógica va en `run` | `new ConnectionCreator(ctx, encryptionService).execute(args.input)` |
-| Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `resend/resend-sender.ts`, `ResendSender` |
-| Templates de email | `<email>-template.tsx` | `welcome-template.tsx` |
+| Adapters de un service | `<adapter>/<adapter>-<rol>.ts`, clase `<Adapter><Rol>` | `stripe/stripe-billing.ts`, `StripeBilling` |
 | Schemas | `<Acción><Recurso>Schema` | `CreateConnectionSchema` |
 | Error | describe el caso + `Error` | `ConnectionNotFoundError` |
 | Conjuntos de valores | objeto `as const` con un tipo del mismo nombre, de preferencia en vez de `enum`; llaves en PascalCase y valores en minúsculas | `OrderByKey.Asc`, con valor `'asc'` |
@@ -60,11 +59,10 @@ Se mantienen con punto los sufijos que piden las herramientas (`.test.ts`, `.int
   | `context/` | `app-context.ts` (y el contexto del request cuando exista) | `@/context` |
   | `services/auth/` | `auth.ts` | `@/services/auth` |
   | `services/logger/` | `logger.ts` | `@/services/logger` |
-  | `services/emails/senders/resend/` | `resend-sender.ts` | `./resend` |
   | `services/encryption/` | `encryption-service.ts` | `@/services/encryption` |
   | `persistence/repositories/verification/` | `verification-repository.ts` | `@/persistence/repositories/verification` |
 
-- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`, `senders/`, `templates/`) no lleva barrel: se importa el archivo (`@/modules/workspace/use-cases/workspace-for-user-creator`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).
+- Una carpeta que agrupa varias piezas del mismo nivel (`use-cases/`, `api/resolvers/`, `errors/`) no lleva barrel: se importa el archivo (`@/modules/workspace/use-cases/workspace-for-user-creator`). Su `index.ts`, si existe, no reexporta: arma algo (el array de `resolvers`).
 
 ## Use-case
 
@@ -135,9 +133,9 @@ export class SavedQueryNotFoundError extends BusinessError<SavedQueryErrorCode> 
 De infraestructura (sesión, services), extiende `DbiewerError` directo:
 
 ```ts
-export class EmailSendFailedError extends DbiewerError {
-  constructor(to: string, reason: string) {
-    super(`Failed to send email to ${to}: ${reason}`);
+export class PostgresQueryFailedError extends DbiewerError {
+  constructor(reason: string) {
+    super(reason);
   }
 }
 ```

@@ -14,7 +14,7 @@ src/api/resolvers   llaman al use-case (o al repositorio, si la query solo lee) 
         │
         ▼
 src/modules/<modulo>/use-cases   reglas de negocio ──► src/services   servicios externos
-        │                                                     (email, billing, storage...)
+        │                                                     (auth, billing, storage...)
         ▼
 src/persistence/repositories   acceso a datos
 ```
@@ -135,7 +135,7 @@ La web llama directo a la api con credenciales (sin proxy): CORS solo acepta `WE
 
 ## Services (externos)
 
-Un service es una capa de abstracción sobre un proveedor externo: emails (Resend), autenticación (Better Auth, `services/auth/`), logs (`services/logger/`, hoy winston a consola; más adelante un proveedor de logs. `createLogger(context)` devuelve un `Logger` con `info`, `warn` y `error(message, error?, meta?)`, que pasa el error por `formatError` (`message`, `name`, `cause`, `stack`) para que salga completo también en el JSON de producción; el formato inline imprime su stack), billing, almacenamiento de archivos (S3), etc. Permite cambiar de proveedor, o usar uno falso en desarrollo y tests, sin tocar los use-cases.
+Un service es una capa de abstracción sobre un proveedor externo: autenticación (Better Auth, `services/auth/`), logs (`services/logger/`, hoy winston a consola; más adelante un proveedor de logs. `createLogger(context)` devuelve un `Logger` con `info`, `warn` y `error(message, error?, meta?)`, que pasa el error por `formatError` (`message`, `name`, `cause`, `stack`) para que salga completo también en el JSON de producción; el formato inline imprime su stack), billing, almacenamiento de archivos (S3), etc. Permite cambiar de proveedor, o usar uno falso en desarrollo y tests, sin tocar los use-cases.
 
 Un service sin proveedor externo (cifrado, `services/encryption/`) es una sola clase (`EncryptionService`), sin interface, adapters ni factory: corre igual en todos los ambientes. Se instancia en `createAppContext` con su parte de la config y queda en `appContext.services`. Lo demás de esta sección aplica igual.
 
@@ -144,29 +144,24 @@ Un service sin proveedor externo (cifrado, `services/encryption/`) es una sola c
 - Si la carpeta del service lleva el nombre de su archivo principal (`services/auth/auth.ts`), tiene un `index.ts` que lo reexporta y se importa como `@/services/auth`. Lo mismo para cada adapter dentro de su carpeta. Ver `code-style.md` > Carpetas e `index.ts`.
 - Si el proveedor falla o la entrada no es válida, el service lanza un error de `services/<servicio>/<servicio>-errors.ts` con el motivo; no lo ignora.
 
-Estructura, con `emails` como ejemplo:
+Un service con varios proveedores posibles (billing, storage) sigue esta estructura:
 
 ```
-src/services/emails/
-├── senders/
-│   ├── email-sender.ts              interface EmailSender, tipos (EmailData) y factory getEmailSender(config)
-│   ├── resend/                      un adapter por proveedor, cada uno en su carpeta
-│   │   ├── resend-sender.ts
+src/services/<servicio>/
+├── <rol>s/
+│   ├── <servicio>-<rol>.ts          interface, tipos y factory get<Rol>(config)
+│   ├── <proveedor>/                 un adapter por proveedor, cada uno en su carpeta
+│   │   ├── <proveedor>-<rol>.ts
 │   │   └── index.ts
-│   ├── console/                     desarrollo: escribe en el log lo necesario para usar el email
+│   ├── console/                     desarrollo: escribe en el log o trabaja en local
 │   └── dummy/                       tests: no hace nada
-├── email-errors.ts                  EmailSendFailedError
-├── templates/
-│   ├── <email>-template.tsx         react-email: componente, PreviewProps, export default y create<Email>Email(input)
-│   └── _shared/                     componentes compartidos entre templates (con `_` para que el preview de React Email no la muestre)
-└── locales/                         textos y asuntos por locale (`en`, `es`)
+└── <servicio>-errors.ts
 ```
 
-- **Una interface** con los métodos que usan los use-cases (`EmailSender.send`), sin tipos del proveedor.
+- **Una interface** con los métodos que usan los use-cases, sin tipos del proveedor.
 - **Un adapter por proveedor**, en `<adapter>/<adapter>-<rol>.ts` con su `index.ts`. Siempre hay uno para desarrollo (consola o local) y uno para tests (dummy), para no depender del proveedor real fuera de producción.
-- **Una factory** (`get<Rol>(config)`) que elige el adapter según una variable de entorno (`EMAIL_SENDER`), no según `NODE_ENV`. La factory recibe su parte de la config (`getEmailSender(config.emailSender)`), y `src/config/` exige las credenciales del adapter elegido.
+- **Una factory** (`get<Rol>(config)`) que elige el adapter según una variable de entorno, no según `NODE_ENV`. La factory recibe su parte de la config (`get<Rol>(config.<rol>)`), y `src/config/` exige las credenciales del adapter elegido.
 - La factory se llama una sola vez, en `createAppContext`, y el service queda en `appContext.services`. De ahí se pasa al constructor del use-case.
-- Templates y locales van dentro del service solo si el proveedor los necesita (emails sí; storage no). El use-case arma el contenido con el template y el locale y se lo pasa al service ya listo.
 
 ## App context
 
@@ -180,7 +175,7 @@ El app context lleva, ya instanciados:
 | Clave | Qué |
 |-------|-----|
 | `databases` | `app` (`DATABASE_URL`, con RLS) y `admin` (`ADMIN_DATABASE_URL`, se salta RLS). |
-| `services` | Los services externos (`emailSender`). Su factory se llama aquí. |
+| `services` | Los services (`encryptionService`, `postgresService`). Si un service tiene factory, se llama aquí. |
 | `repositories` | Los repositorios (`connection`, `file`), cada uno con la conexión que le corresponde. |
 
 - **Los use-cases no van en el app context.** Se instancian donde se usan, con lo que sacan del app context: `new ConnectionCreator(uowCtx, appContext.services.encryptionService)`.
@@ -221,9 +216,9 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 
 ## Config
 
-- `src/config/config.ts` valida `process.env` con zod y lo mapea a un objeto en camelCase, agrupado por tema: `config.port`, `config.database.url`, `config.auth.secret`, `config.emailSender.adapter`, `config.emailSender.resend.apiKey`. Nadie más lee `process.env` ni usa los nombres en mayúsculas.
-- Cada service tiene su grupo (`emailSender`, más adelante `billing`, `assetStorage`), con `adapter` y una clave por proveedor con sus credenciales. Su tipo se exporta desde `@/config` (`EmailSenderConfig = Config['emailSender']`). Un service sin proveedor externo no lleva `adapter`: su grupo tiene solo lo que usa (`encryption.connectionsKey`).
-- **La config solo valida forma y presencia**: que estén las variables que se necesitan, con el tipo correcto, y las credenciales del adapter elegido. Nada de reglas por ambiente (p. ej. "en production solo `resend`"): cada ambiente se configura con lo que quiera, pero tiene que configurarlo. Por eso ninguna variable tiene default.
+- `src/config/config.ts` valida `process.env` con zod y lo mapea a un objeto en camelCase, agrupado por tema: `config.port`, `config.database.url`, `config.auth.secret`, `config.auth.github.clientId`. Nadie más lee `process.env` ni usa los nombres en mayúsculas.
+- Cada service tiene su grupo. Uno con varios proveedores (más adelante `billing`, `assetStorage`) lleva `adapter` y una clave por proveedor con sus credenciales. Su tipo se exporta desde `@/config` (`PostgresConfig = Config['postgres']`). Un service sin proveedor externo no lleva `adapter`: su grupo tiene solo lo que usa (`encryption.connectionsKey`).
+- **La config solo valida forma y presencia**: que estén las variables que se necesitan, con el tipo correcto, y las credenciales del adapter elegido. Nada de reglas por ambiente (p. ej. "en production solo tal adapter"): cada ambiente se configura con lo que quiera, pero tiene que configurarlo. Por eso ninguna variable tiene default.
 
 ## Repositorios
 
@@ -246,7 +241,7 @@ Todo proceso que toca la DB propia corre dentro de un `UnitOfWork` (`src/persist
 - Hay dos tipos:
   - **Errores de negocio**: los que devuelve un use-case por una regla (`WorkspaceAlreadyExistsError`). Extienden `BusinessError` (`src/shared/errors/business-error.ts`) y llevan su `code` en SCREAMING_SNAKE_CASE (`WORKSPACE_ALREADY_EXISTS`), tipado con el enum `<Recurso>ErrorCode` de `@/api/codegen` (`BusinessError<WorkspaceErrorCode>`). Sin mapper: el error ya trae lo que necesita la API.
   - **Input inválido**: los errores de forma no llevan un código por campo. `UseCase.execute` devuelve `InvalidInputError` (`src/shared/errors/invalid-input-error.ts`, código `INVALID_INPUT`) con el mensaje de `z.prettifyError`, que dice qué campo falló. Cada `<Recurso>ErrorCode` cuyo use-case valida input incluye `INVALID_INPUT`.
-  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`EmailSendFailedError`, `SecretDecryptionFailedError`). Extienden `DbiewerError` directo y se lanzan.
+  - **Errores de infraestructura**: sesión (`UnauthenticatedError`, lo lanza el middleware `requireSession` que envuelve al resolver) y services (`SecretDecryptionFailedError`, `PostgresConnectionFailedError`). Extienden `DbiewerError` directo y se lanzan.
 - Los use-cases **devuelven** el error de negocio, no lo lanzan: es parte de su tipo de retorno (`Promise<Workspace | WorkspaceAlreadyExistsError>`). El resolver lo pasa a `apiResponse` (ver "Resolvers") y llega al cliente en `apiErrors` del payload con su `code` y `message`.
 - Como el error se devuelve, el `UnitOfWork` hace commit: el use-case verifica sus reglas y devuelve el error antes de escribir.
 - Lo que no es de negocio sale como error de GraphQL por el handler de Yoga (`src/shared/errors/error-handler.ts`): mapea los `DbiewerError` registrados en `ERROR_CODES` a `extensions: { code }` con su mensaje (hoy `UNAUTHENTICATED`). Lo demás responde un error genérico sin detalles (`Unexpected error.`, `INTERNAL_SERVER_ERROR`) en todos los ambientes: nunca sale `originalError`, stack ni causa.

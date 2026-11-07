@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2023"],

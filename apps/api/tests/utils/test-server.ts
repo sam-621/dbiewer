@@ -47,7 +47,10 @@ export class TestServer {
     const found = await ctx.internalAdapter.findUserByEmail(email);
     const user =
       found?.user ??
-      (await ctx.internalAdapter.createUser({ email, name: '', emailVerified: true }));
+      (await ctx.internalAdapter.createUser(
+        { email, name: '', emailVerified: true },
+        { method: 'admin' }
+      ));
     const session = await ctx.internalAdapter.createSession(user.id);
     const signature = await makeSignature(session.token, ctx.secret);
 

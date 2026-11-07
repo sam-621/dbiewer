@@ -20,8 +20,6 @@ export default defineConfig({
       BETTER_AUTH_SECRET: 'test-secret-with-at-least-thirty-two-characters',
       BETTER_AUTH_URL: 'http://localhost:4000',
       WEB_URL: 'http://localhost:5173',
-      EMAIL_SENDER: 'dummy',
-      EMAIL_FROM: 'no-reply@dbiewer.localhost',
       GITHUB_CLIENT_ID: 'test-github-client-id',
       GITHUB_CLIENT_SECRET: 'test-github-client-secret',
       CONNECTIONS_ENCRYPTION_KEY: 'Ap8+HgfC4cuwGb1n3x+JgBcaTsA/tpXSaz0TZXDjhLU='
