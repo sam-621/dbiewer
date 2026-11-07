@@ -35,3 +35,8 @@
 - Acomodo por fuerzas en vez de por capas: por capas, una base real salía en pocas columnas muy altas.
 - El acomodo corre sobre las tablas visibles, así que ocultar un esquema reacomoda las tablas sin posición guardada.
 - Con un foco fijo, pasar sobre otra tabla no cambia el foco.
+
+## 2026-11-07 — samuel.corrales621
+
+**Hecho:**
+- Se cierra la feature: `status: done`.
