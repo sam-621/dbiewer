@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { CommonConnectionFragment } from '@/lib/api/types';
 import { NewConnectionDialog } from '@/lib/connection/components/new-connection-dialog/new-connection-dialog';
-import { ChevronDownIcon, PlusIcon } from '@/shared/components/icons/icons';
+import { RemoveConnectionDialog } from '@/lib/connection/components/remove-connection-dialog/remove-connection-dialog';
+import { BinIcon, ChevronDownIcon, PlusIcon } from '@/shared/components/icons/icons';
 import { PostgresIcon } from '@/shared/components/icons/postgres-icon';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -21,6 +23,9 @@ export const ConnectionSelector = () => {
   const { t } = useTranslation();
   const { activeConnection, connections, setActiveConnection } = useActiveConnection();
   const [isNewConnectionOpen, setIsNewConnectionOpen] = useState(false);
+  const [removingConnection, setRemovingConnection] = useState<CommonConnectionFragment | null>(
+    null
+  );
 
   if (!activeConnection) return null;
 
@@ -63,6 +68,14 @@ export const ConnectionSelector = () => {
             <PlusIcon />
             {t('New connection')}
           </MenuItem>
+          <MenuItem
+            variant="destructive"
+            className="text-[13px] sm:text-[13px]"
+            onClick={() => setRemovingConnection(activeConnection)}
+          >
+            <BinIcon />
+            {t('Delete connection')}
+          </MenuItem>
         </MenuPopup>
       </Menu>
       <NewConnectionDialog
@@ -70,6 +83,12 @@ export const ConnectionSelector = () => {
         onOpenChange={setIsNewConnectionOpen}
         onCreated={setActiveConnection}
       />
+      {removingConnection && (
+        <RemoveConnectionDialog
+          connection={removingConnection}
+          onClose={() => setRemovingConnection(null)}
+        />
+      )}
     </>
   );
 };

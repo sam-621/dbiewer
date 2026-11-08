@@ -101,6 +101,8 @@
   "Location": "Location",
   "Name": "Name",
   "Name must be 50 characters or less": "Name must be 50 characters or less",
+  "Delete connection": "Delete connection",
+  "Its saved files will be deleted too. This action cannot be undone.": "Its saved files will be deleted too. This action cannot be undone.",
   "New connection": "New connection",
   "Next page": "Next page",
   "No": "No",

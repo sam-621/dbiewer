@@ -118,4 +118,50 @@ describe('ConnectionSelector', () => {
       expect(screen.queryByRole('dialog', { name: 'Nueva conexión' })).not.toBeInTheDocument()
     );
   });
+
+  test('deletes the active connection and falls back to the next one', async () => {
+    let items = [PROD, STAGING];
+    vi.mocked(gqlFetcher).mockImplementation(async document => {
+      if (document.toString().includes('mutation RemoveConnection')) {
+        items = items.filter(c => c.id !== PROD.id);
+        return { removeConnection: { apiErrors: [], success: true } };
+      }
+      return { connections: { items } };
+    });
+
+    renderSelector();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /Acme prod/ }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Eliminar conexión' }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: '¿Eliminar Acme prod?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    expect(await screen.findByRole('button', { name: /Acme staging/ })).toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  });
+
+  test('shows the error when the connection cannot be deleted', async () => {
+    vi.mocked(gqlFetcher).mockImplementation(async document => {
+      if (document.toString().includes('mutation RemoveConnection')) {
+        return {
+          removeConnection: {
+            apiErrors: [{ code: 'CONNECTION_NOT_FOUND', message: 'Not found' }],
+            success: null
+          }
+        };
+      }
+      return { connections: { items: [PROD, STAGING] } };
+    });
+
+    renderSelector();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /Acme prod/ }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Eliminar conexión' }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: '¿Eliminar Acme prod?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    expect(await within(dialog).findByText('Esta conexión ya no existe')).toBeInTheDocument();
+  });
 });

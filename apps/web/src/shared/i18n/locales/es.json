@@ -101,6 +101,8 @@
   "Location": "Ubicación",
   "Name": "Nombre",
   "Name must be 50 characters or less": "El nombre debe tener 50 caracteres o menos",
+  "Delete connection": "Eliminar conexión",
+  "Its saved files will be deleted too. This action cannot be undone.": "También se eliminarán sus archivos guardados. Esta acción no se puede deshacer.",
   "New connection": "Nueva conexión",
   "Next page": "Página siguiente",
   "No": "No",
