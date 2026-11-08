@@ -179,6 +179,13 @@ export type TestConnectionMutationVariables = Exact<{
 
 export type TestConnectionMutation = { testConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
 
+export type RemoveConnectionMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type RemoveConnectionMutation = { removeConnection: { success: boolean | null, apiErrors: Array<{ code: ConnectionErrorCode, message: string }> } };
+
 export type GetConnectionSchemaQueryVariables = Exact<{
   connectionId: string | number;
 }>;
@@ -399,6 +406,17 @@ export const TestConnectionDocument = new TypedDocumentString(`
   }
 }
     `) as unknown as TypedDocumentString<TestConnectionMutation, TestConnectionMutationVariables>;
+export const RemoveConnectionDocument = new TypedDocumentString(`
+    mutation RemoveConnection($id: ID!) {
+  removeConnection(id: $id) {
+    apiErrors {
+      code
+      message
+    }
+    success
+  }
+}
+    `) as unknown as TypedDocumentString<RemoveConnectionMutation, RemoveConnectionMutationVariables>;
 export const GetConnectionSchemaDocument = new TypedDocumentString(`
     query GetConnectionSchema($connectionId: ID!) {
   connectionSchema(connectionId: $connectionId) {
